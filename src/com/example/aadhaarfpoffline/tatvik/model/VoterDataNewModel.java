@@ -11,8 +11,6 @@ public class VoterDataNewModel {
     private String AC_NO;
     @SerializedName("BlockID")
     private String BlockID;
-    @SerializedName("BoothNo")
-    private String BoothNo;
     @SerializedName("C_HOUSE_NO")
     private String C_HOUSE_NO;
     @SerializedName("C_HOUSE_NO_V1")
@@ -69,8 +67,6 @@ public class VoterDataNewModel {
     private String STATUS_TYPE;
     @SerializedName("SlNoInWard")
     private String SlNoInWard;
-    @SerializedName("USER_ID")
-    private String USER_ID = "";
     @SerializedName("UserId")
     private String UserId;
     @SerializedName("VOTED")
@@ -400,19 +396,7 @@ public class VoterDataNewModel {
         this.VOTED = voted;
     }
 
-    public void setBoothNo(String boothno) {
-        this.BoothNo = boothno;
-    }
-
     public String getSlNoInWard() {
         return this.SlNoInWard;
-    }
-
-    public String getBoothNo() {
-        return this.BoothNo;
-    }
-
-    public String getUSER_ID() {
-        return this.USER_ID;
     }
 }

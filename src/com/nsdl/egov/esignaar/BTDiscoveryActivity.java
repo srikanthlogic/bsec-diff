@@ -30,9 +30,7 @@ public class BTDiscoveryActivity extends AppCompatActivity {
     public static BluetoothAdapter e = BluetoothAdapter.getDefaultAdapter();
     TextView h;
     private boolean i;
-
-    /* renamed from: a */
-    String f27a = "";
+    String a = "";
     String b = "";
     String c = "";
     String d = "";
@@ -188,8 +186,8 @@ public class BTDiscoveryActivity extends AppCompatActivity {
         finish();
     }
 
-    @Override // androidx.fragment.app.FragmentActivity, androidx.activity.ComponentActivity, androidx.core.app.ComponentActivity, android.app.Activity
-    protected void onCreate(Bundle bundle) {
+    @Override // androidx.appcompat.app.AppCompatActivity, androidx.fragment.app.FragmentActivity, androidx.activity.ComponentActivity, androidx.core.app.ComponentActivity, android.app.Activity
+    public void onCreate(Bundle bundle) {
         super.onCreate(bundle);
         setContentView(R.layout.activity_bt_discovery);
         if (!e.isEnabled()) {
@@ -238,7 +236,7 @@ public class BTDiscoveryActivity extends AppCompatActivity {
                 sb.append("\" value=\"");
                 sb.append(BTDiscoveryActivity.this.n);
                 sb.append("\" /> </CustOpts> </PidOptions>");
-                bTDiscoveryActivity.f27a = sb.toString();
+                bTDiscoveryActivity.a = sb.toString();
                 BiometricActivityPieSupport.e = 30;
                 BiometricActivityPieSupport.f = 5;
                 WithoutOTGSupportBiometricActivity.I = 30;
@@ -246,7 +244,7 @@ public class BTDiscoveryActivity extends AppCompatActivity {
                 Intent intent2 = new Intent();
                 intent2.putExtra("DEVICENAME", BTDiscoveryActivity.this.o);
                 intent2.putExtra("DEVICEMAC", BTDiscoveryActivity.this.n);
-                intent2.putExtra("ResponseXml", BTDiscoveryActivity.this.f27a);
+                intent2.putExtra("ResponseXml", BTDiscoveryActivity.this.a);
                 BTDiscoveryActivity.this.setResult(-1, intent2);
                 BTDiscoveryActivity.this.finish();
             }

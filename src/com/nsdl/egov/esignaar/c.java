@@ -13,9 +13,7 @@ import javax.net.ssl.TrustManager;
 import javax.net.ssl.X509TrustManager;
 /* loaded from: classes3.dex */
 public class c implements X509TrustManager {
-
-    /* renamed from: a  reason: collision with root package name */
-    private static TrustManager[] f112a;
+    private static TrustManager[] a;
     private static final X509Certificate[] b = new X509Certificate[0];
 
     public static void a() {
@@ -28,8 +26,8 @@ public class c implements X509TrustManager {
                 return true;
             }
         });
-        if (f112a == null) {
-            f112a = new TrustManager[]{new c()};
+        if (a == null) {
+            a = new TrustManager[]{new c()};
         }
         try {
             sSLContext = SSLContext.getInstance("TLS");
@@ -41,7 +39,7 @@ public class c implements X509TrustManager {
             sSLContext = null;
         }
         try {
-            sSLContext.init(null, f112a, new SecureRandom());
+            sSLContext.init(null, a, new SecureRandom());
         } catch (KeyManagementException e5) {
             e2 = e5;
             e2.printStackTrace();

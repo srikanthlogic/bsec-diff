@@ -262,7 +262,6 @@ public final class PhoneNumber extends AppCompatActivity {
         this.BASEURL = str;
     }
 
-    /* JADX INFO: Access modifiers changed from: protected */
     /* JADX WARN: Removed duplicated region for block: B:14:0x0095 A[Catch: Exception -> 0x00b3, TryCatch #2 {Exception -> 0x00b3, blocks: (B:3:0x005e, B:5:0x0062, B:6:0x0065, B:8:0x0089, B:14:0x0095, B:15:0x0099, B:17:0x009f, B:23:0x00ab, B:24:0x00af), top: B:73:0x005e }] */
     /* JADX WARN: Removed duplicated region for block: B:15:0x0099 A[Catch: Exception -> 0x00b3, TryCatch #2 {Exception -> 0x00b3, blocks: (B:3:0x005e, B:5:0x0062, B:6:0x0065, B:8:0x0089, B:14:0x0095, B:15:0x0099, B:17:0x009f, B:23:0x00ab, B:24:0x00af), top: B:73:0x005e }] */
     /* JADX WARN: Removed duplicated region for block: B:23:0x00ab A[Catch: Exception -> 0x00b3, TryCatch #2 {Exception -> 0x00b3, blocks: (B:3:0x005e, B:5:0x0062, B:6:0x0065, B:8:0x0089, B:14:0x0095, B:15:0x0099, B:17:0x009f, B:23:0x00ab, B:24:0x00af), top: B:73:0x005e }] */
@@ -272,7 +271,7 @@ public final class PhoneNumber extends AppCompatActivity {
     /* JADX WARN: Removed duplicated region for block: B:59:0x0157  */
     /* JADX WARN: Removed duplicated region for block: B:66:0x01ae  */
     /* JADX WARN: Removed duplicated region for block: B:71:0x00ca A[EXC_TOP_SPLITTER, SYNTHETIC] */
-    @Override // androidx.fragment.app.FragmentActivity, androidx.activity.ComponentActivity, androidx.core.app.ComponentActivity, android.app.Activity
+    @Override // androidx.appcompat.app.AppCompatActivity, androidx.fragment.app.FragmentActivity, androidx.activity.ComponentActivity, androidx.core.app.ComponentActivity, android.app.Activity
     /* Code decompiled incorrectly, please refer to instructions dump */
     public void onCreate(Bundle savedInstanceState) {
         Store store;
@@ -612,9 +611,8 @@ public final class PhoneNumber extends AppCompatActivity {
         finish();
     }
 
-    /* JADX INFO: Access modifiers changed from: protected */
-    @Override // androidx.fragment.app.FragmentActivity, androidx.activity.ComponentActivity, android.app.Activity
-    public void onActivityResult(int requestCode, int resultCode, Intent data) {
+    @Override // androidx.fragment.app.FragmentActivity, android.app.Activity
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
         if (requestCode == this.REQUEST_CODE_FOR_VERIFICATION_RESULT) {
             if (data == null) {

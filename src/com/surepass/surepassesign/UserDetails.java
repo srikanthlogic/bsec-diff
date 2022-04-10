@@ -316,9 +316,9 @@ public final class UserDetails extends AppCompatActivity {
     /* JADX WARN: Removed duplicated region for block: B:47:0x0120 A[Catch: Exception -> 0x0168, TryCatch #0 {Exception -> 0x0168, blocks: (B:6:0x0071, B:8:0x0075, B:9:0x0078, B:11:0x0080, B:12:0x0083, B:14:0x00d2, B:20:0x00de, B:21:0x00e2, B:23:0x00e8, B:29:0x00f4, B:30:0x00f8, B:31:0x00fb, B:33:0x0102, B:39:0x010e, B:41:0x0114, B:47:0x0120, B:48:0x015f), top: B:59:0x0071 }] */
     /* JADX WARN: Removed duplicated region for block: B:53:0x0171  */
     /* JADX WARN: Removed duplicated region for block: B:56:0x0191  */
-    @Override // androidx.fragment.app.FragmentActivity, androidx.activity.ComponentActivity, androidx.core.app.ComponentActivity, android.app.Activity
+    @Override // androidx.appcompat.app.AppCompatActivity, androidx.fragment.app.FragmentActivity, androidx.activity.ComponentActivity, androidx.core.app.ComponentActivity, android.app.Activity
     /* Code decompiled incorrectly, please refer to instructions dump */
-    protected void onCreate(Bundle savedInstanceState) {
+    public void onCreate(Bundle savedInstanceState) {
         Store store;
         OkHttpClient okHttpClient;
         String str;
@@ -850,7 +850,7 @@ public final class UserDetails extends AppCompatActivity {
         textView2.setText(this.BRAND_NAME);
     }
 
-    @Override // androidx.fragment.app.FragmentActivity, androidx.activity.ComponentActivity, android.app.Activity
+    @Override // androidx.fragment.app.FragmentActivity, android.app.Activity
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
         if (requestCode == this.REQUEST_CODE_FOR_VERIFICATION_RESULT) {

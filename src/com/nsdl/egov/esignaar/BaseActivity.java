@@ -11,9 +11,7 @@ import java.util.ArrayList;
 import java.util.List;
 /* loaded from: classes3.dex */
 public class BaseActivity extends AppCompatActivity {
-
-    /* renamed from: a  reason: collision with root package name */
-    public static String f36a;
+    public static String a;
     private static List<String> d = null;
     private static final byte[] e = {48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 97, 98, 99, 100, 101, 102};
     int b = 0;
@@ -78,7 +76,7 @@ public class BaseActivity extends AppCompatActivity {
     }
 
     /* JADX INFO: Access modifiers changed from: protected */
-    @Override // androidx.fragment.app.FragmentActivity, androidx.activity.ComponentActivity, android.app.Activity
+    @Override // androidx.fragment.app.FragmentActivity, android.app.Activity
     public void onActivityResult(int i, int i2, Intent intent) {
         super.onActivityResult(i, i2, intent);
     }

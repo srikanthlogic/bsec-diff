@@ -129,7 +129,7 @@ public class NsdlEsignActivity extends BaseActivity {
         String str2 = this.e;
         if (str2 != null) {
             try {
-                f36a = str2.equalsIgnoreCase(new String(this.p.doFinal(b(getResources().getString(R.string.nbb5db6596c7ab75a351056b8eb448990))))) ? new String(this.p.doFinal(b(getResources().getString(R.string.n57b4d2430fd03265753b22acae9989d72f2451dfaf9abf07c63b537711d6fc0772ddd587e4938d0dc77c138704f9f5ce20bd4ea62ffada667e371df7a1450b4e)))) : new String(this.p.doFinal(b(getResources().getString(R.string.n274b5c7933864679323b0aec6d4b0b2d090f339db2eb5562387fc9f0edaa7e2598d86e656ddbd61a66328bb78ba70261c35ae9865aa76239078882e6a3e86e03))));
+                a = str2.equalsIgnoreCase(new String(this.p.doFinal(b(getResources().getString(R.string.nbb5db6596c7ab75a351056b8eb448990))))) ? new String(this.p.doFinal(b(getResources().getString(R.string.n57b4d2430fd03265753b22acae9989d72f2451dfaf9abf07c63b537711d6fc0772ddd587e4938d0dc77c138704f9f5ce20bd4ea62ffada667e371df7a1450b4e)))) : new String(this.p.doFinal(b(getResources().getString(R.string.n274b5c7933864679323b0aec6d4b0b2d090f339db2eb5562387fc9f0edaa7e2598d86e656ddbd61a66328bb78ba70261c35ae9865aa76239078882e6a3e86e03))));
             } catch (Exception e3) {
                 e3.printStackTrace();
             }
@@ -228,7 +228,7 @@ public class NsdlEsignActivity extends BaseActivity {
             e.printStackTrace();
         }
         c.a();
-        AnonymousClass4 r1 = new StringRequest(1, f36a, new Response.Listener<String>() { // from class: com.nsdl.egov.esignaar.NsdlEsignActivity.2
+        AnonymousClass4 r1 = new StringRequest(1, a, new Response.Listener<String>() { // from class: com.nsdl.egov.esignaar.NsdlEsignActivity.2
             /* JADX WARN: Removed duplicated region for block: B:27:0x0180 A[Catch: Exception -> 0x02f0, TryCatch #0 {Exception -> 0x02f0, blocks: (B:8:0x0018, B:10:0x00b6, B:12:0x00be, B:13:0x00e7, B:14:0x0108, B:15:0x0129, B:24:0x015c, B:25:0x0178, B:27:0x0180, B:28:0x019f, B:29:0x01a8, B:32:0x01b4, B:34:0x01c4, B:36:0x01ca, B:38:0x01ec, B:41:0x01f4, B:42:0x0214, B:43:0x0222, B:44:0x0227, B:46:0x022f, B:47:0x025b, B:49:0x0261, B:50:0x026f, B:53:0x027d, B:55:0x0283, B:57:0x028f, B:59:0x029b, B:61:0x02a2, B:62:0x02b2, B:63:0x02d3, B:64:0x02e3), top: B:69:0x0018 }] */
             /* JADX WARN: Removed duplicated region for block: B:29:0x01a8 A[Catch: Exception -> 0x02f0, TRY_LEAVE, TryCatch #0 {Exception -> 0x02f0, blocks: (B:8:0x0018, B:10:0x00b6, B:12:0x00be, B:13:0x00e7, B:14:0x0108, B:15:0x0129, B:24:0x015c, B:25:0x0178, B:27:0x0180, B:28:0x019f, B:29:0x01a8, B:32:0x01b4, B:34:0x01c4, B:36:0x01ca, B:38:0x01ec, B:41:0x01f4, B:42:0x0214, B:43:0x0222, B:44:0x0227, B:46:0x022f, B:47:0x025b, B:49:0x0261, B:50:0x026f, B:53:0x027d, B:55:0x0283, B:57:0x028f, B:59:0x029b, B:61:0x02a2, B:62:0x02b2, B:63:0x02d3, B:64:0x02e3), top: B:69:0x0018 }] */
             /* renamed from: a */
@@ -413,7 +413,7 @@ public class NsdlEsignActivity extends BaseActivity {
         newRequestQueue.add(r1);
     }
 
-    @Override // com.nsdl.egov.esignaar.BaseActivity, androidx.fragment.app.FragmentActivity, androidx.activity.ComponentActivity, android.app.Activity
+    @Override // com.nsdl.egov.esignaar.BaseActivity, androidx.fragment.app.FragmentActivity, android.app.Activity
     public void onActivityResult(int i, int i2, Intent intent) {
         super.onActivityResult(i, i2, intent);
         if (i == this.i && i2 == 5000) {
@@ -426,8 +426,9 @@ public class NsdlEsignActivity extends BaseActivity {
         }
     }
 
-    @Override // androidx.fragment.app.FragmentActivity, androidx.activity.ComponentActivity, androidx.core.app.ComponentActivity, android.app.Activity
-    protected void onCreate(Bundle bundle) {
+    /* JADX INFO: Access modifiers changed from: protected */
+    @Override // androidx.appcompat.app.AppCompatActivity, androidx.fragment.app.FragmentActivity, androidx.activity.ComponentActivity, androidx.core.app.ComponentActivity, android.app.Activity
+    public void onCreate(Bundle bundle) {
         super.onCreate(bundle);
         setContentView(R.layout.esignnsdlactivity);
         e();

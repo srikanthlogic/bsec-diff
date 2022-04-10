@@ -116,23 +116,23 @@ public class CameraKitView extends GestureLayout {
     }
 
     private void obtainAttributes(Context context, AttributeSet attrs) {
-        TypedArray a2 = context.obtainStyledAttributes(attrs, R.styleable.CameraKitView);
-        this.mAdjustViewBounds = a2.getBoolean(R.styleable.CameraKitView_android_adjustViewBounds, false);
-        this.mAspectRatio = a2.getFloat(R.styleable.CameraKitView_camera_aspectRatio, -1.0f);
-        this.mFacing = a2.getInteger(R.styleable.CameraKitView_camera_facing, 0);
+        TypedArray a = context.obtainStyledAttributes(attrs, R.styleable.CameraKitView);
+        this.mAdjustViewBounds = a.getBoolean(R.styleable.CameraKitView_android_adjustViewBounds, false);
+        this.mAspectRatio = a.getFloat(R.styleable.CameraKitView_camera_aspectRatio, -1.0f);
+        this.mFacing = a.getInteger(R.styleable.CameraKitView_camera_facing, 0);
         if (cameraFacing == CameraFacing.FRONT) {
             this.mFacing = 1;
         }
-        this.mFlash = a2.getInteger(R.styleable.CameraKitView_camera_flash, 0);
+        this.mFlash = a.getInteger(R.styleable.CameraKitView_camera_flash, 0);
         if (cameraFlash == CameraFlash.ON) {
             this.mFlash = 1;
         }
-        this.mFocus = a2.getInteger(R.styleable.CameraKitView_camera_focus, 1);
-        this.mZoomFactor = a2.getFloat(R.styleable.CameraKitView_camera_zoomFactor, 1.0f);
-        this.mPermissions = a2.getInteger(R.styleable.CameraKitView_camera_permissions, 1);
-        this.mImageMegaPixels = a2.getFloat(R.styleable.CameraKitView_camera_imageMegaPixels, 2.0f);
-        this.mImageJpegQuality = a2.getInteger(R.styleable.CameraKitView_camera_imageJpegQuality, 100);
-        a2.recycle();
+        this.mFocus = a.getInteger(R.styleable.CameraKitView_camera_focus, 1);
+        this.mZoomFactor = a.getFloat(R.styleable.CameraKitView_camera_zoomFactor, 1.0f);
+        this.mPermissions = a.getInteger(R.styleable.CameraKitView_camera_permissions, 1);
+        this.mImageMegaPixels = a.getFloat(R.styleable.CameraKitView_camera_imageMegaPixels, 2.0f);
+        this.mImageJpegQuality = a.getInteger(R.styleable.CameraKitView_camera_imageJpegQuality, 100);
+        a.recycle();
         this.mCameraPreview = new CameraPreview(getContext());
         addView(this.mCameraPreview);
         this.mCameraPreview.setListener(new CameraPreview.Listener() { // from class: com.camerakit.CameraKitView.1

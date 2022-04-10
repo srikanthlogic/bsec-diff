@@ -8,8 +8,6 @@ public class UserAuth {
     private Context mcontext;
     private String MYPREF = "userdata";
     private String BASE_URL = "baseurl";
-    private String TRANSACTION_ID = "transactionid";
-    private String FINGERPRINTDEVICE = "fingerprintdevice";
 
     public UserAuth(Context context) {
         this.mcontext = context;
@@ -112,7 +110,7 @@ public class UserAuth {
     }
 
     public String getBaseUrl() {
-        return this.mcontext.getSharedPreferences(this.MYPREF, 0).getString(this.BASE_URL, "http://cim.phoneme.in/");
+        return this.mcontext.getSharedPreferences(this.MYPREF, 0).getString(this.BASE_URL, "");
     }
 
     public void setBoothNo(String boothno) {
@@ -143,85 +141,5 @@ public class UserAuth {
 
     public String getBlockID() {
         return this.mcontext.getSharedPreferences(this.MYPREF, 0).getString("blockid", "");
-    }
-
-    public void setTransactionId(Long boothno) {
-        SharedPreferences.Editor editor = this.mcontext.getSharedPreferences(this.MYPREF, 0).edit();
-        editor.putLong(this.TRANSACTION_ID, boothno.longValue());
-        editor.commit();
-    }
-
-    public Long getTransactionId() {
-        return Long.valueOf(this.mcontext.getSharedPreferences(this.MYPREF, 0).getLong(this.TRANSACTION_ID, 0));
-    }
-
-    public void setFingerPrintDevice(String fingerPrintDevice) {
-        SharedPreferences.Editor editor = this.mcontext.getSharedPreferences(this.MYPREF, 0).edit();
-        editor.putString(this.FINGERPRINTDEVICE, fingerPrintDevice);
-        editor.apply();
-    }
-
-    public String getFingerPrintDevice() {
-        return this.mcontext.getSharedPreferences(this.MYPREF, 0).getString(this.FINGERPRINTDEVICE, "");
-    }
-
-    public void setPanchayat_NAME_EN(String panchayat_name_en) {
-        SharedPreferences.Editor editor = this.mcontext.getSharedPreferences(this.MYPREF, 0).edit();
-        editor.putString("panchayat_name_en", panchayat_name_en);
-        editor.apply();
-    }
-
-    public String getPanchayat_NAME_EN() {
-        return this.mcontext.getSharedPreferences(this.MYPREF, 0).getString("panchayat_name_en", "");
-    }
-
-    public void setPanchayat_NAME_HN(String panchayat_name_hn) {
-        SharedPreferences.Editor editor = this.mcontext.getSharedPreferences(this.MYPREF, 0).edit();
-        editor.putString("panchayat_name_hn", panchayat_name_hn);
-        editor.apply();
-    }
-
-    public String getPanchayat_NAME_HN() {
-        return this.mcontext.getSharedPreferences(this.MYPREF, 0).getString("panchayat_name_hn", "");
-    }
-
-    public void setBlock_NAME_EN(String panchayat_name_hn) {
-        SharedPreferences.Editor editor = this.mcontext.getSharedPreferences(this.MYPREF, 0).edit();
-        editor.putString("block_name_en", panchayat_name_hn);
-        editor.apply();
-    }
-
-    public String getBlock_NAME_EN() {
-        return this.mcontext.getSharedPreferences(this.MYPREF, 0).getString("block_name_en", "");
-    }
-
-    public void setBlock_NAME_HN(String panchayat_name_hn) {
-        SharedPreferences.Editor editor = this.mcontext.getSharedPreferences(this.MYPREF, 0).edit();
-        editor.putString("block_name_hn", panchayat_name_hn);
-        editor.apply();
-    }
-
-    public String getBlock_NAME_HN() {
-        return this.mcontext.getSharedPreferences(this.MYPREF, 0).getString("block_name_hn", "");
-    }
-
-    public void setDIST_NAME_EN(String panchayat_name_hn) {
-        SharedPreferences.Editor editor = this.mcontext.getSharedPreferences(this.MYPREF, 0).edit();
-        editor.putString("dist_name_en", panchayat_name_hn);
-        editor.apply();
-    }
-
-    public String getDIST_NAME_EN() {
-        return this.mcontext.getSharedPreferences(this.MYPREF, 0).getString("dist_name_en", "");
-    }
-
-    public void setDIST_NAME_HN(String panchayat_name_hn) {
-        SharedPreferences.Editor editor = this.mcontext.getSharedPreferences(this.MYPREF, 0).edit();
-        editor.putString("dist_name_hn", panchayat_name_hn);
-        editor.apply();
-    }
-
-    public String getDIST_NAME_HN() {
-        return this.mcontext.getSharedPreferences(this.MYPREF, 0).getString("dist_name_hn", "");
     }
 }
