@@ -8,9 +8,7 @@ import android.telephony.SmsMessage;
 import com.nsdl.egov.esignaar.a;
 /* loaded from: classes3.dex */
 public class SmsReceiver extends BroadcastReceiver {
-
-    /* renamed from: a  reason: collision with root package name */
-    private static a.AbstractC0001a f96a;
+    private static a.AbstractC0001a a;
 
     @Override // android.content.BroadcastReceiver
     public void onReceive(Context context, Intent intent) {
@@ -29,7 +27,7 @@ public class SmsReceiver extends BroadcastReceiver {
                     break;
                 }
             }
-            a.AbstractC0001a aVar = f96a;
+            a.AbstractC0001a aVar = a;
             if (aVar != null) {
                 aVar.a(str);
             }

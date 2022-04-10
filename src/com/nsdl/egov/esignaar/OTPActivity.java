@@ -299,7 +299,7 @@ public class OTPActivity extends BaseActivity implements View.OnClickListener {
         } catch (Exception e2) {
             e2.printStackTrace();
         }
-        AnonymousClass13 r9 = new StringRequest(1, f36a, new Response.Listener<String>() { // from class: com.nsdl.egov.esignaar.OTPActivity.11
+        AnonymousClass13 r9 = new StringRequest(1, a, new Response.Listener<String>() { // from class: com.nsdl.egov.esignaar.OTPActivity.11
             /* renamed from: a */
             public void onResponse(String str3) {
                 ProgressDialog progressDialog2;
@@ -462,7 +462,7 @@ public class OTPActivity extends BaseActivity implements View.OnClickListener {
         } catch (Exception e) {
             e.printStackTrace();
         }
-        AnonymousClass2 r9 = new StringRequest(1, f36a, new Response.Listener<String>() { // from class: com.nsdl.egov.esignaar.OTPActivity.14
+        AnonymousClass2 r9 = new StringRequest(1, a, new Response.Listener<String>() { // from class: com.nsdl.egov.esignaar.OTPActivity.14
             /* renamed from: a */
             public void onResponse(String str3) {
                 ProgressDialog progressDialog2;
@@ -579,7 +579,7 @@ public class OTPActivity extends BaseActivity implements View.OnClickListener {
         } catch (Exception e) {
             e.printStackTrace();
         }
-        AnonymousClass7 r10 = new StringRequest(1, f36a, new Response.Listener<String>() { // from class: com.nsdl.egov.esignaar.OTPActivity.5
+        AnonymousClass7 r10 = new StringRequest(1, a, new Response.Listener<String>() { // from class: com.nsdl.egov.esignaar.OTPActivity.5
             /* renamed from: a */
             public void onResponse(String str3) {
                 ProgressDialog progressDialog2;
@@ -772,8 +772,9 @@ public class OTPActivity extends BaseActivity implements View.OnClickListener {
         }
     }
 
-    @Override // androidx.fragment.app.FragmentActivity, androidx.activity.ComponentActivity, androidx.core.app.ComponentActivity, android.app.Activity
-    protected void onCreate(Bundle bundle) {
+    /* JADX INFO: Access modifiers changed from: protected */
+    @Override // androidx.appcompat.app.AppCompatActivity, androidx.fragment.app.FragmentActivity, androidx.activity.ComponentActivity, androidx.core.app.ComponentActivity, android.app.Activity
+    public void onCreate(Bundle bundle) {
         super.onCreate(bundle);
         setContentView(R.layout.activity_otp);
         this.b = Integer.parseInt(getResources().getString(R.string.n405f0ffcd4afa4d88b71f405f0ff405f0ffbb6c3854e097f8aa89a3c9ebc31405f0ffcd4afa4d888d65dd4405f0ffcd4afa4d88fbe561160f5ce2Kf));

@@ -58,7 +58,7 @@ public class NsdlDeviceDetectActivity extends BaseActivity {
     /* JADX INFO: Access modifiers changed from: protected */
     /* JADX WARN: Removed duplicated region for block: B:37:0x0110  */
     /* JADX WARN: Removed duplicated region for block: B:38:0x012f  */
-    @Override // com.nsdl.egov.esignaar.BaseActivity, androidx.fragment.app.FragmentActivity, androidx.activity.ComponentActivity, android.app.Activity
+    @Override // com.nsdl.egov.esignaar.BaseActivity, androidx.fragment.app.FragmentActivity, android.app.Activity
     /* Code decompiled incorrectly, please refer to instructions dump */
     public void onActivityResult(int i, int i2, Intent intent) {
         Bundle extras;
@@ -153,8 +153,9 @@ public class NsdlDeviceDetectActivity extends BaseActivity {
         a(str2, str);
     }
 
-    @Override // androidx.fragment.app.FragmentActivity, androidx.activity.ComponentActivity, androidx.core.app.ComponentActivity, android.app.Activity
-    protected void onCreate(Bundle bundle) {
+    /* JADX INFO: Access modifiers changed from: protected */
+    @Override // androidx.appcompat.app.AppCompatActivity, androidx.fragment.app.FragmentActivity, androidx.activity.ComponentActivity, androidx.core.app.ComponentActivity, android.app.Activity
+    public void onCreate(Bundle bundle) {
         super.onCreate(bundle);
         Bundle extras = getIntent().getExtras();
         if (extras != null) {

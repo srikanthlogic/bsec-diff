@@ -9,15 +9,12 @@ import android.database.Cursor;
 import android.graphics.Bitmap;
 import android.graphics.drawable.BitmapDrawable;
 import android.location.LocationManager;
-import android.media.ThumbnailUtils;
-import android.net.ConnectivityManager;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
 import android.os.SystemClock;
 import android.provider.MediaStore;
-import android.provider.Settings;
 import android.util.Log;
 import android.view.View;
 import android.widget.AdapterView;
@@ -36,12 +33,10 @@ import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 import androidx.exifinterface.media.ExifInterface;
 import androidx.loader.content.CursorLoader;
-import androidx.recyclerview.widget.ItemTouchHelper;
 import com.example.aadhaarfpoffline.tatvik.GetDataService;
 import com.example.aadhaarfpoffline.tatvik.LocaleHelper;
 import com.example.aadhaarfpoffline.tatvik.ProgressRequestBody;
 import com.example.aadhaarfpoffline.tatvik.R;
-import com.example.aadhaarfpoffline.tatvik.UserAuth;
 import com.example.aadhaarfpoffline.tatvik.config.RetrofitClientInstance;
 import com.example.aadhaarfpoffline.tatvik.config.RetrofitClientInstanceSurepass;
 import com.example.aadhaarfpoffline.tatvik.config.RetrofitClientInstanceUrl;
@@ -51,8 +46,7 @@ import com.example.aadhaarfpoffline.tatvik.network.GetUploadLinkResponse;
 import com.example.aadhaarfpoffline.tatvik.network.ImageUploadResponse;
 import com.example.aadhaarfpoffline.tatvik.network.InitializeResponse;
 import com.example.aadhaarfpoffline.tatvik.network.PostUploadResponse;
-import com.example.aadhaarfpoffline.tatvik.services.LocationTrack;
-import com.example.aadhaarfpoffline.tatvik.util.Const;
+import com.example.aadhaarfpoffline.tatvik.servece.LocationTrack;
 import com.facebook.common.util.UriUtil;
 import com.google.android.gms.location.LocationListener;
 import com.google.gson.JsonObject;
@@ -84,7 +78,6 @@ import retrofit2.Callback;
 import retrofit2.Response;
 /* loaded from: classes2.dex */
 public class UserIdCaptureActivity extends AppCompatActivity implements ProgressRequestBody.UploadCallbacks {
-    private static final String FILE_NAME = "TransactionTable.json";
     public static final String MULTIPART_FORM_DATA = "multipart/form-data";
     public static final int MY_PERMISSIONS_REQUEST_LOCATION = 99;
     private static final int PERMISSION_CODE = 1000;
@@ -102,7 +95,6 @@ public class UserIdCaptureActivity extends AppCompatActivity implements Progress
     ProgressBar progressBar;
     Resources resources;
     private Spinner spinner;
-    UserAuth userAuth;
     private TextView voterDistrict;
     private TextView voterId;
     private TextView voterName;
@@ -116,33 +108,25 @@ public class UserIdCaptureActivity extends AppCompatActivity implements Progress
     String blockno = "";
     String blockid = "";
     String voterid = "";
-    String slnoinward = "";
     String voteridtype = "";
     String voterIdentificationImage = "";
     String voted = "";
-    String age = "";
-    String gender = "";
     private ArrayList<String> voteridtypes = new ArrayList<>();
     private ArrayList<String> voteridtypesvalues = new ArrayList<>();
     private String GeneratedClientId = "";
     MFS100 mfs100 = null;
     int timeout = 10000;
-    int k = 0;
-    String androidId = "";
-    String UDevId = "";
 
-    @Override // androidx.fragment.app.FragmentActivity, androidx.activity.ComponentActivity, androidx.core.app.ComponentActivity, android.app.Activity
-    protected void onCreate(Bundle savedInstanceState) {
+    /* JADX INFO: Access modifiers changed from: protected */
+    @Override // androidx.appcompat.app.AppCompatActivity, androidx.fragment.app.FragmentActivity, androidx.activity.ComponentActivity, androidx.core.app.ComponentActivity, android.app.Activity
+    public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_voterid_capture);
         String lan = LocaleHelper.getLanguage(this);
         this.context = LocaleHelper.setLocale(this, lan);
         this.resources = this.context.getResources();
         this.db = new DBHelper(this);
-        this.androidId = Settings.Secure.getString(getContentResolver(), "android_id");
-        this.UDevId = this.androidId;
         this.imageUri = null;
-        this.userAuth = new UserAuth(this);
         this.progressBar = (ProgressBar) findViewById(R.id.progressBar);
         this.mImageView = (ImageView) findViewById(R.id.imageView);
         this.mCaptureBtn = (Button) findViewById(R.id.btnCaptureImage);
@@ -170,14 +154,11 @@ public class UserIdCaptureActivity extends AppCompatActivity implements Progress
         this.voterDistrict = (TextView) findViewById(R.id.district);
         Intent intent = getIntent();
         this.voterid = intent.getStringExtra("voter_id");
-        this.slnoinward = intent.getStringExtra("slnoinward");
         this.votername = intent.getStringExtra("voter_name");
         this.district = intent.getStringExtra("district");
         this.blockno = intent.getStringExtra("blockno");
         this.blockid = intent.getStringExtra("blockid");
         this.voted = intent.getStringExtra("voted");
-        this.age = intent.getStringExtra("age");
-        this.gender = intent.getStringExtra("gender");
         this.voterName.setText(this.votername);
         this.voterId.setText(this.voterid);
         this.voterDistrict.setText(this.district);
@@ -202,24 +183,23 @@ public class UserIdCaptureActivity extends AppCompatActivity implements Progress
                 if (SystemClock.elapsedRealtime() - UserIdCaptureActivity.mLastClkTime >= UserIdCaptureActivity.Threshold) {
                     long unused = UserIdCaptureActivity.mLastClkTime = SystemClock.elapsedRealtime();
                     if (UserIdCaptureActivity.this.imageUri != null) {
-                        try {
-                            String filename = UserIdCaptureActivity.this.updatevoterDocumentSqliteTransTable();
-                            if (Build.VERSION.SDK_INT < 23) {
-                                return;
-                            }
+                        UserIdCaptureActivity.this.updatevoterDocumentSqlite();
+                        if (Build.VERSION.SDK_INT >= 23) {
                             if (!UserIdCaptureActivity.this.checkPermission2()) {
                                 UserIdCaptureActivity.this.requestPermissions(new String[]{"android.permission.WRITE_EXTERNAL_STORAGE", "android.permission.READ_EXTERNAL_STORAGE"}, 1000);
-                            } else if (UserIdCaptureActivity.this.imageUri != null) {
-                                UserIdCaptureActivity.this.uploadImage(filename);
+                            } else {
+                                UserIdCaptureActivity.this.uploadImage();
                             }
-                        } catch (Exception e) {
-                            Context applicationContext = UserIdCaptureActivity.this.getApplicationContext();
-                            Toast.makeText(applicationContext, "Document local update exception " + e.getMessage(), 0).show();
-                            Toast.makeText(UserIdCaptureActivity.this.getApplicationContext(), "Try captureing image again ", 0).show();
+                            if (!UserIdCaptureActivity.this.checkLocationPermission()) {
+                                UserIdCaptureActivity.this.requestPermissions(new String[]{"android.permission.ACCESS_FINE_LOCATION"}, 99);
+                            } else {
+                                UserIdCaptureActivity.this.getLocation();
+                            }
                         }
-                    } else {
-                        Toast.makeText(UserIdCaptureActivity.this.getApplicationContext(), "Please select an ID document", 0).show();
+                        UserIdCaptureActivity.this.uploadImage();
+                        return;
                     }
+                    Toast.makeText(UserIdCaptureActivity.this.getApplicationContext(), "Please select an ID document", 0).show();
                 }
             }
         });
@@ -242,41 +222,41 @@ public class UserIdCaptureActivity extends AppCompatActivity implements Progress
 
     /* JADX INFO: Access modifiers changed from: private */
     public void openCamera() {
-        try {
-            ContentValues values = new ContentValues();
-            values.put("title", "New Picture");
-            values.put("description", "From the Camera");
-            this.imageUri = getContentResolver().insert(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, values);
-            Intent cameraIntent = new Intent("android.media.action.IMAGE_CAPTURE");
-            cameraIntent.putExtra("output", this.imageUri);
-            startActivityForResult(cameraIntent, this.IMAGE_CAPTURE_CODE);
-        } catch (Exception e) {
-            Toast.makeText(getApplicationContext(), "Error capturing image.Try again", 0).show();
-        }
+        ContentValues values = new ContentValues();
+        values.put("title", "New Picture");
+        values.put("description", "From the Camera");
+        this.imageUri = getContentResolver().insert(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, values);
+        Intent cameraIntent = new Intent("android.media.action.IMAGE_CAPTURE");
+        cameraIntent.putExtra("output", this.imageUri);
+        startActivityForResult(cameraIntent, this.IMAGE_CAPTURE_CODE);
     }
 
-    @Override // androidx.fragment.app.FragmentActivity, androidx.activity.ComponentActivity, android.app.Activity
+    /* JADX WARN: Code restructure failed: missing block: B:10:0x0012, code lost:
+        if (r0 == 0) goto L_0x001e;
+     */
+    @Override // androidx.fragment.app.FragmentActivity, android.app.Activity, androidx.core.app.ActivityCompat.OnRequestPermissionsResultCallback
+    /* Code decompiled incorrectly, please refer to instructions dump */
     public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
-        if (requestCode != 99 && requestCode == 1000) {
-            if (grantResults.length > 0) {
-                int i = grantResults[0];
-                getPackageManager();
-                if (i == 0) {
-                    return;
+        if (requestCode != 99) {
+            if (requestCode == 1000) {
+                if (grantResults.length > 0) {
+                    int i = grantResults[0];
+                    getPackageManager();
                 }
+                Toast.makeText(this, "Permission denied...", 0).show();
+            } else {
+                return;
             }
-            Toast.makeText(this, "Permission denied...", 0).show();
+        }
+        if (grantResults.length > 0 && grantResults[0] == 0 && ContextCompat.checkSelfPermission(this, "android.permission.ACCESS_FINE_LOCATION") == 0) {
+            getLocation();
         }
     }
 
-    @Override // androidx.fragment.app.FragmentActivity, androidx.activity.ComponentActivity, android.app.Activity
+    @Override // androidx.fragment.app.FragmentActivity, android.app.Activity
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         if (resultCode == -1) {
-            try {
-                this.mImageView.setImageURI(this.imageUri);
-            } catch (Exception e) {
-                Toast.makeText(this, "Image set exception " + e.getMessage(), 0).show();
-            }
+            this.mImageView.setImageURI(this.imageUri);
         }
         super.onActivityResult(requestCode, resultCode, data);
     }
@@ -298,20 +278,28 @@ public class UserIdCaptureActivity extends AppCompatActivity implements Progress
     }
 
     /* JADX INFO: Access modifiers changed from: private */
-    public void uploadImage(String filename) {
-        ((BitmapDrawable) this.mImageView.getDrawable()).getBitmap();
+    public void uploadImage() {
+        BitmapDrawable drawable = (BitmapDrawable) this.mImageView.getDrawable();
+        drawable.getBitmap();
+        File file = new File(getRealPathFromURI(this.imageUri));
+        getImageLocation3(this.imageUri);
+        try {
+            drawable.getBitmap().compress(Bitmap.CompressFormat.JPEG, 6, new FileOutputStream(file));
+        } catch (Throwable t) {
+            Log.e("ERROR", "Error compressing file." + t.toString());
+            t.printStackTrace();
+        }
         this.voteridtype = this.voteridtypesvalues.get(this.spinner.getSelectedItemPosition());
-        File file = new File("/sdcard/" + Const.PublicImageName + "/", filename);
+        setImagewithLocagtion(file);
+        checkExif(file);
         HashMap<String, RequestBody> map = new HashMap<>();
-        map.put("udevid", createPartFromString(this.UDevId));
         map.put("votername", createPartFromString(this.votername));
-        map.put("district", createPartFromString(this.userAuth.getDistrictNo()));
+        map.put("district", createPartFromString(this.district));
         map.put("blockno", createPartFromString(this.blockno));
         map.put("blockid", createPartFromString(this.blockid));
         map.put("voterid", createPartFromString(this.voterid));
         map.put("iddoctype", createPartFromString(this.voteridtype));
-        map.put("user_id", createPartFromString(this.userAuth.getPanchayatId() + "_" + this.userAuth.getWardNo() + "_" + this.userAuth.getBoothNo() + "_" + this.slnoinward));
-        postDataWithImage(map, file, filename);
+        postDataWithImage(map, file);
     }
 
     private void checkExif(File file) {
@@ -320,71 +308,23 @@ public class UserIdCaptureActivity extends AppCompatActivity implements Progress
     private void setImagewithLocagtion(File file) {
     }
 
-    private synchronized void postDataWithImage(HashMap<String, RequestBody> map, File file, String filename) {
-        ((GetDataService) RetrofitClientInstance.getRetrofitInstanceImageUploadNewUrl().create(GetDataService.class)).postVoterIdentificationThumb(MultipartBody.Part.createFormData(UriUtil.LOCAL_FILE_SCHEME, filename, new ProgressRequestBody(file, "jpg", this)), map).enqueue(new Callback<ImageUploadResponse>() { // from class: com.example.aadhaarfpoffline.tatvik.activity.UserIdCaptureActivity.6
+    private synchronized void postDataWithImage(HashMap<String, RequestBody> map, final File file) {
+        ((GetDataService) RetrofitClientInstance.getRetrofitInstance().create(GetDataService.class)).postVoterIdentification(MultipartBody.Part.createFormData(UriUtil.LOCAL_FILE_SCHEME, file.getName(), new ProgressRequestBody(file, "jpg", this)), map).enqueue(new Callback<ImageUploadResponse>() { // from class: com.example.aadhaarfpoffline.tatvik.activity.UserIdCaptureActivity.6
             @Override // retrofit2.Callback
             public void onResponse(Call<ImageUploadResponse> call, Response<ImageUploadResponse> response) {
-                if (response == null || response.body() == null || !response.body().isAdded().booleanValue()) {
-                    Context applicationContext = UserIdCaptureActivity.this.getApplicationContext();
-                    Toast.makeText(applicationContext, "Not verified.Try again code=" + response.code(), 0).show();
-                    if (UserIdCaptureActivity.this.isNetworkAvailable()) {
-                        UserIdCaptureActivity.this.startofflinefingerprintactivity();
-                    } else {
-                        UserIdCaptureActivity.this.startnonAadhaarfingerprintactivity();
-                    }
-                } else {
-                    UserIdCaptureActivity.this.db.updateImageSyncThumbnail(UserIdCaptureActivity.this.userAuth.getTransactionId().intValue(), 1);
+                if (response.body().isAdded().booleanValue()) {
+                    file.delete();
                     UserIdCaptureActivity.this.startofflinefingerprintactivity();
                     UserIdCaptureActivity.this.voterIdentificationImage = response.body().getFilename();
+                    return;
                 }
+                Toast.makeText(UserIdCaptureActivity.this.getApplicationContext(), "Not verified.Try again", 0).show();
             }
 
             @Override // retrofit2.Callback
             public void onFailure(Call<ImageUploadResponse> call, Throwable t) {
                 Log.d("taag", t.getMessage());
-                Context applicationContext = UserIdCaptureActivity.this.getApplicationContext();
-                Toast.makeText(applicationContext, "failure post " + t.getMessage(), 1).show();
-                if (!(t instanceof SocketTimeoutException)) {
-                    boolean z = t instanceof IOException;
-                }
-                if (UserIdCaptureActivity.this.isNetworkAvailable()) {
-                    UserIdCaptureActivity.this.startofflinefingerprintactivity();
-                } else {
-                    UserIdCaptureActivity.this.startnonAadhaarfingerprintactivity();
-                }
-            }
-        });
-    }
-
-    private synchronized void postDataWithImageInCaseofFailure(HashMap<String, RequestBody> map, File file, String filename) {
-        ((GetDataService) RetrofitClientInstance.getRetrofitInstanceCimUrlForVoterIdUploadAlternate().create(GetDataService.class)).postVoterIdentificationThumb(MultipartBody.Part.createFormData(UriUtil.LOCAL_FILE_SCHEME, filename, new ProgressRequestBody(file, "jpg", this)), map).enqueue(new Callback<ImageUploadResponse>() { // from class: com.example.aadhaarfpoffline.tatvik.activity.UserIdCaptureActivity.7
-            @Override // retrofit2.Callback
-            public void onResponse(Call<ImageUploadResponse> call, Response<ImageUploadResponse> response) {
-                if (response == null || response.body() == null || !response.body().isAdded().booleanValue()) {
-                    Context applicationContext = UserIdCaptureActivity.this.getApplicationContext();
-                    Toast.makeText(applicationContext, "Not verified.Try again code=" + response.code(), 0).show();
-                    if (UserIdCaptureActivity.this.isNetworkAvailable()) {
-                        UserIdCaptureActivity.this.startofflinefingerprintactivity();
-                    } else {
-                        UserIdCaptureActivity.this.startnonAadhaarfingerprintactivity();
-                    }
-                } else {
-                    UserIdCaptureActivity.this.startofflinefingerprintactivity();
-                    UserIdCaptureActivity.this.voterIdentificationImage = response.body().getFilename();
-                }
-            }
-
-            @Override // retrofit2.Callback
-            public void onFailure(Call<ImageUploadResponse> call, Throwable t) {
-                Log.d("taag", t.getMessage());
-                Context applicationContext = UserIdCaptureActivity.this.getApplicationContext();
-                Toast.makeText(applicationContext, "failure post " + t.getMessage(), 1).show();
-                if (!(t instanceof SocketTimeoutException)) {
-                    boolean z = t instanceof IOException;
-                }
-                if (UserIdCaptureActivity.this.isNetworkAvailable()) {
-                    UserIdCaptureActivity.this.startofflinefingerprintactivity();
-                } else {
+                if (!(t instanceof SocketTimeoutException) && (t instanceof IOException)) {
                     UserIdCaptureActivity.this.startnonAadhaarfingerprintactivity();
                 }
             }
@@ -402,8 +342,6 @@ public class UserIdCaptureActivity extends AppCompatActivity implements Progress
             intent.putExtra("blockid", this.blockid);
             intent.putExtra("iddoctype", this.voteridtype);
             intent.putExtra("nameIfFoundFace", "");
-            intent.putExtra("slnoinward", this.slnoinward);
-            intent.putExtra("voted", this.voted);
             startActivity(intent);
             return;
         }
@@ -414,7 +352,6 @@ public class UserIdCaptureActivity extends AppCompatActivity implements Progress
         Intent intent = new Intent(getApplicationContext(), AadharActivity.class);
         intent.putExtra("voter_id", this.voterid);
         intent.putExtra("voted", this.voted);
-        intent.putExtra("slnoinward", this.slnoinward);
         startActivity(intent);
     }
 
@@ -425,10 +362,6 @@ public class UserIdCaptureActivity extends AppCompatActivity implements Progress
         try {
             return RequestBody.create(MediaType.parse("multipart/form-data"), descriptionString);
         } catch (Exception e) {
-            if (isNetworkAvailable()) {
-                startofflinefingerprintactivity();
-                return null;
-            }
             startnonAadhaarfingerprintactivity();
             return null;
         }
@@ -450,7 +383,6 @@ public class UserIdCaptureActivity extends AppCompatActivity implements Progress
 
     @Override // com.example.aadhaarfpoffline.tatvik.ProgressRequestBody.UploadCallbacks
     public void onError() {
-        Toast.makeText(getApplicationContext(), "Error", 0).show();
     }
 
     @Override // com.example.aadhaarfpoffline.tatvik.ProgressRequestBody.UploadCallbacks
@@ -463,7 +395,7 @@ public class UserIdCaptureActivity extends AppCompatActivity implements Progress
             return true;
         }
         if (ActivityCompat.shouldShowRequestPermissionRationale(this, "android.permission.ACCESS_FINE_LOCATION")) {
-            new AlertDialog.Builder(this).setTitle("Permission Denied").setMessage("Please approve permission again").setPositiveButton("Okay", new DialogInterface.OnClickListener() { // from class: com.example.aadhaarfpoffline.tatvik.activity.UserIdCaptureActivity.8
+            new AlertDialog.Builder(this).setTitle("Dhansu title").setMessage("Dhansu message").setPositiveButton("Dhansu ok", new DialogInterface.OnClickListener() { // from class: com.example.aadhaarfpoffline.tatvik.activity.UserIdCaptureActivity.7
                 @Override // android.content.DialogInterface.OnClickListener
                 public void onClick(DialogInterface dialogInterface, int i) {
                     ActivityCompat.requestPermissions(UserIdCaptureActivity.this, new String[]{"android.permission.ACCESS_FINE_LOCATION"}, 99);
@@ -475,7 +407,8 @@ public class UserIdCaptureActivity extends AppCompatActivity implements Progress
         return false;
     }
 
-    private void getLocation() {
+    /* JADX INFO: Access modifiers changed from: private */
+    public void getLocation() {
         LocationTrack locationTrack = new LocationTrack(this);
         if (locationTrack.canGetLocation()) {
             double longitude = locationTrack.getLongitude();
@@ -495,7 +428,7 @@ public class UserIdCaptureActivity extends AppCompatActivity implements Progress
     }
 
     private void logout() {
-        Intent intent = new Intent(this, LoginActivityWithoutLocation.class);
+        Intent intent = new Intent(this, LoginActivity.class);
         intent.setFlags(268468224);
         startActivity(intent);
     }
@@ -545,7 +478,7 @@ public class UserIdCaptureActivity extends AppCompatActivity implements Progress
         ArrayAdapter aa = new ArrayAdapter(getApplicationContext(), 17367048, this.voteridtypes);
         aa.setDropDownViewResource(R.layout.dropdown);
         this.spinner.setAdapter((SpinnerAdapter) aa);
-        this.spinner.setSelection(2);
+        this.spinner.setSelection(0);
     }
 
     private void translate(String lan) {
@@ -558,13 +491,13 @@ public class UserIdCaptureActivity extends AppCompatActivity implements Progress
         Uri imageUri = Uri.parse("android.resource://" + getApplicationContext().getPackageName() + R.drawable.faceimage2);
         PrintStream printStream = System.out;
         printStream.println("fileuripath=" + imageUri.getPath());
-        String photoAg1 = Uri.parse("android.resource://com.example.aadhaarfpoffline.tatvik/2131230868").getPath();
+        String photoAg1 = Uri.parse("android.resource://com.example.aadhaarfpoffline.tatvik/2131230871").getPath();
         PrintStream printStream2 = System.out;
         printStream2.println("fileuripath2=" + photoAg1);
         File file = getFile3();
         PrintStream printStream3 = System.out;
         printStream3.println("filename=" + file.getName() + " filestring=" + file.toString());
-        ((GetDataService) RetrofitClientInstanceUrl.getRetrofitInstanceDefaultTokenNewUrl(url).create(GetDataService.class)).postUploadFile(map, MultipartBody.Part.createFormData(UriUtil.LOCAL_FILE_SCHEME, file.getName(), RequestBody.create(MediaType.parse("image/*"), file))).enqueue(new Callback<String>() { // from class: com.example.aadhaarfpoffline.tatvik.activity.UserIdCaptureActivity.9
+        ((GetDataService) RetrofitClientInstanceUrl.getRetrofitInstanceDefaultTokenNewUrl(url).create(GetDataService.class)).postUploadFile(map, MultipartBody.Part.createFormData(UriUtil.LOCAL_FILE_SCHEME, file.getName(), RequestBody.create(MediaType.parse("image/*"), file))).enqueue(new Callback<String>() { // from class: com.example.aadhaarfpoffline.tatvik.activity.UserIdCaptureActivity.8
             @Override // retrofit2.Callback
             public void onResponse(Call<String> call, Response<String> response) {
                 PrintStream printStream4 = System.out;
@@ -586,7 +519,7 @@ public class UserIdCaptureActivity extends AppCompatActivity implements Progress
 
     /* JADX INFO: Access modifiers changed from: private */
     public void getUploadLink(String cliendId) {
-        ((GetDataService) RetrofitClientInstanceSurepass.getRetrofitInstanceDefaultToken().create(GetDataService.class)).getUploadLink(getUploadLinkData(cliendId).toString()).enqueue(new Callback<GetUploadLinkResponse>() { // from class: com.example.aadhaarfpoffline.tatvik.activity.UserIdCaptureActivity.10
+        ((GetDataService) RetrofitClientInstanceSurepass.getRetrofitInstanceDefaultToken().create(GetDataService.class)).getUploadLink(getUploadLinkData(cliendId).toString()).enqueue(new Callback<GetUploadLinkResponse>() { // from class: com.example.aadhaarfpoffline.tatvik.activity.UserIdCaptureActivity.9
             @Override // retrofit2.Callback
             public void onResponse(Call<GetUploadLinkResponse> call, Response<GetUploadLinkResponse> response) {
                 UserIdCaptureActivity.this.printUploadLinkDataModel(response.body().getDataModel());
@@ -600,7 +533,7 @@ public class UserIdCaptureActivity extends AppCompatActivity implements Progress
     }
 
     private void getInitialize(String votername) {
-        ((GetDataService) RetrofitClientInstanceSurepass.getRetrofitInstanceDefaultToken().create(GetDataService.class)).getInitialize2(getInitializeData(votername).toString()).enqueue(new Callback<InitializeResponse>() { // from class: com.example.aadhaarfpoffline.tatvik.activity.UserIdCaptureActivity.11
+        ((GetDataService) RetrofitClientInstanceSurepass.getRetrofitInstanceDefaultToken().create(GetDataService.class)).getInitialize2(getInitializeData(votername).toString()).enqueue(new Callback<InitializeResponse>() { // from class: com.example.aadhaarfpoffline.tatvik.activity.UserIdCaptureActivity.10
             @Override // retrofit2.Callback
             public void onResponse(Call<InitializeResponse> call, Response<InitializeResponse> response) {
                 if (response.body() != null) {
@@ -730,7 +663,7 @@ public class UserIdCaptureActivity extends AppCompatActivity implements Progress
         JSONObject jsonObject = getReportData();
         PrintStream printStream = System.out;
         printStream.println("clientid=" + clientid + " jsonobject=" + jsonObject.toString());
-        ((GetDataService) RetrofitClientInstanceSurepass.getRetrofitInstanceDefaultToken().create(GetDataService.class)).getReport(clientid, jsonObject.toString()).enqueue(new Callback<PostUploadResponse>() { // from class: com.example.aadhaarfpoffline.tatvik.activity.UserIdCaptureActivity.12
+        ((GetDataService) RetrofitClientInstanceSurepass.getRetrofitInstanceDefaultToken().create(GetDataService.class)).getReport(clientid, jsonObject.toString()).enqueue(new Callback<PostUploadResponse>() { // from class: com.example.aadhaarfpoffline.tatvik.activity.UserIdCaptureActivity.11
             @Override // retrofit2.Callback
             public void onResponse(Call<PostUploadResponse> call, Response<PostUploadResponse> response) {
                 PrintStream printStream2 = System.out;
@@ -750,6 +683,19 @@ public class UserIdCaptureActivity extends AppCompatActivity implements Progress
 
     /* JADX INFO: Access modifiers changed from: private */
     public void startFinalActivity(String name, String pincode, String state, String last4digit) {
+        Intent intent = new Intent(this, FinalScreenActivity.class);
+        intent.putExtra("aadhaarapi", true);
+        if (name == null) {
+            intent.putExtra("aadhaarmatch", false);
+        } else {
+            intent.putExtra("aadhaarmatch", true);
+            intent.putExtra("votername", name);
+            intent.putExtra("pincode", pincode);
+            intent.putExtra("state", state);
+            intent.putExtra("last4digit", last4digit);
+        }
+        intent.putExtra("voterid", this.voterid);
+        startActivity(intent);
     }
 
     @Override // androidx.activity.ComponentActivity, android.app.Activity
@@ -763,7 +709,6 @@ public class UserIdCaptureActivity extends AppCompatActivity implements Progress
     /* JADX INFO: Access modifiers changed from: private */
     public void startnonAadhaarfingerprintactivity() {
         Intent intent = new Intent(getApplicationContext(), FingerprintCaptureActivity.class);
-        intent.setFlags(intent.getFlags() | 1073741824);
         intent.putExtra("voteridentificationimage", this.voterIdentificationImage);
         intent.putExtra("voter_name", this.votername);
         intent.putExtra("voter_id", this.voterid);
@@ -773,16 +718,13 @@ public class UserIdCaptureActivity extends AppCompatActivity implements Progress
         intent.putExtra("iddoctype", this.voteridtype);
         intent.putExtra("nameIfFoundFace", "");
         intent.putExtra("voted", this.voted);
-        intent.putExtra("slnoinward", this.slnoinward);
         startActivity(intent);
-        finish();
     }
 
     /* JADX INFO: Access modifiers changed from: private */
     public void startofflinefingerprintactivity() {
         if (!this.voteridtype.equalsIgnoreCase("aadhaarcard")) {
             Intent intent = new Intent(getApplicationContext(), FingerprintCaptureActivity.class);
-            intent.setFlags(intent.getFlags() | 1073741824);
             intent.putExtra("voteridentificationimage", this.voterIdentificationImage);
             intent.putExtra("voter_name", this.votername);
             intent.putExtra("voter_id", this.voterid);
@@ -792,25 +734,23 @@ public class UserIdCaptureActivity extends AppCompatActivity implements Progress
             intent.putExtra("iddoctype", this.voteridtype);
             intent.putExtra("nameIfFoundFace", "");
             intent.putExtra("voted", this.voted);
-            intent.putExtra("slnoinward", this.slnoinward);
             startActivity(intent);
-            finish();
             return;
         }
         startNewAadharActivity();
     }
 
     private void createDirectoryAndSaveFile(Bitmap imageToSave, String fileName) {
-        if (!new File(Environment.getExternalStorageDirectory() + "/" + Const.PublicImageName).exists()) {
-            new File("/sdcard/" + Const.PublicImageName + "/").mkdirs();
+        if (!new File(Environment.getExternalStorageDirectory() + "/Images").exists()) {
+            new File("/sdcard/Images/").mkdirs();
         }
-        File file = new File("/sdcard/" + Const.PublicImageName + "/", fileName);
+        File file = new File("/sdcard/Images/", fileName);
         if (file.exists()) {
             file.delete();
         }
         try {
             FileOutputStream out = new FileOutputStream(file);
-            imageToSave.compress(Bitmap.CompressFormat.JPEG, 80, out);
+            imageToSave.compress(Bitmap.CompressFormat.JPEG, 100, out);
             out.flush();
             out.close();
         } catch (Exception e) {
@@ -818,48 +758,11 @@ public class UserIdCaptureActivity extends AppCompatActivity implements Progress
         }
     }
 
-    private void updatevoterDocumentSqlite() {
+    /* JADX INFO: Access modifiers changed from: private */
+    public void updatevoterDocumentSqlite() {
         Bitmap bitmap = ((BitmapDrawable) this.mImageView.getDrawable()).getBitmap();
         String filename = this.voterid + "_" + new SimpleDateFormat("yyyyMMdd_HHmmss").format(new Date()) + ".jpg";
         createDirectoryAndSaveFile(bitmap, filename);
         this.db.updateVoterIdImage(this.voterid, filename);
-    }
-
-    /* JADX INFO: Access modifiers changed from: private */
-    public String updatevoterDocumentSqliteTransTable() {
-        Bitmap bitmap = ((BitmapDrawable) this.mImageView.getDrawable()).getBitmap();
-        String timeStamp = new SimpleDateFormat("yyyyMMdd_HHmmss").format(new Date());
-        String userId = this.userAuth.getPanchayatId() + "_" + this.userAuth.getWardNo() + "_" + this.userAuth.getBoothNo() + "_" + this.slnoinward;
-        String filename = userId + "_" + timeStamp + ".jpg";
-        createDirectoryAndSaveFile(bitmap, filename);
-        String filenameThumbNail = "thumbnail_" + userId + "_" + timeStamp + ".jpg";
-        createDirectoryAndSaveFile(getThumbnail(bitmap), filenameThumbNail);
-        ContentValues cols = new ContentValues();
-        cols.put("ID_DOCUMENT_IMAGE", filename);
-        cols.put("EPIC_NO", this.voterid);
-        cols.put("DIST_NO", this.userAuth.getDistrictNo());
-        cols.put("BlockID", this.userAuth.getBlockID());
-        cols.put("PanchayatID", this.userAuth.getPanchayatId());
-        cols.put("SlNoInWard", this.slnoinward);
-        cols.put("AGE", this.age);
-        cols.put("GENDER", this.gender);
-        cols.put("USER_ID", userId);
-        cols.put("THUMBNAIL_ID_DOCUMENT_IMAGE", filenameThumbNail);
-        DBHelper dBHelper = this.db;
-        this.userAuth.setTransactionId(Long.valueOf(dBHelper.insertData(dBHelper.tbl_transaction, cols)));
-        return filenameThumbNail;
-    }
-
-    /* JADX INFO: Access modifiers changed from: private */
-    public boolean isNetworkAvailable() {
-        return ((ConnectivityManager) getSystemService("connectivity")).getActiveNetworkInfo() != null;
-    }
-
-    private Bitmap getThumbnail(Bitmap imagebitmap) {
-        try {
-            return ThumbnailUtils.extractThumbnail(imagebitmap, ItemTouchHelper.Callback.DEFAULT_DRAG_ANIMATION_DURATION, ItemTouchHelper.Callback.DEFAULT_DRAG_ANIMATION_DURATION);
-        } catch (Exception e) {
-            return null;
-        }
     }
 }

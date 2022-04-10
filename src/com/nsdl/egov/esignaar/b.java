@@ -5,9 +5,7 @@ import com.android.volley.RetryPolicy;
 import com.android.volley.VolleyError;
 /* loaded from: classes3.dex */
 public class b implements RetryPolicy {
-
-    /* renamed from: a  reason: collision with root package name */
-    private int f111a;
+    private int a;
     private int b;
     private final int c;
     private final float d;
@@ -17,7 +15,7 @@ public class b implements RetryPolicy {
     }
 
     public b(int i, int i2, float f) {
-        this.f111a = i;
+        this.a = i;
         this.c = i2;
         this.d = f;
     }
@@ -33,14 +31,14 @@ public class b implements RetryPolicy {
 
     @Override // com.android.volley.RetryPolicy
     public int getCurrentTimeout() {
-        return this.f111a;
+        return this.a;
     }
 
     @Override // com.android.volley.RetryPolicy
     public void retry(VolleyError volleyError) throws VolleyError {
         this.b++;
-        int i = this.f111a;
-        this.f111a = (int) (((float) i) + (((float) i) * this.d));
+        int i = this.a;
+        this.a = (int) (((float) i) + (((float) i) * this.d));
         if (!a()) {
             throw volleyError;
         }

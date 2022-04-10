@@ -172,8 +172,7 @@ public final class SignatureActivity extends AppCompatActivity {
         this.BRAND_NAME = str;
     }
 
-    /* JADX INFO: Access modifiers changed from: protected */
-    @Override // androidx.fragment.app.FragmentActivity, androidx.activity.ComponentActivity, androidx.core.app.ComponentActivity, android.app.Activity
+    @Override // androidx.appcompat.app.AppCompatActivity, androidx.fragment.app.FragmentActivity, androidx.activity.ComponentActivity, androidx.core.app.ComponentActivity, android.app.Activity
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_signature);
@@ -315,9 +314,8 @@ public final class SignatureActivity extends AppCompatActivity {
         startActivityForResult(intent, this.REQUEST_CODE_FOR_VERIFICATION_RESULT);
     }
 
-    /* JADX INFO: Access modifiers changed from: protected */
-    @Override // androidx.fragment.app.FragmentActivity, androidx.activity.ComponentActivity, android.app.Activity
-    public void onActivityResult(int requestCode, int resultCode, Intent data) {
+    @Override // androidx.fragment.app.FragmentActivity, android.app.Activity
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
         if (requestCode == this.REQUEST_CODE_FOR_VERIFICATION_RESULT) {
             if (data == null) {
@@ -415,7 +413,7 @@ public final class SignatureActivity extends AppCompatActivity {
         return file;
     }
 
-    @Override // androidx.fragment.app.FragmentActivity, androidx.activity.ComponentActivity, android.app.Activity
+    @Override // androidx.fragment.app.FragmentActivity, android.app.Activity, androidx.core.app.ActivityCompat.OnRequestPermissionsResultCallback
     public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
         Intrinsics.checkParameterIsNotNull(permissions, "permissions");
         Intrinsics.checkParameterIsNotNull(grantResults, "grantResults");
