@@ -36,7 +36,8 @@ public class VotingStatusActivity extends AppCompatActivity implements VotingHis
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_votingstatus);
-        this.context = LocaleHelper.setLocale(this, LocaleHelper.getLanguage(this));
+        String lan = LocaleHelper.getLanguage(this);
+        this.context = LocaleHelper.setLocale(this, lan);
         this.resources = this.context.getResources();
         this.db = new DBHelper(this);
         this.userAuth = new UserAuth(this);
@@ -57,22 +58,27 @@ public class VotingStatusActivity extends AppCompatActivity implements VotingHis
         sb.append("Rejected voters:");
         sb.append(this.db.getNumbersRejected());
         textView3.setText(sb.toString());
-        TextView textView4 = this.stateDistrict;
-        textView4.setText(this.resources.getString(R.string.district_name_text) + ":" + this.userAuth.getDistrictNo());
-        TextView textView5 = this.blockBooth;
-        textView5.setText(this.resources.getString(R.string.panchayat_id) + ":" + this.userAuth.getPanchayatId() + ", " + this.resources.getString(R.string.block_no_text) + ":" + getBoothInFormat(this.userAuth.getBoothNo()) + "," + this.resources.getString(R.string.ward_no_text) + ":" + this.userAuth.getWardNo());
-        TextView textView6 = this.aadhaaNonAaadhaatCount;
+        if (lan.equalsIgnoreCase("en")) {
+            TextView textView4 = this.stateDistrict;
+            textView4.setText(this.resources.getString(R.string.panchayat_name) + ":" + this.userAuth.getPanchayat_NAME_EN() + " " + this.resources.getString(R.string.district_name_text) + ":" + this.userAuth.getDIST_NAME_EN() + " " + this.resources.getString(R.string.booth_name) + ":" + this.userAuth.getBlock_NAME_EN());
+        } else {
+            TextView textView5 = this.stateDistrict;
+            textView5.setText(this.resources.getString(R.string.panchayat_name) + ":" + this.userAuth.getPanchayat_NAME_HN() + " " + this.resources.getString(R.string.district_name_text) + ":" + this.userAuth.getDIST_NAME_HN() + " " + this.resources.getString(R.string.booth_name) + ":" + this.userAuth.getBlock_NAME_HN());
+        }
+        TextView textView6 = this.blockBooth;
+        textView6.setText(this.resources.getString(R.string.panchayat_id) + ":" + this.userAuth.getPanchayatId() + ", " + this.resources.getString(R.string.block_no_text) + ":" + getBoothInFormat(this.userAuth.getBoothNo()) + "," + this.resources.getString(R.string.ward_no_text) + ":" + this.userAuth.getWardNo());
+        TextView textView7 = this.aadhaaNonAaadhaatCount;
         StringBuilder sb2 = new StringBuilder();
         sb2.append("Voters by Aadhaar:");
         sb2.append(this.db.getAadhaarVotedCount());
         sb2.append(", Voters by Non Aadhaar:");
         sb2.append(this.db.getNonAadhaarVotedCount());
-        textView6.setText(sb2.toString());
-        TextView textView7 = this.txtNumMaleVoted;
+        textView7.setText(sb2.toString());
+        TextView textView8 = this.txtNumMaleVoted;
         StringBuilder sb3 = new StringBuilder();
         sb3.append("Male voters ");
         sb3.append(this.db.getNumberMalesVoted());
-        textView7.setText(sb3.toString());
+        textView8.setText(sb3.toString());
         this.txtNumMaleVoted.setVisibility(8);
         List<VotingHistoryModel> list = this.db.getAllTransactionTableData();
         if (list != null && !list.isEmpty() && list.size() > 0) {
