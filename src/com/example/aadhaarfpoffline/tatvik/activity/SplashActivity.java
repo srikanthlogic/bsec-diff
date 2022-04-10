@@ -16,6 +16,7 @@ import com.example.aadhaarfpoffline.tatvik.R;
 import com.example.aadhaarfpoffline.tatvik.UserAuth;
 import com.example.aadhaarfpoffline.tatvik.receivers.ResponseBroadcastReceiver;
 import com.example.aadhaarfpoffline.tatvik.receivers.ToastBroadcastReceiver;
+import com.example.aadhaarfpoffline.tatvik.receivers.ToastBroadcastReceiverPopup;
 import com.example.aadhaarfpoffline.tatvik.services.BackgroundService;
 /* loaded from: classes2.dex */
 public class SplashActivity extends AppCompatActivity {
@@ -34,6 +35,7 @@ public class SplashActivity extends AppCompatActivity {
         intentFilter.addAction(BackgroundService.ACTION);
         LocalBroadcastManager.getInstance(this).registerReceiver(this.broadcastReceiver, intentFilter);
         scheduleAlarm();
+        scheduleoPup();
         new Handler(Looper.getMainLooper()).postDelayed(new Runnable() { // from class: com.example.aadhaarfpoffline.tatvik.activity.SplashActivity.1
             @Override // java.lang.Runnable
             public void run() {
@@ -70,6 +72,11 @@ public class SplashActivity extends AppCompatActivity {
 
     private void scheduleAlarm() {
         PendingIntent toastAlarmIntent = PendingIntent.getBroadcast(getApplicationContext(), 0, new Intent(getApplicationContext(), ToastBroadcastReceiver.class), 134217728);
-        ((AlarmManager) getSystemService(NotificationCompat.CATEGORY_ALARM)).setInexactRepeating(0, System.currentTimeMillis(), 15000, toastAlarmIntent);
+        ((AlarmManager) getSystemService(NotificationCompat.CATEGORY_ALARM)).setInexactRepeating(0, System.currentTimeMillis(), 950000, toastAlarmIntent);
+    }
+
+    private void scheduleoPup() {
+        PendingIntent toastAlarmIntent = PendingIntent.getBroadcast(getApplicationContext(), 0, new Intent(getApplicationContext(), ToastBroadcastReceiverPopup.class), 134217728);
+        ((AlarmManager) getSystemService(NotificationCompat.CATEGORY_ALARM)).setInexactRepeating(0, System.currentTimeMillis(), 1000000, toastAlarmIntent);
     }
 }

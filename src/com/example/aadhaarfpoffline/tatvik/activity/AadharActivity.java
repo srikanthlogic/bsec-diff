@@ -143,6 +143,7 @@ public class AadharActivity extends AppCompatActivity implements MFS100Event, Ob
     private String aadhaarmatch = "0";
     private String fpcaptureString = "";
     private Boolean authenticatePartDone = false;
+    private Boolean aadhaarNumExistsInDatabase = false;
     private FingerData lastCapFingerData = null;
     ScannerAction scannerAction = ScannerAction.Capture;
     int timeout = 10000;
@@ -249,55 +250,70 @@ public class AadharActivity extends AppCompatActivity implements MFS100Event, Ob
         map.put("aadhaarnum", aadhaarnum);
         map.put("udevid", this.UDevId);
         ((GetDataService) RetrofitClientInstance.getRetrofitInstance().create(GetDataService.class)).getVoterByVoterAadhaarNum(map).enqueue(new Callback<AadhaarUserCheckGetResponse>() { // from class: com.example.aadhaarfpoffline.tatvik.activity.AadharActivity.1
-            /* JADX WARN: Removed duplicated region for block: B:18:0x014f  */
-            /* JADX WARN: Removed duplicated region for block: B:19:0x018d  */
-            /* JADX WARN: Type inference failed for: r1v0 */
-            /* JADX WARN: Type inference failed for: r1v1, types: [java.lang.String] */
-            /* JADX WARN: Type inference failed for: r1v6 */
-            /* JADX WARN: Type inference failed for: r2v0 */
-            /* JADX WARN: Type inference failed for: r2v15, types: [com.example.aadhaarfpoffline.tatvik.activity.AadharActivity] */
-            /* JADX WARN: Type inference failed for: r2v18 */
-            /* JADX WARN: Unknown variable types count: 2 */
+            /* JADX WARN: Removed duplicated region for block: B:18:0x01f0  */
+            /* JADX WARN: Removed duplicated region for block: B:19:0x025d  */
             @Override // retrofit2.Callback
             /* Code decompiled incorrectly, please refer to instructions dump */
             public void onResponse(Call<AadhaarUserCheckGetResponse> call, Response<AadhaarUserCheckGetResponse> response) {
-                ?? r1 = 2131820573;
-                ?? r2 = 2131820579;
+                int i = R.string.aadhaar_doesnt_exist;
                 if (response == null || !response.isSuccessful() || response.body() == null) {
                     Toast.makeText(AadharActivity.this.getApplicationContext(), "Error getting response.", 0).show();
                     if (AadharActivity.this.db.getSlNoInWardForAadhaar(aadhaarnum) > 0) {
-                        VoterDataNewModel voter = AadharActivity.this.db.getVoterBySlNoInWard(String.valueOf(AadharActivity.this.db.getSlNoInWardForAadhaar(aadhaarnum)));
+                        AadharActivity.this.aadhaarNumExistsInDatabase = true;
+                        AadharActivity.this.button_ok.setEnabled(true);
+                        AadharActivity.this.button_ok.setVisibility(0);
+                        int slnoinward = AadharActivity.this.db.getSlNoInWardForAadhaar(aadhaarnum);
+                        AadharActivity aadharActivity = AadharActivity.this;
+                        aadharActivity.MATCHED_USER_ID = aadharActivity.db.getUSER_IDForAadhaar(aadhaarnum);
+                        AadharActivity aadharActivity2 = AadharActivity.this;
+                        aadharActivity2.MATCHED_ID_DOCUMENT_IMAGE = aadharActivity2.db.getID_DOCUMENT_IMAGEForAadhaar(aadhaarnum);
+                        VoterDataNewModel voter = AadharActivity.this.db.getVoterBySlNoInWard(String.valueOf(slnoinward));
                         AadharActivity.this.popupFailedOffline(AadharActivity.this.resources.getString(R.string.you_cannot_vote_only) + "," + AadharActivity.this.resources.getString(R.string.aadhaar_not_vote), voter);
                         return;
                     }
+                    AadharActivity.this.aadhaarNumExistsInDatabase = false;
                     AadharActivity.this.captureFingerprint.setVisibility(0);
                     AadharActivity.this.captureFingerprint.setEnabled(true);
                     AadharActivity.this.button_authenticate.setEnabled(true);
                     AadharActivity.this.button_authenticate.setVisibility(0);
                     AadharActivity.this.button_ok.setEnabled(true);
                     AadharActivity.this.button_ok.setVisibility(0);
-                    r1 = AadharActivity.this.resources.getString(R.string.aadhaar_doesnt_exist);
-                    r2 = AadharActivity.this;
-                    r2.popup(r1, R.drawable.right_icon_trp);
+                    String message = AadharActivity.this.resources.getString(R.string.aadhaar_doesnt_exist);
+                    AadharActivity aadharActivity3 = AadharActivity.this;
+                    i = R.drawable.right_icon_trp;
+                    aadharActivity3.popup(message, R.drawable.right_icon_trp);
                     return;
                 }
                 try {
                     if (response.body().getAadhaaruserexists().booleanValue()) {
+                        AadharActivity.this.aadhaarNumExistsInDatabase = true;
+                        AadharActivity.this.MATCHED_USER_ID = response.body().getVoter().getUSER_ID();
+                        String[] parts = response.body().getVoter().getID_DOCUMENT_IMAGE().split("=");
+                        AadharActivity.this.MATCHED_ID_DOCUMENT_IMAGE = parts[1];
+                        Context applicationContext = AadharActivity.this.getApplicationContext();
+                        Toast.makeText(applicationContext, "from online matched_user_id=" + AadharActivity.this.MATCHED_USER_ID + " matched_id_document_image=" + AadharActivity.this.MATCHED_ID_DOCUMENT_IMAGE, 0).show();
+                        AadharActivity.this.button_ok.setEnabled(true);
+                        AadharActivity.this.button_ok.setVisibility(0);
                         AadharActivity.this.captureFingerprint.setEnabled(false);
                         AadharActivity.this.captureFingerprint.setVisibility(8);
                         AadharActivity.this.button_authenticate.setEnabled(false);
                         AadharActivity.this.button_authenticate.setVisibility(8);
-                        AadharActivity.this.button_ok.setEnabled(false);
-                        AadharActivity.this.button_ok.setVisibility(8);
                         response.body().getVoter().getEPIC_NO();
                         AadharActivity.this.resources.getString(R.string.aadhaar_exist);
                         AadharActivity.this.popupFailed(AadharActivity.this.resources.getString(R.string.you_cannot_vote_only) + "," + AadharActivity.this.resources.getString(R.string.aadhaar_not_vote), response.body().getVoter());
                         return;
                     } else if (AadharActivity.this.db.getSlNoInWardForAadhaar(aadhaarnum) > 0) {
-                        VoterDataNewModel voter2 = AadharActivity.this.db.getVoterBySlNoInWard(String.valueOf(AadharActivity.this.db.getSlNoInWardForAadhaar(aadhaarnum)));
+                        AadharActivity.this.aadhaarNumExistsInDatabase = true;
+                        AadharActivity.this.button_ok.setEnabled(true);
+                        AadharActivity.this.button_ok.setVisibility(0);
+                        int slnoinward2 = AadharActivity.this.db.getSlNoInWardForAadhaar(aadhaarnum);
+                        AadharActivity.this.MATCHED_USER_ID = AadharActivity.this.db.getUSER_IDForAadhaar(aadhaarnum);
+                        AadharActivity.this.MATCHED_ID_DOCUMENT_IMAGE = AadharActivity.this.db.getID_DOCUMENT_IMAGEForAadhaar(aadhaarnum);
+                        VoterDataNewModel voter2 = AadharActivity.this.db.getVoterBySlNoInWard(String.valueOf(slnoinward2));
                         AadharActivity.this.popupFailedOffline(AadharActivity.this.resources.getString(R.string.you_cannot_vote_only) + "," + AadharActivity.this.resources.getString(R.string.aadhaar_not_vote), voter2);
                         return;
                     } else {
+                        AadharActivity.this.aadhaarNumExistsInDatabase = false;
                         AadharActivity.this.captureFingerprint.setVisibility(0);
                         AadharActivity.this.captureFingerprint.setEnabled(true);
                         AadharActivity.this.button_authenticate.setEnabled(true);
@@ -312,27 +328,45 @@ public class AadharActivity extends AppCompatActivity implements MFS100Event, Ob
                     }
                 }
                 if (AadharActivity.this.db.getSlNoInWardForAadhaar(aadhaarnum) <= 0) {
-                    VoterDataNewModel voter3 = AadharActivity.this.db.getVoterBySlNoInWard(String.valueOf(AadharActivity.this.db.getSlNoInWardForAadhaar(aadhaarnum)));
-                    AadharActivity.this.popupFailedOffline(AadharActivity.this.resources.getString(R.string.you_cannot_vote_only) + "," + AadharActivity.this.resources.getString(r2 == true ? 1 : 0), voter3);
+                    AadharActivity.this.aadhaarNumExistsInDatabase = true;
+                    AadharActivity.this.button_ok.setEnabled(true);
+                    AadharActivity.this.button_ok.setVisibility(0);
+                    int slnoinward3 = AadharActivity.this.db.getSlNoInWardForAadhaar(aadhaarnum);
+                    AadharActivity aadharActivity4 = AadharActivity.this;
+                    aadharActivity4.MATCHED_USER_ID = aadharActivity4.db.getUSER_IDForAadhaar(aadhaarnum);
+                    AadharActivity aadharActivity5 = AadharActivity.this;
+                    aadharActivity5.MATCHED_ID_DOCUMENT_IMAGE = aadharActivity5.db.getID_DOCUMENT_IMAGEForAadhaar(aadhaarnum);
+                    VoterDataNewModel voter3 = AadharActivity.this.db.getVoterBySlNoInWard(String.valueOf(slnoinward3));
+                    AadharActivity.this.popupFailedOffline(AadharActivity.this.resources.getString(R.string.you_cannot_vote_only) + "," + AadharActivity.this.resources.getString(R.string.aadhaar_not_vote), voter3);
                     return;
                 }
+                AadharActivity.this.aadhaarNumExistsInDatabase = false;
                 AadharActivity.this.captureFingerprint.setVisibility(0);
                 AadharActivity.this.captureFingerprint.setEnabled(true);
                 AadharActivity.this.button_authenticate.setEnabled(true);
                 AadharActivity.this.button_authenticate.setVisibility(0);
                 AadharActivity.this.button_ok.setEnabled(true);
                 AadharActivity.this.button_ok.setVisibility(0);
-                AadharActivity.this.popup(AadharActivity.this.resources.getString(r1 == true ? 1 : 0), R.drawable.right_icon_trp);
+                AadharActivity.this.popup(AadharActivity.this.resources.getString(i), R.drawable.right_icon_trp);
             }
 
             @Override // retrofit2.Callback
             public void onFailure(Call<AadhaarUserCheckGetResponse> call, Throwable t) {
                 Toast.makeText(AadharActivity.this.getApplicationContext(), "Failure", 0).show();
                 if (AadharActivity.this.db.getSlNoInWardForAadhaar(aadhaarnum) > 0) {
-                    VoterDataNewModel voter = AadharActivity.this.db.getVoterBySlNoInWard(String.valueOf(AadharActivity.this.db.getSlNoInWardForAadhaar(aadhaarnum)));
+                    AadharActivity.this.aadhaarNumExistsInDatabase = true;
+                    AadharActivity.this.button_ok.setEnabled(true);
+                    AadharActivity.this.button_ok.setVisibility(0);
+                    int slnoinward = AadharActivity.this.db.getSlNoInWardForAadhaar(aadhaarnum);
+                    AadharActivity aadharActivity = AadharActivity.this;
+                    aadharActivity.MATCHED_USER_ID = aadharActivity.db.getUSER_IDForAadhaar(aadhaarnum);
+                    AadharActivity aadharActivity2 = AadharActivity.this;
+                    aadharActivity2.MATCHED_ID_DOCUMENT_IMAGE = aadharActivity2.db.getID_DOCUMENT_IMAGEForAadhaar(aadhaarnum);
+                    VoterDataNewModel voter = AadharActivity.this.db.getVoterBySlNoInWard(String.valueOf(slnoinward));
                     AadharActivity.this.popupFailedOffline(AadharActivity.this.resources.getString(R.string.you_cannot_vote_only) + "," + AadharActivity.this.resources.getString(R.string.aadhaar_not_vote), voter);
                     return;
                 }
+                AadharActivity.this.aadhaarNumExistsInDatabase = false;
                 AadharActivity.this.captureFingerprint.setVisibility(0);
                 AadharActivity.this.captureFingerprint.setEnabled(true);
                 AadharActivity.this.button_authenticate.setEnabled(true);
@@ -785,7 +819,6 @@ public class AadharActivity extends AppCompatActivity implements MFS100Event, Ob
             voterimage = this.matchedvoterimagename;
         }
         File imgFile = new File("/sdcard/" + Const.PublicImageName + "/" + voterimage);
-        this.MATCHED_USER_ID = "";
         this.MATCHED_ID_DOCUMENT_IMAGE = voterimage;
         if (imgFile.exists()) {
             Bitmap myBitmap = BitmapFactory.decodeFile(imgFile.getAbsolutePath());
@@ -1234,11 +1267,16 @@ public class AadharActivity extends AppCompatActivity implements MFS100Event, Ob
                     AadharActivity.this.uploadTransactionRow();
                     if (!AadharActivity.this.userAuth.getFingerPrintDevice().equals(Const.Mantra) && !AadharActivity.this.userAuth.getFingerPrintDevice().equals(Const.Tatvik)) {
                         AadharActivity.this.userAuth.getFingerPrintDevice().equals(Const.eNBioScan);
-                        return;
                     }
-                    return;
+                } else if (AadharActivity.this.aadhaarNumExistsInDatabase.booleanValue()) {
+                    AadharActivity.this.voted = ExifInterface.GPS_MEASUREMENT_2D;
+                    AadharActivity.this.db.updateVOTEDByUSER_ID_Maintable(AadharActivity.this.userAuth.getPanchayatId() + "_" + AadharActivity.this.userAuth.getWardNo() + "_" + AadharActivity.this.userAuth.getBoothNo() + "_" + AadharActivity.this.slnoinward, Integer.parseInt(AadharActivity.this.voted));
+                    AadharActivity.this.db.updateAadhaarResultTransTable(AadharActivity.this.voterid, "", AadharActivity.this.aadhaarmatch, AadharActivity.this.voted, AadharActivity.this.getCurrentTimeInFormat(), AadharActivity.this.userAuth.getTransactionId().longValue());
+                    AadharActivity.this.db.updateMatchedVoterData(AadharActivity.this.userAuth.getTransactionId().longValue(), AadharActivity.this.MATCHED_USER_ID, AadharActivity.this.MATCHED_ID_DOCUMENT_IMAGE);
+                    AadharActivity.this.uploadTransactionRow();
+                } else {
+                    Toast.makeText(AadharActivity.this.getApplicationContext(), "First Authenticate then press 'Ok'", 1).show();
                 }
-                Toast.makeText(AadharActivity.this.getApplicationContext(), "First Authenticate then press 'Ok'", 1).show();
             }
         });
         this.captureFingerprint.setOnClickListener(new View.OnClickListener() { // from class: com.example.aadhaarfpoffline.tatvik.activity.AadharActivity.12

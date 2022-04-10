@@ -27,7 +27,7 @@ import com.example.aadhaarfpoffline.tatvik.config.RetrofitClientInstance;
 import com.example.aadhaarfpoffline.tatvik.database.DBHelper;
 import com.example.aadhaarfpoffline.tatvik.network.LoginForUrlResponse;
 import com.example.aadhaarfpoffline.tatvik.network.LoginTimeUpdateGetResponse;
-import com.example.aadhaarfpoffline.tatvik.servece.LocationTrack;
+import com.example.aadhaarfpoffline.tatvik.services.LocationTrack;
 import com.scwang.wave.MultiWaveHeader;
 import java.io.PrintStream;
 import java.util.HashMap;
@@ -61,7 +61,7 @@ public class LoginActivityWithoutLocation extends AppCompatActivity {
     private String responseString = "";
     String androidId = "";
     String UDevId = "";
-    private String PHASE = "6";
+    private String PHASE = "7";
 
     public LoginActivityWithoutLocation() {
         Double valueOf = Double.valueOf(0.0d);
@@ -101,7 +101,7 @@ public class LoginActivityWithoutLocation extends AppCompatActivity {
         this.appVersion = (TextView) findViewById(R.id.versioncode);
         this.progressBar = (ProgressBar) findViewById(R.id.simpleProgressBar);
         TextView textView = this.appVersion;
-        textView.setText("App version:29/" + BuildConfig.VERSION_NAME);
+        textView.setText("App version:34/" + BuildConfig.VERSION_NAME);
         MultiWaveHeader waveHeader = (MultiWaveHeader) findViewById(R.id.wavebottom);
         waveHeader.setColorAlpha(0.5f);
         waveHeader.start();

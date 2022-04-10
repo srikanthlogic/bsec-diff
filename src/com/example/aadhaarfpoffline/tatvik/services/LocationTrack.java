@@ -1,4 +1,4 @@
-package com.example.aadhaarfpoffline.tatvik.servece;
+package com.example.aadhaarfpoffline.tatvik.services;
 
 import android.app.Service;
 import android.content.Context;
@@ -138,13 +138,13 @@ public class LocationTrack extends Service implements LocationListener {
         AlertDialog.Builder alertDialog = new AlertDialog.Builder(mContext);
         alertDialog.setTitle("GPS is not Enabled!");
         alertDialog.setMessage("Do you want to turn on GPS?");
-        alertDialog.setPositiveButton("Yes", new DialogInterface.OnClickListener() { // from class: com.example.aadhaarfpoffline.tatvik.servece.LocationTrack.1
+        alertDialog.setPositiveButton("Yes", new DialogInterface.OnClickListener() { // from class: com.example.aadhaarfpoffline.tatvik.services.LocationTrack.1
             @Override // android.content.DialogInterface.OnClickListener
             public void onClick(DialogInterface dialog, int which) {
                 LocationTrack.mContext.startActivity(new Intent("android.settings.LOCATION_SOURCE_SETTINGS"));
             }
         });
-        alertDialog.setNegativeButton("No", new DialogInterface.OnClickListener() { // from class: com.example.aadhaarfpoffline.tatvik.servece.LocationTrack.2
+        alertDialog.setNegativeButton("No", new DialogInterface.OnClickListener() { // from class: com.example.aadhaarfpoffline.tatvik.services.LocationTrack.2
             @Override // android.content.DialogInterface.OnClickListener
             public void onClick(DialogInterface dialog, int which) {
                 dialog.cancel();
@@ -203,7 +203,7 @@ public class LocationTrack extends Service implements LocationListener {
         Map<String, String> map = new HashMap<>();
         map.put(FirebaseAnalytics.Param.LOCATION, latitude + ":" + longitude);
         map.put("phone", phone);
-        ((GetDataService) RetrofitClientInstance.getRetrofitInstance().create(GetDataService.class)).postLocationUpdate(map).enqueue(new Callback<UserLocationUpdatePostResponse>() { // from class: com.example.aadhaarfpoffline.tatvik.servece.LocationTrack.3
+        ((GetDataService) RetrofitClientInstance.getRetrofitInstance().create(GetDataService.class)).postLocationUpdate(map).enqueue(new Callback<UserLocationUpdatePostResponse>() { // from class: com.example.aadhaarfpoffline.tatvik.services.LocationTrack.3
             @Override // retrofit2.Callback
             public void onResponse(Call<UserLocationUpdatePostResponse> call, Response<UserLocationUpdatePostResponse> response) {
             }
@@ -222,7 +222,7 @@ public class LocationTrack extends Service implements LocationListener {
         map.put(FirebaseAnalytics.Param.LOCATION, latitude + ":" + longitude);
         map.put("phone", phone);
         map.put("action", action);
-        ((GetDataService) RetrofitClientInstance.getRetrofitInstance().create(GetDataService.class)).postLocationUpdate(map).enqueue(new Callback<UserLocationUpdatePostResponse>() { // from class: com.example.aadhaarfpoffline.tatvik.servece.LocationTrack.4
+        ((GetDataService) RetrofitClientInstance.getRetrofitInstance().create(GetDataService.class)).postLocationUpdate(map).enqueue(new Callback<UserLocationUpdatePostResponse>() { // from class: com.example.aadhaarfpoffline.tatvik.services.LocationTrack.4
             @Override // retrofit2.Callback
             public void onResponse(Call<UserLocationUpdatePostResponse> call, Response<UserLocationUpdatePostResponse> response) {
             }

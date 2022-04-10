@@ -12,12 +12,14 @@ import android.os.Bundle;
 import android.os.SystemClock;
 import android.provider.Settings;
 import android.util.Base64;
+import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.exifinterface.media.ExifInterface;
 import com.example.aadhaarfpoffline.tatvik.GetDataService;
 import com.example.aadhaarfpoffline.tatvik.LocaleHelper;
 import com.example.aadhaarfpoffline.tatvik.R;
@@ -129,7 +131,7 @@ public class FinalScreenActivityOffline extends AppCompatActivity {
                     return;
                 }
                 long unused = FinalScreenActivityOffline.mLastClkTime = SystemClock.elapsedRealtime();
-                if (FinalScreenActivityOffline.this.votedDone.equalsIgnoreCase(DiskLruCache.VERSION_1) && FinalScreenActivityOffline.this.voted == 1) {
+                if ((FinalScreenActivityOffline.this.votedDone.equalsIgnoreCase(DiskLruCache.VERSION_1) || FinalScreenActivityOffline.this.votedDone.equalsIgnoreCase(ExifInterface.GPS_MEASUREMENT_3D)) && FinalScreenActivityOffline.this.voted == 1) {
                     FinalScreenActivityOffline.this.voted = 3;
                 }
                 FinalScreenActivityOffline finalScreenActivityOffline = FinalScreenActivityOffline.this;
@@ -146,7 +148,7 @@ public class FinalScreenActivityOffline extends AppCompatActivity {
                     return;
                 }
                 long unused = FinalScreenActivityOffline.mLastClkTime = SystemClock.elapsedRealtime();
-                if (FinalScreenActivityOffline.this.votedDone.equalsIgnoreCase(DiskLruCache.VERSION_1)) {
+                if (FinalScreenActivityOffline.this.votedDone.equalsIgnoreCase(DiskLruCache.VERSION_1) || FinalScreenActivityOffline.this.votedDone.equalsIgnoreCase(ExifInterface.GPS_MEASUREMENT_3D)) {
                     FinalScreenActivityOffline finalScreenActivityOffline = FinalScreenActivityOffline.this;
                     finalScreenActivityOffline.voted = 3;
                     finalScreenActivityOffline.updateVotingStatusOffline(finalScreenActivityOffline.voterid, FinalScreenActivityOffline.this.voted);
@@ -435,6 +437,7 @@ public class FinalScreenActivityOffline extends AppCompatActivity {
         ((GetDataService) RetrofitClientInstance.getRetrofitInstance().create(GetDataService.class)).updateTransactionRow(map).enqueue(new Callback<TransactionRowPostResponse>() { // from class: com.example.aadhaarfpoffline.tatvik.activity.FinalScreenActivityOffline.7
             @Override // retrofit2.Callback
             public void onResponse(Call<TransactionRowPostResponse> call, Response<TransactionRowPostResponse> response) {
+                Log.d("syncing", "responserawstring finalscreen" + response.raw().toString());
                 if (response == null || response.body() == null || !response.body().getUpdated()) {
                     Toast.makeText(FinalScreenActivityOffline.this.getApplicationContext(), "Transaction row Not updated " + response.code(), 1).show();
                 } else {
