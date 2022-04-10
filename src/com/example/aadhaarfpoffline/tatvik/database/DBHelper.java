@@ -29,7 +29,7 @@ import java.util.Locale;
 /* loaded from: classes2.dex */
 public class DBHelper extends SQLiteOpenHelper {
     public static final String Database_Name = "db_BiometricAttendance.db";
-    public static final int Database_Version = 9;
+    public static final int Database_Version = 10;
     public static final String Key_ID = "_id";
     public Global global;
     private Context mContext;
@@ -39,7 +39,7 @@ public class DBHelper extends SQLiteOpenHelper {
     protected SQLiteDatabase database = getWritableDatabase();
 
     public DBHelper(Context context) {
-        super(context, Database_Name, (SQLiteDatabase.CursorFactory) null, 9);
+        super(context, Database_Name, (SQLiteDatabase.CursorFactory) null, 10);
         this.mContext = context;
     }
 
@@ -72,6 +72,8 @@ public class DBHelper extends SQLiteOpenHelper {
         tranTableCols.put("USER_ID", "varchar(255) DEFAULT ''");
         tranTableCols.put("VOTING_TYPE", "varchar(30) DEFAULT ''");
         tranTableCols.put("IMAGE_SYNCED", "int DEFAULT 0");
+        tranTableCols.put("MATCHED_ID_DOCUMENT_IMAGE", "varchar(255) DEFAULT ''");
+        tranTableCols.put("MATCHED_USER_ID", "varchar(255) DEFAULT ''");
         if (createTransactionTable(this.tbl_transaction, tranTableCols, db)) {
             Log.w("Create Transaction Table", "Successful on transtable new database lock");
         } else {
@@ -446,6 +448,14 @@ public class DBHelper extends SQLiteOpenHelper {
         this.database.update(this.tbl_transaction, cv, "_id = ?", new String[]{String.valueOf(transactionId)});
     }
 
+    public void updateMatchedVoterData(long transactionId, String matched_user_id, String matched_id_document_image) {
+        ContentValues cv = new ContentValues();
+        cv.put("MATCHED_USER_ID", matched_user_id);
+        cv.put("MATCHED_ID_DOCUMENT_IMAGE", matched_id_document_image);
+        this.database = getWritableDatabase();
+        this.database.update(this.tbl_transaction, cv, "_id = ?", new String[]{String.valueOf(transactionId)});
+    }
+
     public String getfp(String voterid) {
         Cursor c = getReadableDatabase().rawQuery("SELECT  EnrollTemplate FROM " + this.tbl_registration_master + " where EPIC_NO='" + voterid + "'", null);
         return Base64.encodeToString(c.getBlob(c.getColumnIndex("EnrollTemplate")), 0);
@@ -653,6 +663,44 @@ public class DBHelper extends SQLiteOpenHelper {
         }
     }
 
+    public String getUser_IdBySlNoinWard(String slnoinward) {
+        String selectQuery = "SELECT  * FROM " + this.tbl_transaction + " where SlNoInWard='" + slnoinward + "' ";
+        SQLiteDatabase db = getReadableDatabase();
+        try {
+            Cursor cursor = db.rawQuery(selectQuery, null);
+            if (!cursor.moveToFirst()) {
+                try {
+                    cursor.close();
+                } catch (Exception e) {
+                }
+                try {
+                    db.close();
+                    return "";
+                } catch (Exception e2) {
+                    return "";
+                }
+            } else if (cursor.moveToFirst()) {
+                String documentimage = cursor.getString(cursor.getColumnIndex("USER_ID"));
+                try {
+                    cursor.close();
+                } catch (Exception e3) {
+                }
+                return documentimage;
+            } else {
+                do {
+                } while (cursor.moveToNext());
+                cursor.close();
+                db.close();
+                return "";
+            }
+        } finally {
+            try {
+                db.close();
+            } catch (Exception e4) {
+            }
+        }
+    }
+
     public VoterDataNewModel getVoterBySlNoInWard(String slnoinward) {
         List<VoterDataNewModel> list = new ArrayList<>();
         String selectQuery = "SELECT  * FROM " + this.tbl_registration_master + " where SlNoInWard='" + slnoinward + "'";
@@ -809,6 +857,8 @@ public class DBHelper extends SQLiteOpenHelper {
                     obj.setVotingDate(cursor.getString(cursor.getColumnIndex("VOTING_DATE")));
                     obj.setSynced(cursor.getInt(cursor.getColumnIndex("SYNCED")));
                     obj.setGender(cursor.getString(cursor.getColumnIndex("GENDER")));
+                    obj.setMATCHED_ID_DOCUMENT_IMAGE(cursor.getString(cursor.getColumnIndex("MATCHED_ID_DOCUMENT_IMAGE")));
+                    obj.setMATCHED_USER_ID(cursor.getString(cursor.getColumnIndex("MATCHED_USER_ID")));
                     list.add(obj);
                 } while (cursor.moveToNext());
                 cursor.close();
@@ -931,8 +981,8 @@ public class DBHelper extends SQLiteOpenHelper {
         return getReadableDatabase().rawQuery("SELECT  * FROM " + this.tbl_registration_master + " where EnrollTemplate IS NOT NULL AND EnrollTemplate != ''", null);
     }
 
-    public Cursor fpcompareTransTable(String voterid) {
-        return getReadableDatabase().rawQuery("SELECT  _id,EPIC_NO,FingerTemplate,SlNoInWard,USER_ID FROM " + this.tbl_transaction + " where FingerTemplate IS NOT NULL AND FingerTemplate != '' AND VOTED !='0'  AND VOTED !='2' ", null);
+    public Cursor fpcompareTransTable(String slnoinward) {
+        return getReadableDatabase().rawQuery("SELECT  _id,EPIC_NO,FingerTemplate,SlNoInWard,USER_ID FROM " + this.tbl_transaction + " where FingerTemplate IS NOT NULL AND FingerTemplate != '' AND SlNoInWard !='" + slnoinward + "' AND (VOTED ='1'  OR VOTED ='3') ", null);
     }
 
     public Cursor fpcompareLock() {
@@ -1086,13 +1136,19 @@ public class DBHelper extends SQLiteOpenHelper {
     }
 
     /* JADX INFO: Multiple debug info for r1v25 'printWriter'  java.io.PrintWriter: [D('printWriter' java.io.PrintWriter), D('FpTemplate' byte[])] */
-    /* JADX WARN: Removed duplicated region for block: B:67:0x02db  */
-    /* JADX WARN: Removed duplicated region for block: B:72:0x02e4  */
+    /* JADX WARN: Removed duplicated region for block: B:67:0x0307  */
+    /* JADX WARN: Removed duplicated region for block: B:72:0x0310  */
     /* JADX WARN: Removed duplicated region for block: B:93:? A[RETURN, SYNTHETIC] */
     /* Code decompiled incorrectly, please refer to instructions dump */
     public boolean exportDatabaseTransTable(String dist, String block, String panchayat, String wardNo, String boothNo, String currTime) {
         Exception exc;
         PrintWriter printWriter;
+        int AGE;
+        int SYNCED;
+        int IMAGE_SYNCED;
+        String userId;
+        String voting_type;
+        String MATCHED_USER_ID;
         new UserAuth(this.mContext);
         if (getTransTableCount() < 1) {
             Toast.makeText(this.mContext, "No data in Transaction table", 1).show();
@@ -1109,7 +1165,7 @@ public class DBHelper extends SQLiteOpenHelper {
         }
         PrintWriter printWriter2 = null;
         try {
-            File file = new File(exportDir, "SECPhase3_" + dist + "_" + block + "_" + panchayat + "_" + wardNo + "_" + boothNo + "_" + currTime + ".csv");
+            File file = new File(exportDir, "SECPhase5_" + dist + "_" + block + "_" + panchayat + "_" + wardNo + "_" + boothNo + "_" + currTime + ".csv");
             file.createNewFile();
             printWriter2 = new PrintWriter(new FileWriter(file));
             try {
@@ -1120,7 +1176,7 @@ public class DBHelper extends SQLiteOpenHelper {
                     sb.append(this.tbl_transaction);
                     Cursor curCSV = db.rawQuery(sb.toString(), null);
                     printWriter2.println("FIRST TABLE OF THE DATABASE");
-                    printWriter2.println("_id,FingerTemplate,EPIC_NO,DIST_NO,BlockID,PanchayatID,VOTED,ID_DOCUMENT_IMAGE,VOTING_DATE,AADHAAR_MATCH,AADHAAR_NO,SlNoInWard,GENDER,AGE,SYNCED,USER_ID,VOTING_TYPE,IMAGE_SYNCED");
+                    printWriter2.println("_id,FingerTemplate,EPIC_NO,DIST_NO,BlockID,PanchayatID,VOTED,ID_DOCUMENT_IMAGE,VOTING_DATE,AADHAAR_MATCH,AADHAAR_NO,SlNoInWard,GENDER,AGE,SYNCED,USER_ID,VOTING_TYPE,IMAGE_SYNCED,MATCHED_ID_DOCUMENT_IMAGE,MATCHED_USER_ID");
                     while (curCSV.moveToNext()) {
                         Long id_ = Long.valueOf(curCSV.getLong(curCSV.getColumnIndex(Key_ID)));
                         byte[] FpTemplate = curCSV.getBlob(curCSV.getColumnIndex("FingerTemplate"));
@@ -1139,52 +1195,55 @@ public class DBHelper extends SQLiteOpenHelper {
                                     int SlNoInWard = curCSV.getInt(curCSV.getColumnIndex("SlNoInWard"));
                                     String GENDER = curCSV.getString(curCSV.getColumnIndex("GENDER"));
                                     try {
-                                        int AGE = curCSV.getInt(curCSV.getColumnIndex("AGE"));
-                                        int SYNCED = curCSV.getInt(curCSV.getColumnIndex("SYNCED"));
-                                        int IMAGE_SYNCED = curCSV.getInt(curCSV.getColumnIndex("IMAGE_SYNCED"));
+                                        AGE = curCSV.getInt(curCSV.getColumnIndex("AGE"));
+                                        SYNCED = curCSV.getInt(curCSV.getColumnIndex("SYNCED"));
+                                        IMAGE_SYNCED = curCSV.getInt(curCSV.getColumnIndex("IMAGE_SYNCED"));
+                                        userId = curCSV.getString(curCSV.getColumnIndex("USER_ID"));
+                                        voting_type = curCSV.getString(curCSV.getColumnIndex("VOTING_TYPE"));
+                                        MATCHED_USER_ID = curCSV.getString(curCSV.getColumnIndex("MATCHED_USER_ID"));
                                         printWriter = printWriter2;
+                                    } catch (Exception e) {
+                                        exc = e;
+                                        printWriter2 = printWriter2;
                                         try {
-                                            printWriter.println(id_ + "," + FpTemplate + "," + EPIC_NO + "," + DIST_NO + "," + BlockID + "," + PanchayatID + "," + VOTED + "," + ID_DOCUMENT_IMAGE + "," + VOTING_DATE + "," + AADHAAR_MATCH + "," + AADHAAR_NO + "," + SlNoInWard + "," + GENDER + "," + AGE + "," + SYNCED + "," + curCSV.getString(curCSV.getColumnIndex("USER_ID")) + "," + curCSV.getString(curCSV.getColumnIndex("VOTING_TYPE")) + "," + IMAGE_SYNCED);
-                                            printWriter2 = printWriter;
-                                            df = df;
-                                            state = state;
-                                            exportDir = exportDir;
-                                            file = file;
-                                            db = db;
-                                            curCSV = curCSV;
-                                        } catch (Exception e) {
-                                            exc = e;
-                                            printWriter2 = printWriter;
-                                            try {
-                                                Log.d("dbtransexport", exc.getMessage());
-                                                if (printWriter2 != null) {
-                                                    return false;
-                                                }
-                                                printWriter2.close();
+                                            Log.d("dbtransexport", exc.getMessage());
+                                            if (printWriter2 != null) {
                                                 return false;
-                                            } catch (Throwable th) {
-                                                exc = th;
-                                                printWriter = printWriter2;
-                                                if (printWriter != null) {
-                                                    printWriter.close();
-                                                }
-                                                throw exc;
                                             }
-                                        } catch (Throwable th2) {
-                                            exc = th2;
+                                            printWriter2.close();
+                                            return false;
+                                        } catch (Throwable th) {
+                                            exc = th;
+                                            printWriter = printWriter2;
                                             if (printWriter != null) {
+                                                printWriter.close();
                                             }
                                             throw exc;
                                         }
+                                    } catch (Throwable th2) {
+                                        exc = th2;
+                                        printWriter = printWriter2;
+                                        if (printWriter != null) {
+                                        }
+                                        throw exc;
+                                    }
+                                    try {
+                                        printWriter.println(id_ + "," + FpTemplate + "," + EPIC_NO + "," + DIST_NO + "," + BlockID + "," + PanchayatID + "," + VOTED + "," + ID_DOCUMENT_IMAGE + "," + VOTING_DATE + "," + AADHAAR_MATCH + "," + AADHAAR_NO + "," + SlNoInWard + "," + GENDER + "," + AGE + "," + SYNCED + "," + userId + "," + voting_type + "," + IMAGE_SYNCED + "," + curCSV.getString(curCSV.getColumnIndex("MATCHED_ID_DOCUMENT_IMAGE")) + "," + MATCHED_USER_ID);
+                                        printWriter2 = printWriter;
+                                        df = df;
+                                        state = state;
+                                        exportDir = exportDir;
+                                        file = file;
+                                        db = db;
+                                        curCSV = curCSV;
                                     } catch (Exception e2) {
                                         exc = e2;
-                                        printWriter2 = printWriter2;
+                                        printWriter2 = printWriter;
                                         Log.d("dbtransexport", exc.getMessage());
                                         if (printWriter2 != null) {
                                         }
                                     } catch (Throwable th3) {
                                         exc = th3;
-                                        printWriter = printWriter2;
                                         if (printWriter != null) {
                                         }
                                         throw exc;
@@ -1234,7 +1293,7 @@ public class DBHelper extends SQLiteOpenHelper {
     }
 
     public long getNumbersVoted() {
-        return (long) getReadableDatabase().rawQuery("SELECT  _id FROM " + this.tbl_transaction + " where VOTED='1' OR VOTED='3' OR VOTED='2'", null).getCount();
+        return (long) getReadableDatabase().rawQuery("SELECT  _id FROM " + this.tbl_transaction + " where VOTED='1' OR VOTED='3' ", null).getCount();
     }
 
     public long getNumbersRejected() {
@@ -1242,11 +1301,11 @@ public class DBHelper extends SQLiteOpenHelper {
     }
 
     public long getNumberFemalesVoted() {
-        return (long) getReadableDatabase().rawQuery("SELECT  * FROM " + this.tbl_transaction + " where VOTED!='0' AND GENDER like '%F%'", null).getCount();
+        return (long) getReadableDatabase().rawQuery("SELECT  * FROM " + this.tbl_transaction + " where (VOTED='1' OR VOTED='3') AND GENDER like '%F%'", null).getCount();
     }
 
     public long getNumberMalesVoted() {
-        return (long) getReadableDatabase().rawQuery("SELECT  * FROM " + this.tbl_transaction + " where VOTED!='0' AND GENDER like '%M%'", null).getCount();
+        return (long) getReadableDatabase().rawQuery("SELECT  * FROM " + this.tbl_transaction + " WHERE (VOTED='1' OR VOTED='3') AND GENDER like '%M%'", null).getCount();
     }
 
     public long getAadhaarVotedCount() {

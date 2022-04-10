@@ -3,6 +3,10 @@ package com.example.aadhaarfpoffline.tatvik.model;
 import com.google.gson.annotations.SerializedName;
 /* loaded from: classes2.dex */
 public class VotingHistoryModel {
+    @SerializedName("MATCHED_ID_DOCUMENT_IMAGE")
+    private String MATCHED_ID_DOCUMENT_IMAGE = "";
+    @SerializedName("MATCHED_USER_ID")
+    private String MATCHED_USER_ID = "";
     @SerializedName("SlNoInWard")
     private String SlNoInWard;
     @SerializedName("GENDER")
@@ -30,6 +34,14 @@ public class VotingHistoryModel {
         this.voted = voted;
     }
 
+    public String getMATCHED_ID_DOCUMENT_IMAGE() {
+        return this.MATCHED_ID_DOCUMENT_IMAGE;
+    }
+
+    public String getMATCHED_USER_ID() {
+        return this.MATCHED_USER_ID;
+    }
+
     public String getSlNoInWard() {
         return this.SlNoInWard;
     }
@@ -52,5 +64,13 @@ public class VotingHistoryModel {
 
     public void setGender(String gender) {
         this.gender = gender;
+    }
+
+    public void setMATCHED_ID_DOCUMENT_IMAGE(String image) {
+        this.MATCHED_ID_DOCUMENT_IMAGE = image;
+    }
+
+    public void setMATCHED_USER_ID(String matched_user_id) {
+        this.MATCHED_USER_ID = matched_user_id;
     }
 }

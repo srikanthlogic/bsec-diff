@@ -60,6 +60,7 @@ import java.util.concurrent.CountDownLatch;
 import okhttp3.MediaType;
 import okhttp3.MultipartBody;
 import okhttp3.RequestBody;
+import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
 import org.tatvik.fp.CaptureResult;
 import org.tatvik.fp.TMF20API;
@@ -500,7 +501,7 @@ public class FingerprintCaptureActivity extends AppCompatActivity implements MFS
                                     Toast.makeText(getApplicationContext(), "Capture Fingerprint first", 1).show();
                                     return;
                                 }
-                                String matchvoterid = CompareFingerprintTatvikTransTable(this.voterid, this.captRslt1.getFmrBytes());
+                                String matchvoterid = CompareFingerprintTatvikTransTable(this.slnoinward, this.captRslt1.getFmrBytes());
                                 if (matchvoterid.length() == 0) {
                                     updatefingerprintdbTransTable(this.captRslt1.getFmrBytes(), this.userAuth.getTransactionId().longValue());
                                     offlineNextScreen("You can vote", true, matchvoterid);
@@ -516,7 +517,7 @@ public class FingerprintCaptureActivity extends AppCompatActivity implements MFS
                                     Toast.makeText(getApplicationContext(), "Capture Fingerprint first", 1).show();
                                     return;
                                 }
-                                String matchvoterid2 = compareAndLockNetgin(this.voterid, this.byTemplate1);
+                                String matchvoterid2 = compareAndLockNetgin(this.slnoinward, this.byTemplate1);
                                 Log.e("Matchvoterid1", matchvoterid2 + "!!!");
                                 if (matchvoterid2.length() == 0) {
                                     updatefingerprintdbTransTable(this.byTemplate1, this.userAuth.getTransactionId().longValue());
@@ -1198,6 +1199,7 @@ public class FingerprintCaptureActivity extends AppCompatActivity implements MFS
     /* JADX INFO: Access modifiers changed from: private */
     public void offlineNextScreen(String message, Boolean truefalse, String fpmatchvoterid) {
         Intent i = new Intent(this, FinalScreenActivityOffline.class);
+        i.setFlags(i.getFlags() | 1073741824);
         i.putExtra("message", message);
         i.putExtra("facefound", this.FaceFound);
         i.putExtra("fingerprintfound", this.FingerprintMatchFound);
@@ -1211,6 +1213,7 @@ public class FingerprintCaptureActivity extends AppCompatActivity implements MFS
         i.putExtra("slnoinward", this.slnoinward);
         i.putExtra("matchslnoinward", fpmatchvoterid);
         startActivity(i);
+        finish();
     }
 
     public void compareFingerprintServer(String voterid, byte[] fingerprinttemplate) {
@@ -1288,6 +1291,7 @@ public class FingerprintCaptureActivity extends AppCompatActivity implements MFS
         try {
             this.captRslt1 = this.tmf20lib.captureFingerprint(HttpUrlConnectionNetworkFetcher.HTTP_DEFAULT_TIMEOUT);
             if (this.captRslt1 == null || TMF20ErrorCodes.SUCCESS != this.captRslt1.getStatusCode()) {
+                Toast.makeText(getApplicationContext(), this.resources.getString(R.string.fingerpint_capture_try_again), 1).show();
                 if (this.captRslt1.getStatusCode() == 15) {
                     deleteCache(this);
                 }
@@ -1454,11 +1458,15 @@ public class FingerprintCaptureActivity extends AppCompatActivity implements MFS
     }
 
     public static void deleteCache(Context context) {
+        Toast.makeText(context, "Delete cache1", 1).show();
         try {
+            Toast.makeText(context, "Delete cache2", 1).show();
             deleteDir(context.getCacheDir());
         } catch (Exception e) {
+            Toast.makeText(context, "Delete cache e" + e.getMessage(), 1).show();
             e.printStackTrace();
         }
+        FileUtils.deleteQuietly(context.getCacheDir());
     }
 
     public static boolean deleteDir(File dir) {
@@ -1473,6 +1481,14 @@ public class FingerprintCaptureActivity extends AppCompatActivity implements MFS
             return false;
         } else {
             return dir.delete();
+        }
+    }
+
+    @Override // androidx.fragment.app.FragmentActivity, android.app.Activity
+    public void onResume() {
+        super.onResume();
+        if (this.tmf20lib == null) {
+            this.tmf20lib = new TMF20API(this);
         }
     }
 }
