@@ -1,5 +1,6 @@
 package com.example.aadhaarfpoffline.tatvik.activity;
 
+import android.app.ProgressDialog;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
@@ -11,6 +12,7 @@ import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.media.ToneGenerator;
 import android.net.Uri;
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.SystemClock;
 import android.util.Base64;
@@ -40,20 +42,27 @@ import com.example.aadhaarfpoffline.tatvik.network.AadhaarMatchUpdatePostRespons
 import com.example.aadhaarfpoffline.tatvik.network.AadhaarUserCheckGetResponse;
 import com.example.aadhaarfpoffline.tatvik.network.BoothOfficerDeviceStatusUpdatePostResponse;
 import com.example.aadhaarfpoffline.tatvik.network.FinperprintCompareServerResponse;
+import com.example.aadhaarfpoffline.tatvik.network.TransactionRowPostResponse;
 import com.example.aadhaarfpoffline.tatvik.network.VoterDataGetResponse;
+import com.example.aadhaarfpoffline.tatvik.util.Const;
 import com.facebook.drawee.view.SimpleDraweeView;
 import com.mantra.mfs100.FingerData;
 import com.mantra.mfs100.MFS100;
 import com.mantra.mfs100.MFS100Event;
+import com.nitgen.SDK.AndroidBSP.NBioBSPJNI;
+import java.io.IOException;
 import java.io.PrintStream;
 import java.io.StringReader;
 import java.io.StringWriter;
 import java.lang.reflect.Field;
+import java.net.SocketTimeoutException;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Observable;
 import java.util.Observer;
 import javax.xml.parsers.DocumentBuilderFactory;
@@ -78,13 +87,18 @@ import retrofit2.Callback;
 import retrofit2.Response;
 /* loaded from: classes2.dex */
 public class AadharActivity extends AppCompatActivity implements MFS100Event, Observer {
-    public static final String MULTIPART_FORM_DATA;
+    public static final String MULTIPART_FORM_DATA = "multipart/form-data";
+    public static final int QUALITY_LIMIT = 60;
     private static long Threshold = 1500;
+    public static final String biometricEnv = "\"P\"";
     EditText aadhaarEditText;
+    private NBioBSPJNI bsp;
     Button button4;
     private Button button_authenticate;
     private Button button_ok;
     Button button_validate;
+    private byte[] byCapturedRaw1;
+    private byte[] byTemplate1;
     Document capDoc;
     CaptureResult captRslt1;
     private Button captureFingerprint;
@@ -93,13 +107,19 @@ public class AadharActivity extends AppCompatActivity implements MFS100Event, Ob
     CheckBox cbFastDetection;
     Context context;
     DBHelper db;
+    private NBioBSPJNI.Export exportEngine;
     byte[] finger_template1;
     ImageView imgFinger;
+    private NBioBSPJNI.IndexSearch indexSearch;
     String lan;
     Document metaDoc;
+    private int nCapturedRawHeight1;
+    private int nCapturedRawWidth1;
     ProgressBar progressBar;
     Resources resources;
     TMF20API tmf20lib;
+    UserAuth userAuth;
+    String voted;
     private TextView xmlResponse;
     private TextView xmlToPost;
     private String UID = "725462470794";
@@ -121,8 +141,37 @@ public class AadharActivity extends AppCompatActivity implements MFS100Event, Ob
     private boolean isCaptureRunning = false;
     Boolean firstfp = false;
     Boolean votertoballowed = false;
+    int nFIQ = 0;
+    String msg = "";
+    String slnoinward = "";
     private long mLastAttTime = 0;
     long mLastDttTime = 0;
+    NBioBSPJNI.CAPTURE_CALLBACK mCallback = new NBioBSPJNI.CAPTURE_CALLBACK() { // from class: com.example.aadhaarfpoffline.tatvik.activity.AadharActivity.16
+        @Override // com.nitgen.SDK.AndroidBSP.NBioBSPJNI.CAPTURE_CALLBACK
+        public void OnDisConnected() {
+            NBioBSPJNI.CURRENT_PRODUCT_ID = 0;
+            String str = "NBioBSP Disconnected: " + AadharActivity.this.bsp.GetErrorCode();
+        }
+
+        @Override // com.nitgen.SDK.AndroidBSP.NBioBSPJNI.CAPTURE_CALLBACK
+        public void OnConnected() {
+            String str = "Device Open Success : " + AadharActivity.this.bsp.GetErrorCode();
+        }
+
+        @Override // com.nitgen.SDK.AndroidBSP.NBioBSPJNI.CAPTURE_CALLBACK
+        public int OnCaptured(NBioBSPJNI.CAPTURED_DATA capturedData) {
+            if (capturedData.getImage() != null) {
+                AadharActivity.this.imgFinger.setImageBitmap(capturedData.getImage());
+            }
+            if (capturedData.getImageQuality() >= 60) {
+                return 513;
+            }
+            if (capturedData.getDeviceError() != 0) {
+                return capturedData.getDeviceError();
+            }
+            return 0;
+        }
+    };
 
     /* loaded from: classes2.dex */
     private enum ScannerAction {
@@ -130,6 +179,7 @@ public class AadharActivity extends AppCompatActivity implements MFS100Event, Ob
         Verify
     }
 
+    /* JADX INFO: Access modifiers changed from: protected */
     @Override // androidx.appcompat.app.AppCompatActivity, androidx.fragment.app.FragmentActivity, androidx.activity.ComponentActivity, androidx.core.app.ComponentActivity, android.app.Activity
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -138,12 +188,16 @@ public class AadharActivity extends AppCompatActivity implements MFS100Event, Ob
         this.context = LocaleHelper.setLocale(this, this.lan);
         this.resources = this.context.getResources();
         this.db = new DBHelper(this);
+        this.userAuth = new UserAuth(this);
         getSupportActionBar().setTitle(this.resources.getString(R.string.aadhaar_activity));
         this.tmf20lib = new TMF20API(this);
-        this.voterid = getIntent().getStringExtra("voter_id");
+        Intent intent = getIntent();
+        this.voterid = intent.getStringExtra("voter_id");
+        this.slnoinward = intent.getStringExtra("slnoinward");
         PrintStream printStream = System.out;
         printStream.println("voterid===" + this.voterid);
         FindFormControls();
+        initData();
         try {
             getWindow().setSoftInputMode(3);
         } catch (Exception e) {
@@ -157,6 +211,7 @@ public class AadharActivity extends AppCompatActivity implements MFS100Event, Ob
         }
     }
 
+    /* JADX INFO: Access modifiers changed from: private */
     public void validateAadhaarUser(String aadhaarnum) {
         ((GetDataService) RetrofitClientInstance.getRetrofitInstance().create(GetDataService.class)).getVoterByVoterAadhaarNum(aadhaarnum).enqueue(new Callback<AadhaarUserCheckGetResponse>() { // from class: com.example.aadhaarfpoffline.tatvik.activity.AadharActivity.1
             @Override // retrofit2.Callback
@@ -241,6 +296,7 @@ public class AadharActivity extends AppCompatActivity implements MFS100Event, Ob
         }
     }
 
+    /* JADX INFO: Access modifiers changed from: private */
     /* JADX WARN: Can't wrap try/catch for region: R(22:2|(4:44|3|4|(3:50|5|6))|(3:54|7|8)|16|42|17|18|21|52|22|23|(3:56|24|25)|31|46|32|33|48|34|35|40|41|(1:(0))) */
     /* JADX WARN: Can't wrap try/catch for region: R(25:2|44|3|4|(3:50|5|6)|(3:54|7|8)|16|42|17|18|21|52|22|23|(3:56|24|25)|31|46|32|33|48|34|35|40|41|(1:(0))) */
     /* JADX WARN: Can't wrap try/catch for region: R(27:2|44|3|4|50|5|6|(3:54|7|8)|16|42|17|18|21|52|22|23|(3:56|24|25)|31|46|32|33|48|34|35|40|41|(1:(0))) */
@@ -411,6 +467,7 @@ public class AadharActivity extends AppCompatActivity implements MFS100Event, Ob
         field.set(object, newValue);
     }
 
+    /* JADX INFO: Access modifiers changed from: private */
     public static Document convertStringToXMLDocument(String xmlString) {
         try {
             return DocumentBuilderFactory.newInstance().newDocumentBuilder().parse(new InputSource(new StringReader(xmlString)));
@@ -505,6 +562,7 @@ public class AadharActivity extends AppCompatActivity implements MFS100Event, Ob
         });
     }
 
+    /* JADX INFO: Access modifiers changed from: private */
     public String retVal(Document doc) {
         String retvalue = doc.getElementsByTagName("AuthRes").item(0).getAttributes().getNamedItem("ret").getNodeValue();
         PrintStream printStream = System.out;
@@ -512,6 +570,7 @@ public class AadharActivity extends AppCompatActivity implements MFS100Event, Ob
         return retvalue;
     }
 
+    /* JADX INFO: Access modifiers changed from: private */
     public String errVal(Document doc) {
         String errvalue;
         NodeList nodeList = doc.getElementsByTagName("AuthRes");
@@ -529,6 +588,7 @@ public class AadharActivity extends AppCompatActivity implements MFS100Event, Ob
         return errvalue;
     }
 
+    /* JADX INFO: Access modifiers changed from: private */
     public void popupFailed(String failedmessage, VoterDataNewModel voter) {
         AlertDialog.Builder alertDialogBuilder = new AlertDialog.Builder(this);
         System.out.println("popup2");
@@ -568,7 +628,7 @@ public class AadharActivity extends AppCompatActivity implements MFS100Event, Ob
             if (voter.getFM_NAME_V1() != null) {
                 name = name + voter.getFM_NAME_V1();
             }
-            if (voter.getLASTNAME_EN() != null) {
+            if (voter.getLASTNAME_V1() != null) {
                 name = name + " " + voter.getLASTNAME_V1();
             }
         }
@@ -591,6 +651,7 @@ public class AadharActivity extends AppCompatActivity implements MFS100Event, Ob
         alertDialog.show();
     }
 
+    /* JADX INFO: Access modifiers changed from: private */
     public void popupElse(String failedmessage, boolean allow) {
         AlertDialog.Builder alertDialogBuilder = new AlertDialog.Builder(this);
         System.out.println("popup2");
@@ -629,6 +690,7 @@ public class AadharActivity extends AppCompatActivity implements MFS100Event, Ob
         alertDialog.show();
     }
 
+    /* JADX INFO: Access modifiers changed from: private */
     public void popup(String message, int icon) {
         System.out.println("popup1");
         AlertDialog.Builder alertDialogBuilder = new AlertDialog.Builder(this);
@@ -651,6 +713,7 @@ public class AadharActivity extends AppCompatActivity implements MFS100Event, Ob
         System.out.println("popup7");
     }
 
+    /* JADX INFO: Access modifiers changed from: private */
     public void updateAadhaarResult(String voterid, String aadhaarid, String aadhaarmatchstatus, String voted) {
         HashMap<String, String> map = new HashMap<>();
         map.put("voterid", voterid);
@@ -672,6 +735,7 @@ public class AadharActivity extends AppCompatActivity implements MFS100Event, Ob
         });
     }
 
+    /* JADX INFO: Access modifiers changed from: private */
     public void startVoterList() {
         startActivity(new Intent(this, ListUserActivity.class));
     }
@@ -780,6 +844,7 @@ public class AadharActivity extends AppCompatActivity implements MFS100Event, Ob
     public void SetData2(FingerData fingerData) {
     }
 
+    /* JADX INFO: Access modifiers changed from: private */
     public void startAadhaarCapture() {
         String AadhaarNo = this.aadhaarEditText.getText().toString();
         if (AadhaarNo == null || AadhaarNo.isEmpty() || AadhaarNo.length() != 12 || !onlyDigits(AadhaarNo, AadhaarNo.length())) {
@@ -787,8 +852,16 @@ public class AadharActivity extends AppCompatActivity implements MFS100Event, Ob
             return;
         }
         this.UID = AadhaarNo;
+        String pidOption = "";
+        if (!this.userAuth.getFingerPrintDevice().equals(Const.Mantra)) {
+            if (this.userAuth.getFingerPrintDevice().equals(Const.Tatvik)) {
+                pidOption = "<?xml version=\"1.0\"?> <PidOptions ver=\"1.0\"> <Opts fCount=\"1\" fType=\"0\" iCount=\"0\" iType=\"0\" pCount=\"0\" format=\"0\" pidVer=\"2.0\" timeout=\"10000\" otp=\"\" posh=\"UNKNOWN\" env=\"P\" /> <CustOpts> <Param name=\"ValidationKey\" value=\"\" /> </CustOpts> </PidOptions>";
+            } else if (this.userAuth.getFingerPrintDevice().equals(Const.eNBioScan)) {
+                pidOption = "<PidOptions ver=\"1.0\"><Opts env=\"P\" fCount=\"1\" fType=\"0\" format=\"0\" pidVer=\"2.0\" posh=\"UNKNOWN\" timeout=\"10000\"/></PidOptions>";
+            }
+        }
         Intent intent2 = new Intent("in.gov.uidai.rdservice.fp.CAPTURE");
-        intent2.putExtra("PID_OPTIONS", "<?xml version=\"1.0\"?> <PidOptions ver=\"1.0\"> <Opts fCount=\"1\" fType=\"0\" iCount=\"0\" iType=\"0\" pCount=\"0\" format=\"0\" pidVer=\"2.0\" timeout=\"10000\" otp=\"\" posh=\"UNKNOWN\" env=\"P\" /> <CustOpts> <Param name=\"ValidationKey\" value=\"\" /> </CustOpts> </PidOptions>");
+        intent2.putExtra("PID_OPTIONS", pidOption);
         Log.v("Pawan ", "starting aadhaar capture");
         startActivityForResult(intent2, this.CAPTURE_FINGERPRINT_ACTIVITY);
     }
@@ -810,6 +883,7 @@ public class AadharActivity extends AppCompatActivity implements MFS100Event, Ob
         startActivityForResult(intent, this.DEVICE_INFORMATION_CODE);
     }
 
+    /* JADX INFO: Access modifiers changed from: protected */
     @Override // androidx.appcompat.app.AppCompatActivity, androidx.fragment.app.FragmentActivity, android.app.Activity
     public void onStart() {
         try {
@@ -881,18 +955,31 @@ public class AadharActivity extends AppCompatActivity implements MFS100Event, Ob
         this.button_ok.setOnClickListener(new View.OnClickListener() { // from class: com.example.aadhaarfpoffline.tatvik.activity.AadharActivity.9
             @Override // android.view.View.OnClickListener
             public void onClick(View view) {
-                String voted;
                 Toast.makeText(AadharActivity.this.getApplicationContext(), "ok pressed= before", 1).show();
                 if (AadharActivity.this.authenticatePartDone.booleanValue()) {
-                    if (AadharActivity.this.votertoballowed.booleanValue()) {
-                        voted = DiskLruCache.VERSION_1;
-                        AadharActivity aadharActivity = AadharActivity.this;
-                        aadharActivity.updatefingerprintdb(aadharActivity.captRslt1.getFmrBytes());
+                    AadharActivity aadharActivity = AadharActivity.this;
+                    aadharActivity.voted = "0";
+                    if (aadharActivity.votertoballowed.booleanValue()) {
+                        AadharActivity aadharActivity2 = AadharActivity.this;
+                        aadharActivity2.voted = DiskLruCache.VERSION_1;
+                        if (!aadharActivity2.userAuth.getFingerPrintDevice().equals(Const.Mantra)) {
+                            if (AadharActivity.this.userAuth.getFingerPrintDevice().equals(Const.Tatvik)) {
+                                AadharActivity aadharActivity3 = AadharActivity.this;
+                                aadharActivity3.updatefingerprintdb(aadharActivity3.captRslt1.getFmrBytes());
+                            } else if (AadharActivity.this.userAuth.getFingerPrintDevice().equals(Const.eNBioScan)) {
+                                AadharActivity aadharActivity4 = AadharActivity.this;
+                                aadharActivity4.updatefingerprintdb(aadharActivity4.byTemplate1);
+                            }
+                        }
                     } else {
-                        voted = ExifInterface.GPS_MEASUREMENT_2D;
+                        AadharActivity.this.voted = ExifInterface.GPS_MEASUREMENT_2D;
                     }
-                    AadharActivity aadharActivity2 = AadharActivity.this;
-                    aadharActivity2.updateFingerprintToServer(aadharActivity2.voterid, AadharActivity.this.captRslt1.getFmrBytes(), voted);
+                    AadharActivity.this.db.updateAadhaarResultTransTable(AadharActivity.this.voterid, AadharActivity.this.UID, AadharActivity.this.aadhaarmatch, AadharActivity.this.voted, AadharActivity.this.userAuth.getTransactionId().longValue());
+                    AadharActivity.this.uploadTransactionRow();
+                    if (!AadharActivity.this.userAuth.getFingerPrintDevice().equals(Const.Mantra) && !AadharActivity.this.userAuth.getFingerPrintDevice().equals(Const.Tatvik)) {
+                        AadharActivity.this.userAuth.getFingerPrintDevice().equals(Const.eNBioScan);
+                        return;
+                    }
                     return;
                 }
                 Toast.makeText(AadharActivity.this.getApplicationContext(), "First Authenticate then press 'Ok'", 1).show();
@@ -901,15 +988,29 @@ public class AadharActivity extends AppCompatActivity implements MFS100Event, Ob
         this.captureFingerprint.setOnClickListener(new View.OnClickListener() { // from class: com.example.aadhaarfpoffline.tatvik.activity.AadharActivity.10
             @Override // android.view.View.OnClickListener
             public void onClick(View view) {
-                AadharActivity.this.captureFingerprintTatvik();
+                if (!AadharActivity.this.userAuth.getFingerPrintDevice().equals(Const.Mantra)) {
+                    if (AadharActivity.this.userAuth.getFingerPrintDevice().equals(Const.Tatvik)) {
+                        AadharActivity.this.captureFingerprintTatvik();
+                    } else if (AadharActivity.this.userAuth.getFingerPrintDevice().equals(Const.eNBioScan)) {
+                        new AsyncCaller().execute(new Void[0]);
+                    }
+                }
             }
         });
         this.button_authenticate.setOnClickListener(new View.OnClickListener() { // from class: com.example.aadhaarfpoffline.tatvik.activity.AadharActivity.11
             @Override // android.view.View.OnClickListener
             public void onClick(View view) {
                 Toast.makeText(AadharActivity.this.getApplicationContext(), "AUTHENTICATE CLICKED", 1).show();
-                AadharActivity aadharActivity = AadharActivity.this;
-                String voter_id = aadharActivity.CompareFingerprintTatvik(aadharActivity.voterid, AadharActivity.this.captRslt1.getFmrBytes());
+                String voter_id = "";
+                if (!AadharActivity.this.userAuth.getFingerPrintDevice().equals(Const.Mantra)) {
+                    if (AadharActivity.this.userAuth.getFingerPrintDevice().equals(Const.Tatvik)) {
+                        AadharActivity aadharActivity = AadharActivity.this;
+                        voter_id = aadharActivity.CompareFingerprintTatvikTransTable(aadharActivity.voterid, AadharActivity.this.captRslt1.getFmrBytes());
+                    } else if (AadharActivity.this.userAuth.getFingerPrintDevice().equals(Const.eNBioScan)) {
+                        AadharActivity aadharActivity2 = AadharActivity.this;
+                        voter_id = aadharActivity2.compareAndLockNetgin(aadharActivity2.voterid, AadharActivity.this.byTemplate1);
+                    }
+                }
                 if (voter_id != null && !voter_id.isEmpty() && voter_id.length() > 0) {
                     AadharActivity.this.beep();
                     Toast.makeText(AadharActivity.this.getApplicationContext(), "Fingerprint exists in local dataa\base", 1).show();
@@ -919,12 +1020,12 @@ public class AadharActivity extends AppCompatActivity implements MFS100Event, Ob
                     AadharActivity.this.getMatchedVoterData(voter_id);
                 } else if (AadharActivity.this.fpcaptureString.length() > 200) {
                     Log.d("finalresultra", AadharActivity.this.partresult1 + " ###result4=" + AadharActivity.this.partresult2);
-                    AadharActivity aadharActivity2 = AadharActivity.this;
-                    aadharActivity2.capDoc = aadharActivity2.changeTagName(aadharActivity2.capDoc, "", "DeviceInfo", "Meta");
                     AadharActivity aadharActivity3 = AadharActivity.this;
-                    aadharActivity3.printXML(aadharActivity3.capDoc, "metaadded");
+                    aadharActivity3.capDoc = aadharActivity3.changeTagName(aadharActivity3.capDoc, "", "DeviceInfo", "Meta");
                     AadharActivity aadharActivity4 = AadharActivity.this;
-                    aadharActivity4.createStringXml(aadharActivity4.UID, AadharActivity.this.capDoc);
+                    aadharActivity4.printXML(aadharActivity4.capDoc, "metaadded");
+                    AadharActivity aadharActivity5 = AadharActivity.this;
+                    aadharActivity5.createStringXml(aadharActivity5.UID, AadharActivity.this.capDoc);
                 } else {
                     Toast.makeText(AadharActivity.this.getApplicationContext(), "Fingerprint not captured properly.Capture again then Authenticate", 1).show();
                 }
@@ -943,9 +1044,11 @@ public class AadharActivity extends AppCompatActivity implements MFS100Event, Ob
         });
     }
 
+    /* JADX INFO: Access modifiers changed from: private */
     public void updatefingerprintdb(byte[] finger_template) {
         Toast.makeText(getApplicationContext(), "updatefingerprintdb", 1).show();
         this.db.updateFingerprintTemplate(this.voterid, finger_template);
+        this.db.updateFingerprintTemplateTransTable(this.voterid, finger_template, this.userAuth.getTransactionId().longValue());
     }
 
     private String CompareFingerprint(String voterid, byte[] fingerprint2) {
@@ -974,12 +1077,13 @@ public class AadharActivity extends AppCompatActivity implements MFS100Event, Ob
         return "";
     }
 
+    /* JADX INFO: Access modifiers changed from: private */
     public void beep() {
-        Toast.makeText(getApplicationContext(), "Beep", 1).show();
         new ToneGenerator(4, 500).startTone(93, 600);
     }
 
-    public void getMatchedVoterData(String matchedvotertid) {
+    /* JADX INFO: Access modifiers changed from: private */
+    public void getMatchedVoterData(final String matchedvotertid) {
         ((GetDataService) RetrofitClientInstance.getRetrofitInstance().create(GetDataService.class)).getVoterByVoterId(matchedvotertid).enqueue(new Callback<VoterDataGetResponse>() { // from class: com.example.aadhaarfpoffline.tatvik.activity.AadharActivity.13
             @Override // retrofit2.Callback
             public void onResponse(Call<VoterDataGetResponse> call, Response<VoterDataGetResponse> response) {
@@ -992,6 +1096,10 @@ public class AadharActivity extends AppCompatActivity implements MFS100Event, Ob
 
             @Override // retrofit2.Callback
             public void onFailure(Call<VoterDataGetResponse> call, Throwable t) {
+                if (!(t instanceof SocketTimeoutException) && (t instanceof IOException)) {
+                    VoterDataNewModel Voter = AadharActivity.this.db.getVoter(matchedvotertid);
+                    AadharActivity.this.popupFailed(AadharActivity.this.resources.getString(R.string.you_cannot_vote_only) + "," + AadharActivity.this.resources.getString(R.string.aadhaar_not_vote), Voter);
+                }
             }
         });
     }
@@ -1010,6 +1118,7 @@ public class AadharActivity extends AppCompatActivity implements MFS100Event, Ob
                     printStream2.println("fingerprinttemplate2=" + response.body().getMatchedvoterid());
                     Context applicationContext = AadharActivity.this.getApplicationContext();
                     Toast.makeText(applicationContext, "matchedvoterid=" + response.body().getMatchedvoterid(), 1).show();
+                    AadharActivity.this.db.updateAadhaarResultTransTable(voterid, AadharActivity.this.UID, AadharActivity.this.aadhaarmatch, voted, AadharActivity.this.userAuth.getTransactionId().longValue());
                     AadharActivity aadharActivity = AadharActivity.this;
                     aadharActivity.updateAadhaarResult(voterid, aadharActivity.UID, AadharActivity.this.aadhaarmatch, voted);
                 }
@@ -1019,6 +1128,9 @@ public class AadharActivity extends AppCompatActivity implements MFS100Event, Ob
             public void onFailure(Call<FinperprintCompareServerResponse> call, Throwable t) {
                 Context applicationContext = AadharActivity.this.getApplicationContext();
                 Toast.makeText(applicationContext, "matchedvoterid= Error=" + t.getMessage(), 1).show();
+                if (!(t instanceof SocketTimeoutException) && (t instanceof IOException)) {
+                    AadharActivity.this.db.updateAadhaarResultTransTable(voterid, AadharActivity.this.UID, AadharActivity.this.aadhaarmatch, voted, AadharActivity.this.userAuth.getTransactionId().longValue());
+                }
             }
         });
     }
@@ -1033,6 +1145,7 @@ public class AadharActivity extends AppCompatActivity implements MFS100Event, Ob
 
     private void deleteFingerprint(String voterid) {
         this.db.clearFingerprint(voterid);
+        this.db.clearFingerprintTransTable(this.userAuth.getTransactionId().longValue());
     }
 
     @Override // androidx.activity.ComponentActivity, android.app.Activity
@@ -1045,7 +1158,7 @@ public class AadharActivity extends AppCompatActivity implements MFS100Event, Ob
     public void update(Observable o, Object arg) {
     }
 
-    public String CompareFingerprintTatvik(String voterid, byte[] fingerprint2) {
+    private String CompareFingerprintTatvik(String voterid, byte[] fingerprint2) {
         Toast.makeText(getApplicationContext(), "CompareFingerprint", 1).show();
         Cursor cursor = this.db.fpcompare(voterid);
         int numrows = 0;
@@ -1068,6 +1181,31 @@ public class AadharActivity extends AppCompatActivity implements MFS100Event, Ob
         return "";
     }
 
+    /* JADX INFO: Access modifiers changed from: private */
+    public String CompareFingerprintTatvikTransTable(String voterid, byte[] fingerprint2) {
+        Toast.makeText(getApplicationContext(), "CompareFingerprint", 1).show();
+        Cursor cursor = this.db.fpcompareTransTable(voterid);
+        int numrows = 0;
+        if (!cursor.moveToFirst()) {
+            return "";
+        }
+        Toast.makeText(getApplicationContext(), "CompareFingerprint2", 1).show();
+        do {
+            byte[] fingerprint1 = cursor.getBlob(cursor.getColumnIndex("FingerTemplate"));
+            numrows++;
+            Context applicationContext = getApplicationContext();
+            Toast.makeText(applicationContext, "CompareFingerprint3 numrows=" + numrows, 1).show();
+            if (this.tmf20lib.matchIsoTemplates(fingerprint1, fingerprint2)) {
+                String matchvoterid = cursor.getString(cursor.getColumnIndex("EPIC_NO"));
+                Context applicationContext2 = getApplicationContext();
+                Toast.makeText(applicationContext2, "Match voterid" + matchvoterid, 1).show();
+                return matchvoterid;
+            }
+        } while (cursor.moveToNext());
+        return "";
+    }
+
+    /* JADX INFO: Access modifiers changed from: private */
     public void captureFingerprintTatvik() {
         this.captRslt1 = this.tmf20lib.captureFingerprint(10000);
         if (this.captRslt1 == null || TMF20ErrorCodes.SUCCESS != this.captRslt1.getStatusCode()) {
@@ -1089,13 +1227,357 @@ public class AadharActivity extends AppCompatActivity implements MFS100Event, Ob
         ((GetDataService) RetrofitClientInstance.getRetrofitInstance().create(GetDataService.class)).updateFpServer2(map).enqueue(new Callback<FinperprintCompareServerResponse>() { // from class: com.example.aadhaarfpoffline.tatvik.activity.AadharActivity.15
             @Override // retrofit2.Callback
             public void onResponse(Call<FinperprintCompareServerResponse> call, Response<FinperprintCompareServerResponse> response) {
+                AadharActivity.this.db.updateAadhaarResultTransTable(voter_id, AadharActivity.this.UID, AadharActivity.this.aadhaarmatch, voted, AadharActivity.this.userAuth.getTransactionId().longValue());
                 AadharActivity aadharActivity = AadharActivity.this;
                 aadharActivity.updateAadhaarResult(voter_id, aadharActivity.UID, AadharActivity.this.aadhaarmatch, voted);
             }
 
             @Override // retrofit2.Callback
             public void onFailure(Call<FinperprintCompareServerResponse> call, Throwable t) {
+                if (!(t instanceof SocketTimeoutException) && (t instanceof IOException)) {
+                    AadharActivity.this.db.updateAadhaarResultTransTable(voter_id, AadharActivity.this.UID, AadharActivity.this.aadhaarmatch, voted, AadharActivity.this.userAuth.getTransactionId().longValue());
+                }
             }
         });
+    }
+
+    public void initData() {
+        NBioBSPJNI.CURRENT_PRODUCT_ID = 0;
+        if (this.bsp == null) {
+            this.bsp = new NBioBSPJNI("010701-613E5C7F4CC7C4B0-72E340B47E034015", this, this.mCallback);
+            String msg = null;
+            if (this.bsp.IsErrorOccured()) {
+                msg = "NBioBSP Error: " + this.bsp.GetErrorCode();
+            } else {
+                NBioBSPJNI nBioBSPJNI = this.bsp;
+                Objects.requireNonNull(nBioBSPJNI);
+                this.exportEngine = new NBioBSPJNI.Export();
+                NBioBSPJNI nBioBSPJNI2 = this.bsp;
+                Objects.requireNonNull(nBioBSPJNI2);
+                this.indexSearch = new NBioBSPJNI.IndexSearch();
+            }
+            Toast.makeText(getApplicationContext(), msg, 1).show();
+        }
+    }
+
+    @Override // androidx.appcompat.app.AppCompatActivity, androidx.fragment.app.FragmentActivity, android.app.Activity
+    public void onDestroy() {
+        NBioBSPJNI nBioBSPJNI = this.bsp;
+        if (nBioBSPJNI != null) {
+            nBioBSPJNI.dispose();
+            this.bsp = null;
+        }
+        super.onDestroy();
+    }
+
+    /* loaded from: classes2.dex */
+    private class AsyncCaller extends AsyncTask<Void, Void, Boolean> {
+        ProgressDialog pdLoading;
+
+        private AsyncCaller() {
+            this.pdLoading = null;
+        }
+
+        @Override // android.os.AsyncTask
+        protected void onPreExecute() {
+            super.onPreExecute();
+            this.pdLoading = new ProgressDialog(AadharActivity.this);
+            this.pdLoading.setMessage("\tLoading...");
+            this.pdLoading.show();
+        }
+
+        /* JADX INFO: Access modifiers changed from: protected */
+        public Boolean doInBackground(Void... params) {
+            return Boolean.valueOf(AadharActivity.this.bsp.OpenDevice());
+        }
+
+        /* JADX INFO: Access modifiers changed from: protected */
+        public void onPostExecute(Boolean result) {
+            super.onPostExecute((AsyncCaller) result);
+            ProgressDialog progressDialog = this.pdLoading;
+            if (progressDialog != null && progressDialog.isShowing()) {
+                this.pdLoading.dismiss();
+            }
+            if (result.booleanValue()) {
+                AadharActivity.this.captureFingerPrintFromNitgen();
+            } else {
+                Toast.makeText(AadharActivity.this, Const.nBioDeviceError, 0).show();
+            }
+        }
+    }
+
+    /* JADX INFO: Access modifiers changed from: private */
+    public void captureFingerPrintFromNitgen() {
+        NBioBSPJNI nBioBSPJNI = this.bsp;
+        Objects.requireNonNull(nBioBSPJNI);
+        NBioBSPJNI.FIR_HANDLE hCapturedFIR = new NBioBSPJNI.FIR_HANDLE();
+        NBioBSPJNI nBioBSPJNI2 = this.bsp;
+        Objects.requireNonNull(nBioBSPJNI2);
+        NBioBSPJNI.FIR_HANDLE hAuditFIR = new NBioBSPJNI.FIR_HANDLE();
+        NBioBSPJNI nBioBSPJNI3 = this.bsp;
+        Objects.requireNonNull(nBioBSPJNI3);
+        this.bsp.Capture(3, hCapturedFIR, this.timeout, hAuditFIR, new NBioBSPJNI.CAPTURED_DATA());
+        if (this.bsp.IsErrorOccured()) {
+            this.msg = "NBioBSP Capture Error: " + this.bsp.GetErrorCode();
+            return;
+        }
+        NBioBSPJNI nBioBSPJNI4 = this.bsp;
+        Objects.requireNonNull(nBioBSPJNI4);
+        NBioBSPJNI.INPUT_FIR inputFIR = new NBioBSPJNI.INPUT_FIR();
+        inputFIR.SetFIRHandle(hCapturedFIR);
+        NBioBSPJNI.Export export = this.exportEngine;
+        Objects.requireNonNull(export);
+        NBioBSPJNI.Export.DATA exportData = new NBioBSPJNI.Export.DATA();
+        this.exportEngine.ExportFIR(inputFIR, exportData, 3);
+        if (this.bsp.IsErrorOccured()) {
+            runOnUiThread(new Runnable() { // from class: com.example.aadhaarfpoffline.tatvik.activity.AadharActivity.17
+                @Override // java.lang.Runnable
+                public void run() {
+                    AadharActivity aadharActivity = AadharActivity.this;
+                    aadharActivity.msg = "NBioBSP ExportFIR Error: " + AadharActivity.this.bsp.GetErrorCode();
+                    Toast.makeText(AadharActivity.this.getApplicationContext(), AadharActivity.this.msg, 0).show();
+                }
+            });
+            return;
+        }
+        if (this.byTemplate1 != null) {
+            this.byTemplate1 = null;
+        }
+        this.byTemplate1 = new byte[exportData.FingerData[0].Template[0].Data.length];
+        this.byTemplate1 = exportData.FingerData[0].Template[0].Data;
+        inputFIR.SetFIRHandle(hAuditFIR);
+        NBioBSPJNI.Export export2 = this.exportEngine;
+        Objects.requireNonNull(export2);
+        NBioBSPJNI.Export.AUDIT exportAudit = new NBioBSPJNI.Export.AUDIT();
+        this.exportEngine.ExportAudit(inputFIR, exportAudit);
+        if (this.bsp.IsErrorOccured()) {
+            runOnUiThread(new Runnable() { // from class: com.example.aadhaarfpoffline.tatvik.activity.AadharActivity.18
+                @Override // java.lang.Runnable
+                public void run() {
+                    AadharActivity aadharActivity = AadharActivity.this;
+                    aadharActivity.msg = "NBioBSP ExportAudit Error: " + AadharActivity.this.bsp.GetErrorCode();
+                    Toast.makeText(AadharActivity.this.getApplicationContext(), AadharActivity.this.msg, 0).show();
+                }
+            });
+            return;
+        }
+        if (this.byCapturedRaw1 != null) {
+            this.byCapturedRaw1 = null;
+        }
+        this.byCapturedRaw1 = new byte[exportAudit.FingerData[0].Template[0].Data.length];
+        this.byCapturedRaw1 = exportAudit.FingerData[0].Template[0].Data;
+        this.nCapturedRawWidth1 = exportAudit.ImageWidth;
+        this.nCapturedRawHeight1 = exportAudit.ImageHeight;
+        this.msg = "First Capture Success";
+        NBioBSPJNI nBioBSPJNI5 = this.bsp;
+        Objects.requireNonNull(nBioBSPJNI5);
+        NBioBSPJNI.NFIQInfo info = new NBioBSPJNI.NFIQInfo();
+        info.pRawImage = this.byCapturedRaw1;
+        info.nImgWidth = this.nCapturedRawWidth1;
+        info.nImgHeight = this.nCapturedRawHeight1;
+        this.bsp.getNFIQInfoFromRaw(info);
+        if (this.bsp.IsErrorOccured()) {
+            runOnUiThread(new Runnable() { // from class: com.example.aadhaarfpoffline.tatvik.activity.AadharActivity.19
+                @Override // java.lang.Runnable
+                public void run() {
+                    AadharActivity aadharActivity = AadharActivity.this;
+                    aadharActivity.msg = "NBioBSP getNFIQInfoFromRaw Error: " + AadharActivity.this.bsp.GetErrorCode();
+                    Toast.makeText(AadharActivity.this.getApplicationContext(), AadharActivity.this.msg, 0).show();
+                }
+            });
+            return;
+        }
+        this.nFIQ = info.pNFIQ;
+        NBioBSPJNI nBioBSPJNI6 = this.bsp;
+        Objects.requireNonNull(nBioBSPJNI6);
+        NBioBSPJNI.ISOBUFFER ISOBuffer = new NBioBSPJNI.ISOBUFFER();
+        this.bsp.ExportRawToISOV1(exportAudit, ISOBuffer, false, (byte) 0);
+        if (this.bsp.IsErrorOccured()) {
+            runOnUiThread(new Runnable() { // from class: com.example.aadhaarfpoffline.tatvik.activity.AadharActivity.20
+                @Override // java.lang.Runnable
+                public void run() {
+                    AadharActivity aadharActivity = AadharActivity.this;
+                    aadharActivity.msg = "NBioBSP ExportRawToISOV1 Error: " + AadharActivity.this.bsp.GetErrorCode();
+                    Toast.makeText(AadharActivity.this.getApplicationContext(), AadharActivity.this.msg, 0).show();
+                }
+            });
+            return;
+        }
+        NBioBSPJNI nBioBSPJNI7 = this.bsp;
+        Objects.requireNonNull(nBioBSPJNI7);
+        NBioBSPJNI.NIMPORTRAWSET rawSet = new NBioBSPJNI.NIMPORTRAWSET();
+        this.bsp.ImportISOToRaw(ISOBuffer, rawSet);
+        if (this.bsp.IsErrorOccured()) {
+            runOnUiThread(new Runnable() { // from class: com.example.aadhaarfpoffline.tatvik.activity.AadharActivity.21
+                @Override // java.lang.Runnable
+                public void run() {
+                    AadharActivity aadharActivity = AadharActivity.this;
+                    aadharActivity.msg = "NBioBSP ImportISOToRaw Error: " + AadharActivity.this.bsp.GetErrorCode();
+                    Toast.makeText(AadharActivity.this.getApplicationContext(), AadharActivity.this.msg, 0).show();
+                }
+            });
+            return;
+        }
+        for (int i = 0; i < rawSet.Count; i++) {
+            this.msg += "  DataLen: " + rawSet.RawData[i].Data.length + "  FingerID: " + ((int) rawSet.RawData[i].FingerID) + "  Width: " + ((int) rawSet.RawData[i].ImgWidth) + "  Height: " + ((int) rawSet.RawData[i].ImgHeight) + "  ";
+        }
+        if (this.byCapturedRaw1 != null) {
+            this.byCapturedRaw1 = null;
+        }
+        this.byCapturedRaw1 = new byte[rawSet.RawData[0].Data.length];
+        this.byCapturedRaw1 = rawSet.RawData[0].Data;
+        this.nCapturedRawWidth1 = rawSet.RawData[0].ImgWidth;
+        this.nCapturedRawHeight1 = rawSet.RawData[0].ImgHeight;
+        runOnUiThread(new Runnable() { // from class: com.example.aadhaarfpoffline.tatvik.activity.AadharActivity.22
+            @Override // java.lang.Runnable
+            public void run() {
+                Toast.makeText(AadharActivity.this.getApplicationContext(), AadharActivity.this.msg, 0).show();
+            }
+        });
+        if (this.byTemplate1 != null) {
+            startAadhaarCapture();
+        }
+    }
+
+    /* JADX INFO: Access modifiers changed from: private */
+    public String compareAndLockNetgin(String voterid, byte[] finger_template1) {
+        Toast.makeText(getApplicationContext(), "CompareFingerprint", 1).show();
+        Cursor cursor = this.db.fpcompare(voterid);
+        int numrows = 0;
+        if (!cursor.moveToFirst()) {
+            return "";
+        }
+        Toast.makeText(getApplicationContext(), "CompareFingerprint2", 1).show();
+        do {
+            byte[] fingerprint1 = cursor.getBlob(cursor.getColumnIndex("EnrollTemplate"));
+            numrows++;
+            Context applicationContext = getApplicationContext();
+            Toast.makeText(applicationContext, "CompareFingerprint3 numrows=" + numrows, 1).show();
+            if (this.byTemplate1 != null) {
+                NBioBSPJNI nBioBSPJNI = this.bsp;
+                Objects.requireNonNull(nBioBSPJNI);
+                NBioBSPJNI.FIR_HANDLE hLoadFIR1 = new NBioBSPJNI.FIR_HANDLE();
+                this.exportEngine.ImportFIR(finger_template1, finger_template1.length, 3, hLoadFIR1);
+                if (this.bsp.IsErrorOccured()) {
+                    this.msg = "Template NBioBSP ImportFIR Error: " + this.bsp.GetErrorCode();
+                    Toast.makeText(getApplicationContext(), this.msg, 1).show();
+                }
+                NBioBSPJNI nBioBSPJNI2 = this.bsp;
+                Objects.requireNonNull(nBioBSPJNI2);
+                NBioBSPJNI.FIR_HANDLE hLoadFIR2 = new NBioBSPJNI.FIR_HANDLE();
+                this.exportEngine.ImportFIR(fingerprint1, fingerprint1.length, 3, hLoadFIR2);
+                if (this.bsp.IsErrorOccured()) {
+                    hLoadFIR1.dispose();
+                    this.msg = "Template NBioBSP ImportFIR Error: " + this.bsp.GetErrorCode();
+                    Toast.makeText(getApplicationContext(), this.msg, 1).show();
+                }
+                Boolean bResult = new Boolean(false);
+                NBioBSPJNI nBioBSPJNI3 = this.bsp;
+                Objects.requireNonNull(nBioBSPJNI3);
+                NBioBSPJNI.INPUT_FIR inputFIR1 = new NBioBSPJNI.INPUT_FIR();
+                NBioBSPJNI nBioBSPJNI4 = this.bsp;
+                Objects.requireNonNull(nBioBSPJNI4);
+                NBioBSPJNI.INPUT_FIR inputFIR2 = new NBioBSPJNI.INPUT_FIR();
+                inputFIR1.SetFIRHandle(hLoadFIR1);
+                inputFIR2.SetFIRHandle(hLoadFIR2);
+                this.bsp.VerifyMatch(inputFIR1, inputFIR2, bResult, null);
+                if (this.bsp.IsErrorOccured()) {
+                    this.msg = "Template NBioBSP VerifyMatch Error: " + this.bsp.GetErrorCode();
+                    Toast.makeText(getApplicationContext(), this.msg, 1).show();
+                } else if (bResult.booleanValue()) {
+                    this.msg = "Template VerifyMatch Successed";
+                    String matchvoterid = cursor.getString(cursor.getColumnIndex("EPIC_NO"));
+                    Context applicationContext2 = getApplicationContext();
+                    Toast.makeText(applicationContext2, "Match voterid" + matchvoterid, 1).show();
+                    return matchvoterid;
+                } else {
+                    this.msg = "Template VerifyMatch Failed";
+                    Toast.makeText(getApplicationContext(), this.msg, 1).show();
+                }
+                hLoadFIR1.dispose();
+                hLoadFIR2.dispose();
+            } else {
+                this.msg = "Can not find captured data";
+                Toast.makeText(getApplicationContext(), this.msg, 1).show();
+            }
+        } while (cursor.moveToNext());
+        return "";
+    }
+
+    /* JADX INFO: Access modifiers changed from: private */
+    public void uploadTransactionRow() {
+        new HashMap();
+        ((GetDataService) RetrofitClientInstance.getRetrofitInstance().create(GetDataService.class)).updateTransactionRow(getTransactionRowData()).enqueue(new Callback<TransactionRowPostResponse>() { // from class: com.example.aadhaarfpoffline.tatvik.activity.AadharActivity.23
+            @Override // retrofit2.Callback
+            public void onResponse(Call<TransactionRowPostResponse> call, Response<TransactionRowPostResponse> response) {
+                if (!(response == null || response.body() == null)) {
+                    response.body().getUpdated();
+                }
+                AadharActivity.this.startVoterList();
+            }
+
+            @Override // retrofit2.Callback
+            public void onFailure(Call<TransactionRowPostResponse> call, Throwable t) {
+                AadharActivity.this.startVoterList();
+            }
+        });
+    }
+
+    private Map<String, String> getTransactionRowData() {
+        Cursor cursor;
+        Map<String, String> map;
+        String fpString;
+        try {
+            cursor = this.db.SingleTransactionRow(this.userAuth.getTransactionId().longValue());
+            map = new HashMap<>();
+            try {
+            } catch (Exception e) {
+                cursor.close();
+            } catch (Throwable th) {
+                try {
+                    cursor.close();
+                } catch (Exception e2) {
+                }
+                throw th;
+            }
+        } catch (Exception e3) {
+        }
+        if (cursor.moveToFirst()) {
+            new VoterDataNewModel().setId(cursor.getString(0));
+            byte[] fp = cursor.getBlob(cursor.getColumnIndex("FingerTemplate"));
+            String voterimagename = cursor.getString(cursor.getColumnIndex("ID_DOCUMENT_IMAGE"));
+            int aadhaarmatch = cursor.getInt(cursor.getColumnIndex("AADHAAR_MATCH"));
+            String str = this.UID;
+            if (fp == null || fp.length <= 0) {
+                fpString = "";
+            } else {
+                fpString = Base64.encodeToString(fp, 0);
+            }
+            map.put("TRANSID", "" + this.userAuth.getTransactionId());
+            map.put("user_id", this.userAuth.getPanchayatId() + "_" + this.userAuth.getWardNo() + "_" + this.userAuth.getBoothNo() + "_" + this.slnoinward);
+            map.put("FINGERPRINT_TEMPLATE", fpString);
+            map.put("VOTED", "" + this.voted);
+            map.put("ID_DOCUMENT_IMAGE", voterimagename);
+            map.put("AADHAAR_MATCH", "" + aadhaarmatch);
+            map.put("AADHAAR_NO", this.UID);
+            map.put("VOTING_DATE", getCurrentTimeInFormat());
+            map.put("VOTING_TYPE", "AADHAAR");
+            map.put("booth_id", this.userAuth.getPanchayatId() + "_" + this.userAuth.getWardNo() + "_" + this.userAuth.getBoothNo());
+            try {
+                cursor.close();
+            } catch (Exception e4) {
+            }
+            return map;
+        }
+        cursor.close();
+        return map;
+    }
+
+    public String getCurrentTimeInFormat() {
+        SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+        Date date = new Date();
+        String timenow = formatter.format(date);
+        System.out.println(formatter.format(date));
+        return timenow;
     }
 }

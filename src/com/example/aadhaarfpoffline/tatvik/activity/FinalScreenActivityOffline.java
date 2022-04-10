@@ -9,6 +9,7 @@ import android.graphics.BitmapFactory;
 import android.media.ToneGenerator;
 import android.net.Uri;
 import android.os.Bundle;
+import android.util.Base64;
 import android.view.View;
 import android.widget.Button;
 import android.widget.ImageView;
@@ -18,10 +19,12 @@ import androidx.appcompat.app.AppCompatActivity;
 import com.example.aadhaarfpoffline.tatvik.GetDataService;
 import com.example.aadhaarfpoffline.tatvik.LocaleHelper;
 import com.example.aadhaarfpoffline.tatvik.R;
+import com.example.aadhaarfpoffline.tatvik.UserAuth;
 import com.example.aadhaarfpoffline.tatvik.config.RetrofitClientInstance;
 import com.example.aadhaarfpoffline.tatvik.database.DBHelper;
 import com.example.aadhaarfpoffline.tatvik.model.VoterDataNewModel;
 import com.example.aadhaarfpoffline.tatvik.network.FacefpmatchvoteridUpdatePostResponse;
+import com.example.aadhaarfpoffline.tatvik.network.TransactionRowPostResponse;
 import com.example.aadhaarfpoffline.tatvik.network.UserVotingStatusUpdatePostResponse;
 import com.example.aadhaarfpoffline.tatvik.network.VoterDataGetResponse;
 import com.facebook.drawee.view.SimpleDraweeView;
@@ -53,10 +56,11 @@ public class FinalScreenActivityOffline extends AppCompatActivity {
     private SimpleDraweeView matchUserImage;
     private TextView messageText;
     Resources resources;
+    private UserAuth userAuth;
     private String voterid = "";
     String facematchvoterid = "";
     String fpmatchovertid = "";
-    String votedDone = "";
+    String votedDone = "0";
     String lan = "";
     int voted = 0;
 
@@ -69,6 +73,7 @@ public class FinalScreenActivityOffline extends AppCompatActivity {
         this.context = LocaleHelper.setLocale(this, this.lan);
         this.resources = this.context.getResources();
         this.db = new DBHelper(this);
+        this.userAuth = new UserAuth(this);
         getSupportActionBar().setTitle(this.resources.getString(R.string.authentication_complete_text));
         this.messageText = (TextView) findViewById(R.id.message);
         this.matchMessageText = (TextView) findViewById(R.id.match_message);
@@ -82,6 +87,7 @@ public class FinalScreenActivityOffline extends AppCompatActivity {
         intent.getStringExtra("message");
         Boolean allowedtovote = Boolean.valueOf(intent.getBooleanExtra("allowedtovote", false));
         this.votedDone = intent.getStringExtra("voted");
+        this.votedDone = "0";
         String fpmatchvoterid = intent.getStringExtra("fpmatchvotertid");
         if (allowedtovote.booleanValue()) {
             String votingmessage = this.resources.getString(R.string.u_can_vote_text);
@@ -190,7 +196,6 @@ public class FinalScreenActivityOffline extends AppCompatActivity {
             Toast.makeText(getApplicationContext(), "Url Not valid " + Voter.getID_DOCUMENT_IMAGE(), 1).show();
             File imgFile = new File("/sdcard/Images/" + Voter.getID_DOCUMENT_IMAGE());
             if (imgFile.exists()) {
-                Toast.makeText(getApplicationContext(), "Url Not valid2", 1).show();
                 Bitmap myBitmap = BitmapFactory.decodeFile(imgFile.getAbsolutePath());
                 this.matchUserImage.setVisibility(0);
                 this.matchUserImage.setImageBitmap(myBitmap);
@@ -299,11 +304,13 @@ public class FinalScreenActivityOffline extends AppCompatActivity {
 
     /* JADX INFO: Access modifiers changed from: private */
     public void updateVotingStatusOffline(String voterid, int voted) {
-        this.db.updateVotingStatus(voterid, voted, getcurrentTime());
+        String currentTime = getcurrentTime();
+        this.db.updateVotingStatus(voterid, voted, currentTime);
+        this.db.updateVotingStatusTransTable(voterid, voted, currentTime, this.userAuth.getTransactionId().longValue());
         if (voted == 2) {
             deleteFingerprint(voterid);
         }
-        updateUserVotingStatusAllow(voted);
+        uploadTransactionRow();
     }
 
     private void beep() {
@@ -311,7 +318,7 @@ public class FinalScreenActivityOffline extends AppCompatActivity {
     }
 
     private void deleteFingerprint(String voterid) {
-        this.db.clearFingerprint(voterid);
+        this.db.clearFingerprintTransTable(this.userAuth.getTransactionId().longValue());
     }
 
     public static boolean isUrlValid(String url) {
@@ -323,5 +330,132 @@ public class FinalScreenActivityOffline extends AppCompatActivity {
         } catch (URISyntaxException e2) {
             return false;
         }
+    }
+
+    private void uploadTransactionRow() {
+        new HashMap();
+        ((GetDataService) RetrofitClientInstance.getRetrofitInstance().create(GetDataService.class)).updateTransactionRow(getTransactionRowData()).enqueue(new Callback<TransactionRowPostResponse>() { // from class: com.example.aadhaarfpoffline.tatvik.activity.FinalScreenActivityOffline.7
+            @Override // retrofit2.Callback
+            public void onResponse(Call<TransactionRowPostResponse> call, Response<TransactionRowPostResponse> response) {
+                if (!(response == null || response.body() == null)) {
+                    response.body().getUpdated();
+                }
+                FinalScreenActivityOffline.this.UserListScreen();
+            }
+
+            @Override // retrofit2.Callback
+            public void onFailure(Call<TransactionRowPostResponse> call, Throwable t) {
+                Context applicationContext = FinalScreenActivityOffline.this.getApplicationContext();
+                Toast.makeText(applicationContext, "Transaction update Error. " + t.getMessage(), 1).show();
+                FinalScreenActivityOffline.this.UserListScreen();
+            }
+        });
+    }
+
+    /* JADX WARN: Can't wrap try/catch for region: R(14:5|6|(1:8)|9|(4:11|54|12|(9:14|21|22|23|46|24|50|25|27))(1:19)|20|21|22|23|46|24|50|25|27) */
+    /* Code decompiled incorrectly, please refer to instructions dump */
+    private Map<String, String> getTransactionRowData() {
+        Cursor cursor;
+        Throwable th;
+        Map<String, String> map;
+        Cursor cursor2;
+        Cursor cursor3;
+        Exception e;
+        String fpString;
+        try {
+            try {
+                cursor2 = this.db.SingleTransactionRow(this.userAuth.getTransactionId().longValue());
+                map = new HashMap<>();
+                try {
+                } catch (Exception e2) {
+                    e = e2;
+                    cursor3 = cursor2;
+                } catch (Throwable th2) {
+                    th = th2;
+                    cursor = cursor2;
+                }
+            } catch (Exception e3) {
+            }
+            if (cursor2.moveToFirst()) {
+                new VoterDataNewModel().setId(cursor2.getString(0));
+                byte[] fp = cursor2.getBlob(cursor2.getColumnIndex("FingerTemplate"));
+                int voted = cursor2.getInt(cursor2.getColumnIndex("VOTED"));
+                String voterimagename = cursor2.getString(cursor2.getColumnIndex("ID_DOCUMENT_IMAGE"));
+                int aadhaarmatch = cursor2.getInt(cursor2.getColumnIndex("AADHAAR_MATCH"));
+                String slnoinward = cursor2.getString(cursor2.getColumnIndex("SlNoInWard"));
+                String aadhaarNo = cursor2.getString(cursor2.getColumnIndex("AADHAAR_NO"));
+                if (aadhaarNo == null) {
+                    aadhaarNo = "";
+                }
+                try {
+                    if (fp != null) {
+                        try {
+                            if (fp.length > 0) {
+                                fpString = Base64.encodeToString(fp, 0);
+                                cursor3 = cursor2;
+                                map.put("TRANSID", "" + this.userAuth.getTransactionId());
+                                map.put("user_id", this.userAuth.getPanchayatId() + "_" + this.userAuth.getWardNo() + "_" + this.userAuth.getBoothNo() + "_" + slnoinward);
+                                map.put("FINGERPRINT_TEMPLATE", fpString);
+                                map.put("VOTED", "" + voted);
+                                map.put("ID_DOCUMENT_IMAGE", voterimagename);
+                                map.put("AADHAAR_MATCH", "" + aadhaarmatch);
+                                map.put("AADHAAR_NO", aadhaarNo);
+                                map.put("VOTING_DATE", getCurrentTimeInFormat());
+                                map.put("VOTING_TYPE", "NON_AADHAAR");
+                                map.put("booth_id", this.userAuth.getPanchayatId() + "_" + this.userAuth.getWardNo() + "_" + this.userAuth.getBoothNo());
+                                cursor3.close();
+                                return map;
+                            }
+                        } catch (Exception e4) {
+                            e = e4;
+                            cursor3 = cursor2;
+                            Toast.makeText(getApplicationContext(), "Exception while forming transaction row " + e.getMessage(), 1).show();
+                            cursor3.close();
+                            return map;
+                        } catch (Throwable th3) {
+                            th = th3;
+                            cursor = cursor2;
+                            try {
+                                cursor.close();
+                            } catch (Exception e5) {
+                            }
+                            throw th;
+                        }
+                    }
+                    map.put("TRANSID", "" + this.userAuth.getTransactionId());
+                    map.put("user_id", this.userAuth.getPanchayatId() + "_" + this.userAuth.getWardNo() + "_" + this.userAuth.getBoothNo() + "_" + slnoinward);
+                    map.put("FINGERPRINT_TEMPLATE", fpString);
+                    map.put("VOTED", "" + voted);
+                    map.put("ID_DOCUMENT_IMAGE", voterimagename);
+                    map.put("AADHAAR_MATCH", "" + aadhaarmatch);
+                    map.put("AADHAAR_NO", aadhaarNo);
+                    map.put("VOTING_DATE", getCurrentTimeInFormat());
+                    map.put("VOTING_TYPE", "NON_AADHAAR");
+                    map.put("booth_id", this.userAuth.getPanchayatId() + "_" + this.userAuth.getWardNo() + "_" + this.userAuth.getBoothNo());
+                    cursor3.close();
+                    return map;
+                } catch (Exception e6) {
+                    e = e6;
+                    Toast.makeText(getApplicationContext(), "Exception while forming transaction row " + e.getMessage(), 1).show();
+                    cursor3.close();
+                    return map;
+                }
+                fpString = "";
+                cursor3 = cursor2;
+            } else {
+                cursor2.close();
+                return map;
+            }
+        } catch (Throwable th4) {
+            th = th4;
+        }
+    }
+
+    public String getCurrentTimeInFormat() {
+        SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+        Date date = new Date();
+        String timenow = formatter.format(date);
+        System.out.println(formatter.format(date));
+        return timenow;
     }
 }

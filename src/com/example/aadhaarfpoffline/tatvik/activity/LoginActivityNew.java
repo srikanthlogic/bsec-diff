@@ -20,6 +20,7 @@ import com.example.aadhaarfpoffline.tatvik.GetDataService;
 import com.example.aadhaarfpoffline.tatvik.R;
 import com.example.aadhaarfpoffline.tatvik.UserAuth;
 import com.example.aadhaarfpoffline.tatvik.config.RetrofitClientInstance;
+import com.example.aadhaarfpoffline.tatvik.database.DBHelper;
 import com.example.aadhaarfpoffline.tatvik.network.ElectionBoothLoginGetResponse;
 import com.example.aadhaarfpoffline.tatvik.network.LoginForUrlResponse;
 import com.example.aadhaarfpoffline.tatvik.network.LoginTimeUpdateGetResponse;
@@ -38,6 +39,7 @@ public class LoginActivityNew extends AppCompatActivity {
     public static final int MY_PERMISSIONS_REQUEST_LOCATION = 99;
     private EditText booth;
     private Button button;
+    DBHelper db;
     private EditText email;
     Handler handler;
     Double latitude;
@@ -47,6 +49,7 @@ public class LoginActivityNew extends AppCompatActivity {
     Runnable r;
     private int BOOTH_RADIUS = 2;
     private String device = "";
+    private String responseString = "";
 
     public LoginActivityNew() {
         Double valueOf = Double.valueOf(0.0d);
@@ -60,20 +63,18 @@ public class LoginActivityNew extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_login);
         getSupportActionBar().hide();
+        this.db = new DBHelper(this);
         this.handler = new Handler();
         this.r = new Runnable() { // from class: com.example.aadhaarfpoffline.tatvik.activity.LoginActivityNew.1
             @Override // java.lang.Runnable
             public void run() {
-                Toast.makeText(LoginActivityNew.this, "user is inactive from last 5 minutes", 0).show();
             }
         };
         startHandler();
         if (((TelephonyManager) Objects.requireNonNull((TelephonyManager) getApplicationContext().getSystemService("phone"))).getPhoneType() == 0) {
             this.device = "tablet";
-            Toast.makeText(this, "Detected... You're using a Tablet", 0).show();
         } else {
             this.device = "tablet";
-            Toast.makeText(this, "Detected... You're using a Mobile Phone", 0).show();
         }
         this.email = (EditText) findViewById(R.id.id_phone1);
         this.booth = (EditText) findViewById(R.id.id_Booth);
@@ -92,27 +93,27 @@ public class LoginActivityNew extends AppCompatActivity {
                     LoginActivityNew.this.requestPermissions(new String[]{"android.permission.ACCESS_FINE_LOCATION"}, 99);
                     return;
                 }
-                String email_text = LoginActivityNew.this.email.getText().toString();
-                String booth_text = LoginActivityNew.this.booth.getText().toString();
-                String password_text = LoginActivityNew.this.password.getText().toString();
-                System.out.println("emailra+" + email_text);
-                LoginActivityNew loginActivityNew = LoginActivityNew.this;
-                loginActivityNew.locationTrack = LocationTrack.getInstance(loginActivityNew);
-                if (LoginActivityNew.this.locationTrack.canGetLocation()) {
-                    LoginActivityNew loginActivityNew2 = LoginActivityNew.this;
-                    loginActivityNew2.longitude = Double.valueOf(loginActivityNew2.locationTrack.getLongitude());
-                    LoginActivityNew loginActivityNew3 = LoginActivityNew.this;
-                    loginActivityNew3.latitude = Double.valueOf(loginActivityNew3.locationTrack.getLatitude());
-                }
-                if (email_text == null || email_text.isEmpty() || email_text.length() == 0 || booth_text == null || booth_text.isEmpty() || booth_text.length() == 0 || password_text == null || password_text.isEmpty() || password_text.length() == 0) {
-                    Toast.makeText(LoginActivityNew.this.getApplicationContext(), "Please enter all fields", 1).show();
-                    return;
-                }
-                Toast.makeText(LoginActivityNew.this.getApplicationContext(), "Before login", 1).show();
-                LoginActivityNew loginActivityNew4 = LoginActivityNew.this;
-                loginActivityNew4.loginMethodWithDevice(email_text, booth_text, password_text, loginActivityNew4.device, LoginActivityNew.this.longitude + ":" + LoginActivityNew.this.latitude);
+                LoginActivityNew.this.initialLogin();
             }
         });
+    }
+
+    public void initialLogin() {
+        String email_text = this.email.getText().toString();
+        String booth_text = this.booth.getText().toString();
+        String password_text = this.password.getText().toString();
+        PrintStream printStream = System.out;
+        printStream.println("emailra+" + email_text);
+        this.locationTrack = LocationTrack.getInstance(this);
+        if (this.locationTrack.canGetLocation()) {
+            this.longitude = Double.valueOf(this.locationTrack.getLongitude());
+            this.latitude = Double.valueOf(this.locationTrack.getLatitude());
+        }
+        if (email_text == null || email_text.isEmpty() || email_text.length() == 0 || booth_text == null || booth_text.isEmpty() || booth_text.length() == 0 || password_text == null || password_text.isEmpty() || password_text.length() == 0) {
+            Toast.makeText(getApplicationContext(), "Please enter all fields", 1).show();
+            return;
+        }
+        loginMethodWithDevice(email_text, booth_text, password_text, this.device, this.longitude + ":" + this.latitude);
     }
 
     @Override // android.app.Activity
@@ -132,7 +133,7 @@ public class LoginActivityNew extends AppCompatActivity {
 
     /* JADX INFO: Access modifiers changed from: private */
     public void startMainActivity(String boothid) {
-        Intent intent = new Intent(this, ListUserActivity.class);
+        Intent intent = new Intent(this, FingerprintDeviceSelectionActivity.class);
         intent.putExtra("boothid", boothid);
         startActivity(intent);
     }
@@ -171,8 +172,7 @@ public class LoginActivityNew extends AppCompatActivity {
         });
     }
 
-    /* JADX INFO: Access modifiers changed from: private */
-    public void loginMethodWithDevice(String panchayat, final String boothid, String password, String device, final String loc) {
+    private void loginMethodWithDevice(String panchayat, String boothid, String password, String device, final String loc) {
         Map<String, String> map = new HashMap<>();
         map.put("PanchayatID", panchayat);
         map.put("BoothNo", boothid);
@@ -182,8 +182,10 @@ public class LoginActivityNew extends AppCompatActivity {
             @Override // retrofit2.Callback
             public void onResponse(Call<LoginForUrlResponse> call, Response<LoginForUrlResponse> response) {
                 if (response != null && response.body() != null) {
+                    LoginActivityNew.this.responseString = response.body().toString();
                     if (!response.body().isLoginAllowed().booleanValue()) {
-                        Toast.makeText(LoginActivityNew.this.getApplicationContext(), response.body().getMessage(), 1).show();
+                        Context applicationContext = LoginActivityNew.this.getApplicationContext();
+                        Toast.makeText(applicationContext, "Login Failed : " + response.body().getMessage(), 1).show();
                     } else if (response.body().getDblocation().equalsIgnoreCase("0.0:0.0")) {
                         UserAuth userAuth = new UserAuth(LoginActivityNew.this.getApplicationContext());
                         userAuth.setBoothLocation(loc);
@@ -192,7 +194,6 @@ public class LoginActivityNew extends AppCompatActivity {
                         userAuth.setBoothId(response.body().getBoothid());
                         userAuth.setPhone("9971791175");
                         userAuth.setLogin(true);
-                        userAuth.setBoothNo(boothid);
                         userAuth.setPanchayatId(response.body().getPanchayatid());
                         userAuth.setDistrictNo(response.body().getDistNo());
                         userAuth.setBlockID(response.body().getBlockId());
@@ -211,7 +212,6 @@ public class LoginActivityNew extends AppCompatActivity {
                         userAuth2.setLogin(true);
                         userAuth2.setPanchayatId(response.body().getPanchayatid());
                         userAuth2.setWardNo(response.body().getWardno());
-                        userAuth2.setBoothNo(boothid);
                         LoginActivityNew.this.postLoginTimeUdate("9971791175", response.body().getBoothid());
                         userAuth2.setPanchayatId(response.body().getPanchayatid());
                         userAuth2.setDistrictNo(response.body().getDistNo());
@@ -220,11 +220,19 @@ public class LoginActivityNew extends AppCompatActivity {
                         userAuth2.setWardNo(response.body().getWardno());
                         userAuth2.setBaseUrl(response.body().getUrl());
                     }
+                } else if (LoginActivityNew.this.db.getAllElements() == null || LoginActivityNew.this.db.getAllElements().size() <= 0) {
+                    Toast.makeText(LoginActivityNew.this.getApplicationContext(), "Resposne not in format and No data in database", 1).show();
+                } else {
+                    Context applicationContext2 = LoginActivityNew.this.getApplicationContext();
+                    Toast.makeText(applicationContext2, "Resposne not in format but data exists in database" + response.toString(), 1).show();
+                    LoginActivityNew.this.startMainActivity("12");
                 }
             }
 
             @Override // retrofit2.Callback
             public void onFailure(Call<LoginForUrlResponse> call, Throwable t) {
+                Context applicationContext = LoginActivityNew.this.getApplicationContext();
+                Toast.makeText(applicationContext, "Login Failure " + t.getMessage(), 1).show();
             }
         });
     }
@@ -333,7 +341,7 @@ public class LoginActivityNew extends AppCompatActivity {
             return true;
         }
         if (ActivityCompat.shouldShowRequestPermissionRationale(this, "android.permission.ACCESS_FINE_LOCATION")) {
-            new AlertDialog.Builder(this).setTitle("Dhansu title").setMessage("Dhansu message").setPositiveButton("Dhansu ok", new DialogInterface.OnClickListener() { // from class: com.example.aadhaarfpoffline.tatvik.activity.LoginActivityNew.7
+            new AlertDialog.Builder(this).setTitle("Permission Denied").setMessage("Please approve permission again.").setPositiveButton("Okay", new DialogInterface.OnClickListener() { // from class: com.example.aadhaarfpoffline.tatvik.activity.LoginActivityNew.7
                 @Override // android.content.DialogInterface.OnClickListener
                 public void onClick(DialogInterface dialogInterface, int i) {
                     ActivityCompat.requestPermissions(LoginActivityNew.this, new String[]{"android.permission.ACCESS_FINE_LOCATION"}, 99);
@@ -347,6 +355,9 @@ public class LoginActivityNew extends AppCompatActivity {
 
     @Override // androidx.fragment.app.FragmentActivity, android.app.Activity, androidx.core.app.ActivityCompat.OnRequestPermissionsResultCallback
     public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
+        if (requestCode == 99 && grantResults.length > 0 && grantResults[0] == 0) {
+            initialLogin();
+        }
     }
 
     /* JADX INFO: Access modifiers changed from: private */

@@ -8,6 +8,8 @@ public class UserAuth {
     private Context mcontext;
     private String MYPREF = "userdata";
     private String BASE_URL = "baseurl";
+    private String TRANSACTION_ID = "transactionid";
+    private String FINGERPRINTDEVICE = "fingerprintdevice";
 
     public UserAuth(Context context) {
         this.mcontext = context;
@@ -110,7 +112,7 @@ public class UserAuth {
     }
 
     public String getBaseUrl() {
-        return this.mcontext.getSharedPreferences(this.MYPREF, 0).getString(this.BASE_URL, "");
+        return this.mcontext.getSharedPreferences(this.MYPREF, 0).getString(this.BASE_URL, "http://cim.phoneme.in/");
     }
 
     public void setBoothNo(String boothno) {
@@ -141,5 +143,25 @@ public class UserAuth {
 
     public String getBlockID() {
         return this.mcontext.getSharedPreferences(this.MYPREF, 0).getString("blockid", "");
+    }
+
+    public void setTransactionId(Long boothno) {
+        SharedPreferences.Editor editor = this.mcontext.getSharedPreferences(this.MYPREF, 0).edit();
+        editor.putLong(this.TRANSACTION_ID, boothno.longValue());
+        editor.commit();
+    }
+
+    public Long getTransactionId() {
+        return Long.valueOf(this.mcontext.getSharedPreferences(this.MYPREF, 0).getLong(this.TRANSACTION_ID, 0));
+    }
+
+    public void setFingerPrintDevice(String fingerPrintDevice) {
+        SharedPreferences.Editor editor = this.mcontext.getSharedPreferences(this.MYPREF, 0).edit();
+        editor.putString(this.FINGERPRINTDEVICE, fingerPrintDevice);
+        editor.apply();
+    }
+
+    public String getFingerPrintDevice() {
+        return this.mcontext.getSharedPreferences(this.MYPREF, 0).getString(this.FINGERPRINTDEVICE, "");
     }
 }

@@ -257,60 +257,60 @@ public class CountryCodePicker extends RelativeLayout {
     }
 
     private void applyCustomProperty(AttributeSet attrs) {
-        TypedArray a;
+        TypedArray a2;
         int contentColor;
         int borderFlagColor;
         try {
-            a = this.context.getTheme().obtainStyledAttributes(attrs, R.styleable.CountryCodePicker, 0, 0);
+            a2 = this.context.getTheme().obtainStyledAttributes(attrs, R.styleable.CountryCodePicker, 0, 0);
             try {
-                this.showNameCode = a.getBoolean(R.styleable.CountryCodePicker_ccp_showNameCode, true);
-                this.numberAutoFormattingEnabled = a.getBoolean(R.styleable.CountryCodePicker_ccp_autoFormatNumber, true);
-                this.showPhoneCode = a.getBoolean(R.styleable.CountryCodePicker_ccp_showPhoneCode, true);
-                this.ccpDialogShowPhoneCode = a.getBoolean(R.styleable.CountryCodePicker_ccpDialog_showPhoneCode, this.showPhoneCode);
-                this.ccpDialogShowNameCode = a.getBoolean(R.styleable.CountryCodePicker_ccpDialog_showNameCode, true);
-                this.ccpDialogShowTitle = a.getBoolean(R.styleable.CountryCodePicker_ccpDialog_showTitle, true);
-                this.ccpUseEmoji = a.getBoolean(R.styleable.CountryCodePicker_ccp_useFlagEmoji, false);
-                this.ccpUseDummyEmojiForPreview = a.getBoolean(R.styleable.CountryCodePicker_ccp_useDummyEmojiForPreview, false);
-                this.ccpDialogShowFlag = a.getBoolean(R.styleable.CountryCodePicker_ccpDialog_showFlag, true);
-                this.ccpDialogInitialScrollToSelection = a.getBoolean(R.styleable.CountryCodePicker_ccpDialog_initialScrollToSelection, false);
-                this.showFullName = a.getBoolean(R.styleable.CountryCodePicker_ccp_showFullName, false);
-                this.showFastScroller = a.getBoolean(R.styleable.CountryCodePicker_ccpDialog_showFastScroller, true);
-                this.fastScrollerBubbleColor = a.getColor(R.styleable.CountryCodePicker_ccpDialog_fastScroller_bubbleColor, 0);
-                this.fastScrollerHandleColor = a.getColor(R.styleable.CountryCodePicker_ccpDialog_fastScroller_handleColor, 0);
-                this.fastScrollerBubbleTextAppearance = a.getResourceId(R.styleable.CountryCodePicker_ccpDialog_fastScroller_bubbleTextAppearance, 0);
-                this.autoDetectLanguageEnabled = a.getBoolean(R.styleable.CountryCodePicker_ccp_autoDetectLanguage, false);
-                this.detectCountryWithAreaCode = a.getBoolean(R.styleable.CountryCodePicker_ccp_areaCodeDetectedCountry, true);
-                this.rememberLastSelection = a.getBoolean(R.styleable.CountryCodePicker_ccp_rememberLastSelection, false);
-                this.hintExampleNumberEnabled = a.getBoolean(R.styleable.CountryCodePicker_ccp_hintExampleNumber, false);
-                this.internationalFormattingOnly = a.getBoolean(R.styleable.CountryCodePicker_ccp_internationalFormattingOnly, true);
-                this.hintExampleNumberType = PhoneNumberType.values()[a.getInt(R.styleable.CountryCodePicker_ccp_hintExampleNumberType, 0)];
-                this.selectionMemoryTag = a.getString(R.styleable.CountryCodePicker_ccp_selectionMemoryTag);
+                this.showNameCode = a2.getBoolean(R.styleable.CountryCodePicker_ccp_showNameCode, true);
+                this.numberAutoFormattingEnabled = a2.getBoolean(R.styleable.CountryCodePicker_ccp_autoFormatNumber, true);
+                this.showPhoneCode = a2.getBoolean(R.styleable.CountryCodePicker_ccp_showPhoneCode, true);
+                this.ccpDialogShowPhoneCode = a2.getBoolean(R.styleable.CountryCodePicker_ccpDialog_showPhoneCode, this.showPhoneCode);
+                this.ccpDialogShowNameCode = a2.getBoolean(R.styleable.CountryCodePicker_ccpDialog_showNameCode, true);
+                this.ccpDialogShowTitle = a2.getBoolean(R.styleable.CountryCodePicker_ccpDialog_showTitle, true);
+                this.ccpUseEmoji = a2.getBoolean(R.styleable.CountryCodePicker_ccp_useFlagEmoji, false);
+                this.ccpUseDummyEmojiForPreview = a2.getBoolean(R.styleable.CountryCodePicker_ccp_useDummyEmojiForPreview, false);
+                this.ccpDialogShowFlag = a2.getBoolean(R.styleable.CountryCodePicker_ccpDialog_showFlag, true);
+                this.ccpDialogInitialScrollToSelection = a2.getBoolean(R.styleable.CountryCodePicker_ccpDialog_initialScrollToSelection, false);
+                this.showFullName = a2.getBoolean(R.styleable.CountryCodePicker_ccp_showFullName, false);
+                this.showFastScroller = a2.getBoolean(R.styleable.CountryCodePicker_ccpDialog_showFastScroller, true);
+                this.fastScrollerBubbleColor = a2.getColor(R.styleable.CountryCodePicker_ccpDialog_fastScroller_bubbleColor, 0);
+                this.fastScrollerHandleColor = a2.getColor(R.styleable.CountryCodePicker_ccpDialog_fastScroller_handleColor, 0);
+                this.fastScrollerBubbleTextAppearance = a2.getResourceId(R.styleable.CountryCodePicker_ccpDialog_fastScroller_bubbleTextAppearance, 0);
+                this.autoDetectLanguageEnabled = a2.getBoolean(R.styleable.CountryCodePicker_ccp_autoDetectLanguage, false);
+                this.detectCountryWithAreaCode = a2.getBoolean(R.styleable.CountryCodePicker_ccp_areaCodeDetectedCountry, true);
+                this.rememberLastSelection = a2.getBoolean(R.styleable.CountryCodePicker_ccp_rememberLastSelection, false);
+                this.hintExampleNumberEnabled = a2.getBoolean(R.styleable.CountryCodePicker_ccp_hintExampleNumber, false);
+                this.internationalFormattingOnly = a2.getBoolean(R.styleable.CountryCodePicker_ccp_internationalFormattingOnly, true);
+                this.hintExampleNumberType = PhoneNumberType.values()[a2.getInt(R.styleable.CountryCodePicker_ccp_hintExampleNumberType, 0)];
+                this.selectionMemoryTag = a2.getString(R.styleable.CountryCodePicker_ccp_selectionMemoryTag);
                 if (this.selectionMemoryTag == null) {
                     this.selectionMemoryTag = "CCP_last_selection";
                 }
-                this.selectedAutoDetectionPref = AutoDetectionPref.getPrefForValue(String.valueOf(a.getInt(R.styleable.CountryCodePicker_ccp_countryAutoDetectionPref, 123)));
-                this.autoDetectCountryEnabled = a.getBoolean(R.styleable.CountryCodePicker_ccp_autoDetectCountry, false);
-                this.showArrow = a.getBoolean(R.styleable.CountryCodePicker_ccp_showArrow, true);
+                this.selectedAutoDetectionPref = AutoDetectionPref.getPrefForValue(String.valueOf(a2.getInt(R.styleable.CountryCodePicker_ccp_countryAutoDetectionPref, 123)));
+                this.autoDetectCountryEnabled = a2.getBoolean(R.styleable.CountryCodePicker_ccp_autoDetectCountry, false);
+                this.showArrow = a2.getBoolean(R.styleable.CountryCodePicker_ccp_showArrow, true);
                 refreshArrowViewVisibility();
-                this.showCloseIcon = a.getBoolean(R.styleable.CountryCodePicker_ccpDialog_showCloseIcon, false);
-                showFlag(a.getBoolean(R.styleable.CountryCodePicker_ccp_showFlag, true));
-                setDialogKeyboardAutoPopup(a.getBoolean(R.styleable.CountryCodePicker_ccpDialog_keyboardAutoPopup, true));
-                this.customDefaultLanguage = getLanguageEnum(a.getInt(R.styleable.CountryCodePicker_ccp_defaultLanguage, Language.ENGLISH.ordinal()));
+                this.showCloseIcon = a2.getBoolean(R.styleable.CountryCodePicker_ccpDialog_showCloseIcon, false);
+                showFlag(a2.getBoolean(R.styleable.CountryCodePicker_ccp_showFlag, true));
+                setDialogKeyboardAutoPopup(a2.getBoolean(R.styleable.CountryCodePicker_ccpDialog_keyboardAutoPopup, true));
+                this.customDefaultLanguage = getLanguageEnum(a2.getInt(R.styleable.CountryCodePicker_ccp_defaultLanguage, Language.ENGLISH.ordinal()));
                 updateLanguageToApply();
-                this.customMasterCountriesParam = a.getString(R.styleable.CountryCodePicker_ccp_customMasterCountries);
-                this.excludedCountriesParam = a.getString(R.styleable.CountryCodePicker_ccp_excludedCountries);
+                this.customMasterCountriesParam = a2.getString(R.styleable.CountryCodePicker_ccp_customMasterCountries);
+                this.excludedCountriesParam = a2.getString(R.styleable.CountryCodePicker_ccp_excludedCountries);
                 if (!isInEditMode()) {
                     refreshCustomMasterList();
                 }
-                this.countryPreference = a.getString(R.styleable.CountryCodePicker_ccp_countryPreference);
+                this.countryPreference = a2.getString(R.styleable.CountryCodePicker_ccp_countryPreference);
                 if (!isInEditMode()) {
                     refreshPreferredCountries();
                 }
-                if (a.hasValue(R.styleable.CountryCodePicker_ccp_textGravity)) {
-                    this.ccpTextgGravity = a.getInt(R.styleable.CountryCodePicker_ccp_textGravity, TEXT_GRAVITY_CENTER);
+                if (a2.hasValue(R.styleable.CountryCodePicker_ccp_textGravity)) {
+                    this.ccpTextgGravity = a2.getInt(R.styleable.CountryCodePicker_ccp_textGravity, TEXT_GRAVITY_CENTER);
                 }
                 applyTextGravity(this.ccpTextgGravity);
-                this.defaultCountryNameCode = a.getString(R.styleable.CountryCodePicker_ccp_defaultNameCode);
+                this.defaultCountryNameCode = a2.getString(R.styleable.CountryCodePicker_ccp_defaultNameCode);
                 boolean setUsingNameCode = false;
                 if (!(this.defaultCountryNameCode == null || this.defaultCountryNameCode.length() == 0)) {
                     if (!isInEditMode()) {
@@ -330,7 +330,7 @@ public class CountryCodePicker extends RelativeLayout {
                         setUsingNameCode = true;
                     }
                 }
-                int defaultCountryCode = a.getInteger(R.styleable.CountryCodePicker_ccp_defaultPhoneCode, -1);
+                int defaultCountryCode = a2.getInteger(R.styleable.CountryCodePicker_ccp_defaultPhoneCode, -1);
                 if (!setUsingNameCode && defaultCountryCode != -1) {
                     if (!isInEditMode()) {
                         if (defaultCountryCode != -1 && CCPCountry.getCountryForCode(getContext(), getLanguageToApply(), this.preferredCountries, defaultCountryCode) == null) {
@@ -359,43 +359,43 @@ public class CountryCodePicker extends RelativeLayout {
                 if (this.rememberLastSelection && !isInEditMode()) {
                     loadLastSelectedCountryInCCP();
                 }
-                setArrowColor(a.getColor(R.styleable.CountryCodePicker_ccp_arrowColor, -99));
+                setArrowColor(a2.getColor(R.styleable.CountryCodePicker_ccp_arrowColor, -99));
                 if (isInEditMode()) {
-                    contentColor = a.getColor(R.styleable.CountryCodePicker_ccp_contentColor, -99);
+                    contentColor = a2.getColor(R.styleable.CountryCodePicker_ccp_contentColor, -99);
                 } else {
-                    contentColor = a.getColor(R.styleable.CountryCodePicker_ccp_contentColor, this.context.getResources().getColor(R.color.defaultContentColor));
+                    contentColor = a2.getColor(R.styleable.CountryCodePicker_ccp_contentColor, this.context.getResources().getColor(R.color.defaultContentColor));
                 }
                 if (contentColor != -99) {
                     setContentColor(contentColor);
                 }
                 if (isInEditMode()) {
-                    borderFlagColor = a.getColor(R.styleable.CountryCodePicker_ccp_flagBorderColor, 0);
+                    borderFlagColor = a2.getColor(R.styleable.CountryCodePicker_ccp_flagBorderColor, 0);
                 } else {
-                    borderFlagColor = a.getColor(R.styleable.CountryCodePicker_ccp_flagBorderColor, this.context.getResources().getColor(R.color.defaultBorderFlagColor));
+                    borderFlagColor = a2.getColor(R.styleable.CountryCodePicker_ccp_flagBorderColor, this.context.getResources().getColor(R.color.defaultBorderFlagColor));
                 }
                 if (borderFlagColor != 0) {
                     setFlagBorderColor(borderFlagColor);
                 }
-                setDialogBackgroundColor(a.getColor(R.styleable.CountryCodePicker_ccpDialog_backgroundColor, 0));
-                setDialogTextColor(a.getColor(R.styleable.CountryCodePicker_ccpDialog_textColor, 0));
-                setDialogSearchEditTextTintColor(a.getColor(R.styleable.CountryCodePicker_ccpDialog_searchEditTextTint, 0));
-                int textSize = a.getDimensionPixelSize(R.styleable.CountryCodePicker_ccp_textSize, 0);
+                setDialogBackgroundColor(a2.getColor(R.styleable.CountryCodePicker_ccpDialog_backgroundColor, 0));
+                setDialogTextColor(a2.getColor(R.styleable.CountryCodePicker_ccpDialog_textColor, 0));
+                setDialogSearchEditTextTintColor(a2.getColor(R.styleable.CountryCodePicker_ccpDialog_searchEditTextTint, 0));
+                int textSize = a2.getDimensionPixelSize(R.styleable.CountryCodePicker_ccp_textSize, 0);
                 if (textSize > 0) {
                     this.textView_selectedCountry.setTextSize(0, (float) textSize);
                     setFlagSize(textSize);
                     setArrowSize(textSize);
                 }
-                int arrowSize = a.getDimensionPixelSize(R.styleable.CountryCodePicker_ccp_arrowSize, 0);
+                int arrowSize = a2.getDimensionPixelSize(R.styleable.CountryCodePicker_ccp_arrowSize, 0);
                 if (arrowSize > 0) {
                     setArrowSize(arrowSize);
                 }
-                this.searchAllowed = a.getBoolean(R.styleable.CountryCodePicker_ccpDialog_allowSearch, true);
-                setCcpClickable(a.getBoolean(R.styleable.CountryCodePicker_ccp_clickable, true));
+                this.searchAllowed = a2.getBoolean(R.styleable.CountryCodePicker_ccpDialog_allowSearch, true);
+                setCcpClickable(a2.getBoolean(R.styleable.CountryCodePicker_ccp_clickable, true));
             } catch (Exception e) {
                 e.printStackTrace();
             }
         } finally {
-            a.recycle();
+            a2.recycle();
         }
     }
 

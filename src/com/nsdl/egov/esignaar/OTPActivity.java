@@ -299,7 +299,7 @@ public class OTPActivity extends BaseActivity implements View.OnClickListener {
         } catch (Exception e2) {
             e2.printStackTrace();
         }
-        AnonymousClass13 r9 = new StringRequest(1, a, new Response.Listener<String>() { // from class: com.nsdl.egov.esignaar.OTPActivity.11
+        AnonymousClass13 r9 = new StringRequest(1, f36a, new Response.Listener<String>() { // from class: com.nsdl.egov.esignaar.OTPActivity.11
             /* renamed from: a */
             public void onResponse(String str3) {
                 ProgressDialog progressDialog2;
@@ -462,7 +462,7 @@ public class OTPActivity extends BaseActivity implements View.OnClickListener {
         } catch (Exception e) {
             e.printStackTrace();
         }
-        AnonymousClass2 r9 = new StringRequest(1, a, new Response.Listener<String>() { // from class: com.nsdl.egov.esignaar.OTPActivity.14
+        AnonymousClass2 r9 = new StringRequest(1, f36a, new Response.Listener<String>() { // from class: com.nsdl.egov.esignaar.OTPActivity.14
             /* renamed from: a */
             public void onResponse(String str3) {
                 ProgressDialog progressDialog2;
@@ -579,7 +579,7 @@ public class OTPActivity extends BaseActivity implements View.OnClickListener {
         } catch (Exception e) {
             e.printStackTrace();
         }
-        AnonymousClass7 r10 = new StringRequest(1, a, new Response.Listener<String>() { // from class: com.nsdl.egov.esignaar.OTPActivity.5
+        AnonymousClass7 r10 = new StringRequest(1, f36a, new Response.Listener<String>() { // from class: com.nsdl.egov.esignaar.OTPActivity.5
             /* renamed from: a */
             public void onResponse(String str3) {
                 ProgressDialog progressDialog2;

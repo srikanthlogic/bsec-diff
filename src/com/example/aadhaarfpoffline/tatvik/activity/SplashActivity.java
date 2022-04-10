@@ -3,6 +3,7 @@ package com.example.aadhaarfpoffline.tatvik.activity;
 import android.content.Intent;
 import android.os.Bundle;
 import android.os.Handler;
+import android.os.Looper;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.vectordrawable.graphics.drawable.PathInterpolatorCompat;
 import com.example.aadhaarfpoffline.tatvik.R;
@@ -17,16 +18,17 @@ public class SplashActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_splash_screen);
         getSupportActionBar().hide();
-        if (new UserAuth(this).ifLogin().booleanValue()) {
-            Intent i = new Intent(getApplicationContext(), ListUserActivity.class);
-            i.setFlags(i.getFlags() | 1073741824);
-            startActivity(i);
-            return;
-        }
-        new Handler().postDelayed(new Runnable() { // from class: com.example.aadhaarfpoffline.tatvik.activity.SplashActivity.1
+        final UserAuth userAuth = new UserAuth(this);
+        new Handler(Looper.getMainLooper()).postDelayed(new Runnable() { // from class: com.example.aadhaarfpoffline.tatvik.activity.SplashActivity.1
             @Override // java.lang.Runnable
             public void run() {
-                SplashActivity.this.startActivity(new Intent(SplashActivity.this.getApplicationContext(), LoginActivityNew.class));
+                if (userAuth.ifLogin().booleanValue()) {
+                    Intent i = new Intent(SplashActivity.this.getApplicationContext(), ListUserActivity.class);
+                    i.setFlags(i.getFlags() | 1073741824);
+                    SplashActivity.this.startActivity(i);
+                } else {
+                    SplashActivity.this.startActivity(new Intent(SplashActivity.this.getApplicationContext(), LoginActivityNew.class));
+                }
                 SplashActivity.this.finish();
             }
         }, (long) SPLASH_TIME_OUT);

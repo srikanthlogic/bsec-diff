@@ -9,7 +9,6 @@ import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
-import android.widget.Toast;
 import androidx.cardview.widget.CardView;
 import androidx.recyclerview.widget.RecyclerView;
 import com.example.aadhaarfpoffline.tatvik.LocaleHelper;
@@ -48,13 +47,8 @@ public class VoterListAdapter extends RecyclerView.Adapter<ViewHolder> {
         this.listener = listener;
         this.formatter = new SimpleDateFormat("yyyy-MM-dd");
         this.voterDataModelList = voterDataModelList;
-        String lan = LocaleHelper.getLanguage(this.mcontext);
-        this.langContext = LocaleHelper.setLocale(this.mcontext, lan);
+        this.langContext = LocaleHelper.setLocale(this.mcontext, LocaleHelper.getLanguage(this.mcontext));
         this.resources = this.langContext.getResources();
-        Context context2 = this.mcontext;
-        Toast.makeText(context2, "language=" + lan, 1).show();
-        Context context3 = this.mcontext;
-        Toast.makeText(context3, "voted?=" + this.resources.getString(R.string.not_voted_text), 1).show();
     }
 
     /* loaded from: classes2.dex */

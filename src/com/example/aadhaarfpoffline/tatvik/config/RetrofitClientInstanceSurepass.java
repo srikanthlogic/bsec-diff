@@ -19,7 +19,7 @@ public class RetrofitClientInstanceSurepass {
     private static final String defaultToken = "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpYXQiOjE2MjM2NTU1MjQsIm5iZiI6MTYyMzY1NTUyNCwianRpIjoiZWI5YjE1YmYtYWRiMS00M2RlLWExYzEtNjJiNzhmNjgyNDZkIiwiZXhwIjoxNjI2MjQ3NTI0LCJpZGVudGl0eSI6ImRldi5teXBob25lbWVAYWFkaGFhcmFwaS5pbyIsImZyZXNoIjpmYWxzZSwidHlwZSI6ImFjY2VzcyIsInVzZXJfY2xhaW1zIjp7InNjb3BlcyI6WyJyZWFkIl19fQ.JPNY8ur3Hw_KAEHl8o_G36Gzl0QR-H5Ogctq_tIHyaI";
 
     /* renamed from: retrofit2  reason: collision with root package name */
-    private static Retrofit f5retrofit2;
+    private static Retrofit f25retrofit2;
 
     public static Retrofit getRetrofitInstanceDefaultToken() {
         OkHttpClient.Builder httpClient = new OkHttpClient.Builder();
@@ -32,9 +32,9 @@ public class RetrofitClientInstanceSurepass {
         });
         httpClient.addInterceptor(new LogJsonInterceptor());
         OkHttpClient client = httpClient.build();
-        if (f5retrofit2 == null) {
-            f5retrofit2 = new Retrofit.Builder().baseUrl(BASE_URL3).addConverterFactory(ScalarsConverterFactory.create()).client(client).addConverterFactory(GsonConverterFactory.create(new GsonBuilder().setLenient().create())).build();
+        if (f25retrofit2 == null) {
+            f25retrofit2 = new Retrofit.Builder().baseUrl(BASE_URL3).addConverterFactory(ScalarsConverterFactory.create()).client(client).addConverterFactory(GsonConverterFactory.create(new GsonBuilder().setLenient().create())).build();
         }
-        return f5retrofit2;
+        return f25retrofit2;
     }
 }

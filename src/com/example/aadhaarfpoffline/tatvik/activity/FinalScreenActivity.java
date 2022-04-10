@@ -41,6 +41,7 @@ public class FinalScreenActivity extends AppCompatActivity {
     String facematchvoterid = "";
     String fpmatchovertid = "";
 
+    /* JADX INFO: Access modifiers changed from: protected */
     @Override // androidx.appcompat.app.AppCompatActivity, androidx.fragment.app.FragmentActivity, androidx.activity.ComponentActivity, androidx.core.app.ComponentActivity, android.app.Activity
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -130,8 +131,12 @@ public class FinalScreenActivity extends AppCompatActivity {
         ((GetDataService) RetrofitClientInstance.getRetrofitInstance().create(GetDataService.class)).getVoterByVoterId(matchedvotertid).enqueue(new Callback<VoterDataGetResponse>() { // from class: com.example.aadhaarfpoffline.tatvik.activity.FinalScreenActivity.3
             @Override // retrofit2.Callback
             public void onResponse(Call<VoterDataGetResponse> call, Response<VoterDataGetResponse> response) {
-                if (response != null && response.isSuccessful() && response.body() != null && response.body().getVoters() != null) {
-                    FinalScreenActivity.this.showUserInfoIncaseofMatch(response.body().getVoters());
+                if (response != null && response.isSuccessful() && response.body() != null) {
+                    if (response.code() != 200) {
+                        Toast.makeText(FinalScreenActivity.this.getApplicationContext(), "The server is temporarily unable to process your request.Please try again later", 1).show();
+                    } else if (response.body().getVoters() != null) {
+                        FinalScreenActivity.this.showUserInfoIncaseofMatch(response.body().getVoters());
+                    }
                 }
             }
 
@@ -141,6 +146,7 @@ public class FinalScreenActivity extends AppCompatActivity {
         });
     }
 
+    /* JADX INFO: Access modifiers changed from: private */
     public void showUserInfoIncaseofMatch(VoterDataNewModel Voter) {
         System.out.println("showUserInfoIncaseofMatch1");
         String name = "";
@@ -171,6 +177,7 @@ public class FinalScreenActivity extends AppCompatActivity {
         }
     }
 
+    /* JADX INFO: Access modifiers changed from: private */
     public void UserListScreen() {
         Intent i = new Intent(this, ListUserActivity.class);
         i.setFlags(i.getFlags() | 1073741824);
@@ -199,6 +206,7 @@ public class FinalScreenActivity extends AppCompatActivity {
         });
     }
 
+    /* JADX INFO: Access modifiers changed from: private */
     public void updateUserVotingStatusAllow(final int votingstatus) {
         Map<String, String> map = new HashMap<>();
         map.put("votingstatus", "" + votingstatus);
