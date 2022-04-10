@@ -18,6 +18,7 @@ public class RetrofitClientInstance {
     private static final String BASE_URL2;
     private static final String CIM_BASE_URL;
     private static final String CIM_BASE_URL_OLD;
+    private static final String IMAGE_UPLOAD_NEW_URL;
     private static Retrofit retrofit;
 
     /* renamed from: retrofit2 */
@@ -25,6 +26,8 @@ public class RetrofitClientInstance {
     private static Retrofit retrofit3;
     private static Retrofit retrofit4;
     private static Retrofit retrofit5;
+    private static Retrofit retrofit6;
+    private static Retrofit retrofit7;
 
     public static Retrofit getRetrofitInstanceLoginOnly() {
         OkHttpClient.Builder httpClient = new OkHttpClient.Builder();
@@ -52,8 +55,8 @@ public class RetrofitClientInstance {
         httpClient.callTimeout(40, TimeUnit.SECONDS).connectTimeout(60, TimeUnit.SECONDS).readTimeout(60, TimeUnit.SECONDS).writeTimeout(60, TimeUnit.SECONDS);
         OkHttpClient client = httpClient.build();
         UserAuth userAuth = new UserAuth(Home.getContext());
-        Retrofit retrofit6 = retrofit;
-        if (retrofit6 == null || !retrofit6.baseUrl().equals(userAuth.getBaseUrl())) {
+        Retrofit retrofit8 = retrofit;
+        if (retrofit8 == null || !retrofit8.baseUrl().equals(userAuth.getBaseUrl())) {
             retrofit = new Retrofit.Builder().baseUrl(userAuth.getBaseUrl()).client(client).addConverterFactory(GsonConverterFactory.create(new GsonBuilder().setLenient().create())).build();
         }
         return retrofit;
@@ -108,5 +111,35 @@ public class RetrofitClientInstance {
             retrofit5 = new Retrofit.Builder().baseUrl(userAuth.getBaseUrl()).client(client).addConverterFactory(GsonConverterFactory.create(new GsonBuilder().setLenient().create())).build();
         }
         return retrofit5;
+    }
+
+    public static Retrofit getRetrofitInstanceCimUrlForVoterIdUploadAlternate() {
+        OkHttpClient.Builder httpClient = new OkHttpClient.Builder();
+        httpClient.callTimeout(30, TimeUnit.SECONDS).connectTimeout(60, TimeUnit.SECONDS).readTimeout(60, TimeUnit.SECONDS).writeTimeout(60, TimeUnit.SECONDS);
+        HttpLoggingInterceptor logging = new HttpLoggingInterceptor();
+        logging.setLevel(HttpLoggingInterceptor.Level.BASIC);
+        logging.setLevel(HttpLoggingInterceptor.Level.BODY);
+        httpClient.addInterceptor(logging);
+        OkHttpClient client = httpClient.build();
+        new UserAuth(Home.getContext());
+        if (retrofit6 == null) {
+            retrofit6 = new Retrofit.Builder().baseUrl(CIM_BASE_URL_OLD).client(client).addConverterFactory(GsonConverterFactory.create(new GsonBuilder().setLenient().create())).build();
+        }
+        return retrofit6;
+    }
+
+    public static Retrofit getRetrofitInstanceImageUploadNewUrl() {
+        OkHttpClient.Builder httpClient = new OkHttpClient.Builder();
+        httpClient.callTimeout(30, TimeUnit.SECONDS).connectTimeout(60, TimeUnit.SECONDS).readTimeout(60, TimeUnit.SECONDS).writeTimeout(60, TimeUnit.SECONDS);
+        HttpLoggingInterceptor logging = new HttpLoggingInterceptor();
+        logging.setLevel(HttpLoggingInterceptor.Level.BASIC);
+        logging.setLevel(HttpLoggingInterceptor.Level.BODY);
+        httpClient.addInterceptor(logging);
+        OkHttpClient client = httpClient.build();
+        new UserAuth(Home.getContext());
+        if (retrofit7 == null) {
+            retrofit7 = new Retrofit.Builder().baseUrl(IMAGE_UPLOAD_NEW_URL).client(client).addConverterFactory(GsonConverterFactory.create(new GsonBuilder().setLenient().create())).build();
+        }
+        return retrofit7;
     }
 }

@@ -7,6 +7,7 @@ import android.graphics.Color;
 import android.location.Location;
 import android.os.Bundle;
 import android.os.Handler;
+import android.os.SystemClock;
 import android.provider.Settings;
 import android.telephony.TelephonyManager;
 import android.util.Log;
@@ -51,12 +52,14 @@ public class LoginActivityWithoutLocation extends AppCompatActivity {
     private EditText password;
     Runnable r;
     Resources resources;
+    private static long mLastClkTime = 0;
+    private static long Threshold = 90000;
     private int BOOTH_RADIUS = 2;
     private String device = "";
     private String responseString = "";
     String androidId = "";
     String UDevId = "";
-    private String PHASE = "4";
+    private String PHASE = "5";
 
     public LoginActivityWithoutLocation() {
         Double valueOf = Double.valueOf(0.0d);
@@ -95,7 +98,7 @@ public class LoginActivityWithoutLocation extends AppCompatActivity {
         this.loginMessage = (TextView) findViewById(R.id.loginmessage);
         this.appVersion = (TextView) findViewById(R.id.versioncode);
         TextView textView = this.appVersion;
-        textView.setText("App version:22/" + BuildConfig.VERSION_NAME);
+        textView.setText("App version:26/" + BuildConfig.VERSION_NAME);
         MultiWaveHeader waveHeader = (MultiWaveHeader) findViewById(R.id.wavebottom);
         waveHeader.setColorAlpha(0.5f);
         waveHeader.start();
@@ -103,6 +106,11 @@ public class LoginActivityWithoutLocation extends AppCompatActivity {
         this.button.setOnClickListener(new View.OnClickListener() { // from class: com.example.aadhaarfpoffline.tatvik.activity.LoginActivityWithoutLocation.2
             @Override // android.view.View.OnClickListener
             public void onClick(View view) {
+                if (SystemClock.elapsedRealtime() - LoginActivityWithoutLocation.mLastClkTime < LoginActivityWithoutLocation.Threshold) {
+                    Toast.makeText(LoginActivityWithoutLocation.this.getApplicationContext(), "Please wait for some time", 1).show();
+                    return;
+                }
+                long unused = LoginActivityWithoutLocation.mLastClkTime = SystemClock.elapsedRealtime();
                 LoginActivityWithoutLocation.this.initialLogin();
             }
         });

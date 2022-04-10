@@ -15,6 +15,10 @@ public class TransTableDataModel {
     private String GENDER;
     @SerializedName("ID_DOCUMENT_IMAGE")
     private String ID_DOCUMENT_IMAGE;
+    @SerializedName("MATCHED_ID_DOCUMENT_IMAGE")
+    private String MATCHED_ID_DOCUMENT_IMAGE = "";
+    @SerializedName("MATCHED_USER_ID")
+    private String MATCHED_USER_ID = "";
     @SerializedName("TRANSID")
     private String TRANSID;
     @SerializedName("VOTED")
@@ -70,6 +74,14 @@ public class TransTableDataModel {
         return this.AGE;
     }
 
+    public String getMATCHED_ID_DOCUMENT_IMAGE() {
+        return this.MATCHED_ID_DOCUMENT_IMAGE;
+    }
+
+    public String getMATCHED_USER_ID() {
+        return this.MATCHED_USER_ID;
+    }
+
     public void setVoter_id(String voter_id) {
         this.voter_id = voter_id;
     }
@@ -112,5 +124,13 @@ public class TransTableDataModel {
 
     public void setAGE(String AGE) {
         this.AGE = AGE;
+    }
+
+    public void setMATCHED_ID_DOCUMENT_IMAGE(String image) {
+        this.MATCHED_ID_DOCUMENT_IMAGE = image;
+    }
+
+    public void setMATCHED_USER_ID(String matched_user_id) {
+        this.MATCHED_USER_ID = matched_user_id;
     }
 }

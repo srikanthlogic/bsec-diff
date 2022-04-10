@@ -1,21 +1,37 @@
 package com.example.aadhaarfpoffline.tatvik.activity;
 
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.res.Resources;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
+import android.net.Uri;
 import android.os.Bundle;
+import android.util.Log;
+import android.view.View;
+import android.view.ViewGroup;
+import android.widget.ImageView;
 import android.widget.TextView;
+import android.widget.Toast;
+import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.exifinterface.media.ExifInterface;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 import androidx.vectordrawable.graphics.drawable.PathInterpolatorCompat;
+import com.example.aadhaarfpoffline.tatvik.BuildConfig;
 import com.example.aadhaarfpoffline.tatvik.LocaleHelper;
 import com.example.aadhaarfpoffline.tatvik.R;
 import com.example.aadhaarfpoffline.tatvik.UserAuth;
 import com.example.aadhaarfpoffline.tatvik.adapter.VotingHistoryAdapter;
 import com.example.aadhaarfpoffline.tatvik.database.DBHelper;
+import com.example.aadhaarfpoffline.tatvik.model.VoterDataNewModel;
 import com.example.aadhaarfpoffline.tatvik.model.VotingHistoryModel;
+import com.facebook.drawee.view.SimpleDraweeView;
+import java.io.File;
 import java.util.List;
+import org.apache.commons.io.IOUtils;
 /* loaded from: classes2.dex */
 public class VotingStatusActivity extends AppCompatActivity implements VotingHistoryAdapter.OnItemClickListener {
     private TextView aadhaaNonAaadhaatCount;
@@ -23,6 +39,8 @@ public class VotingStatusActivity extends AppCompatActivity implements VotingHis
     private TextView blockBooth;
     Context context;
     DBHelper db;
+    String lan;
+    private List<VotingHistoryModel> list;
     private RecyclerView recyclerView;
     Resources resources;
     private TextView stateDistrict;
@@ -37,8 +55,8 @@ public class VotingStatusActivity extends AppCompatActivity implements VotingHis
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_votingstatus);
-        String lan = LocaleHelper.getLanguage(this);
-        this.context = LocaleHelper.setLocale(this, lan);
+        this.lan = LocaleHelper.getLanguage(this);
+        this.context = LocaleHelper.setLocale(this, this.lan);
         this.resources = this.context.getResources();
         this.db = new DBHelper(this);
         this.userAuth = new UserAuth(this);
@@ -59,7 +77,7 @@ public class VotingStatusActivity extends AppCompatActivity implements VotingHis
         sb.append("Rejected voters:");
         sb.append(this.db.getNumbersRejected());
         textView3.setText(sb.toString());
-        if (lan.equalsIgnoreCase("en")) {
+        if (this.lan.equalsIgnoreCase("en")) {
             TextView textView4 = this.stateDistrict;
             textView4.setText(this.resources.getString(R.string.panchayat_name) + ":" + this.userAuth.getPanchayat_NAME_EN() + " " + this.resources.getString(R.string.district_name_text) + ":" + this.userAuth.getDIST_NAME_EN() + " " + this.resources.getString(R.string.block_name) + ":" + this.userAuth.getBlock_NAME_EN());
         } else {
@@ -67,7 +85,7 @@ public class VotingStatusActivity extends AppCompatActivity implements VotingHis
             textView5.setText(this.resources.getString(R.string.panchayat_name) + ":" + this.userAuth.getPanchayat_NAME_HN() + " " + this.resources.getString(R.string.district_name_text) + ":" + this.userAuth.getDIST_NAME_HN() + " " + this.resources.getString(R.string.block_name) + ":" + this.userAuth.getBlock_NAME_HN());
         }
         TextView textView6 = this.blockBooth;
-        textView6.setText(this.resources.getString(R.string.panchayat_id) + ":" + this.userAuth.getPanchayatId() + ", " + this.resources.getString(R.string.block_no_text) + ":" + getBoothInFormat(this.userAuth.getBoothNo()) + "," + this.resources.getString(R.string.ward_no_text) + ":" + this.userAuth.getWardNo());
+        textView6.setText(this.resources.getString(R.string.panchayat_id) + ":" + this.userAuth.getPanchayatId() + ", " + this.resources.getString(R.string.booth_no_text) + ":" + getBoothInFormat(this.userAuth.getBoothNo()) + "," + this.resources.getString(R.string.ward_no_text) + ":" + this.userAuth.getWardNo());
         TextView textView7 = this.aadhaaNonAaadhaatCount;
         StringBuilder sb2 = new StringBuilder();
         sb2.append("Voters by Aadhaar:");
@@ -81,9 +99,10 @@ public class VotingStatusActivity extends AppCompatActivity implements VotingHis
         sb3.append(this.db.getNumberMalesVoted());
         textView8.setText(sb3.toString());
         this.txtNumMaleVoted.setVisibility(8);
-        List<VotingHistoryModel> list = this.db.getAllTransactionTableData();
-        if (list != null && !list.isEmpty() && list.size() > 0) {
-            setRecyclerView(list);
+        this.list = this.db.getAllTransactionTableData();
+        List<VotingHistoryModel> list = this.list;
+        if (list != null && !list.isEmpty() && this.list.size() > 0) {
+            setRecyclerView(this.list);
         }
     }
 
@@ -95,7 +114,23 @@ public class VotingStatusActivity extends AppCompatActivity implements VotingHis
     }
 
     @Override // com.example.aadhaarfpoffline.tatvik.adapter.VotingHistoryAdapter.OnItemClickListener
-    public void onItemClick3(int position, String voterid) {
+    public void onItemClick3(int position, String slnoinward) {
+        Context applicationContext = getApplicationContext();
+        Toast.makeText(applicationContext, "position=" + position + " slnoinward=" + slnoinward, 1).show();
+        Context applicationContext2 = getApplicationContext();
+        Toast.makeText(applicationContext2, "image=" + this.list.get(position).getMATCHED_ID_DOCUMENT_IMAGE() + " userid=" + this.list.get(position).getMATCHED_USER_ID(), 1).show();
+        if (this.list.get(position).getVoted().equalsIgnoreCase(ExifInterface.GPS_MEASUREMENT_2D)) {
+            String[] words = this.list.get(position).getMATCHED_USER_ID().split("_");
+            if (words != null && words.length == 4) {
+                Log.d(BuildConfig.BUILD_TYPE, "" + words.length);
+                String matchslnoinward = words[words.length - 1];
+                VoterDataNewModel Voter = this.db.getVoterBySlNoInWard(matchslnoinward);
+                popupFailedOffline("Matched against " + matchslnoinward, Voter, position);
+                return;
+            }
+            return;
+        }
+        Toast.makeText(getApplicationContext(), "This voter was not rejected", 1).show();
     }
 
     private void getTransTableInList() {
@@ -123,5 +158,73 @@ public class VotingStatusActivity extends AppCompatActivity implements VotingHis
         } else {
             return String.valueOf((boothnum.intValue() - 4000) + "घ");
         }
+    }
+
+    private void popupFailedOffline(String failedmessage, VoterDataNewModel voter, int position) {
+        String user_id = this.list.get(position).getMATCHED_USER_ID();
+        AlertDialog.Builder alertDialogBuilder = new AlertDialog.Builder(this);
+        System.out.println("popup2");
+        alertDialogBuilder.setTitle(this.resources.getString(R.string.aadhaar_authentication));
+        alertDialogBuilder.setIcon(R.drawable.wrong_icon_trp);
+        System.out.println("popup4");
+        alertDialogBuilder.setPositiveButton(17039379, new DialogInterface.OnClickListener() { // from class: com.example.aadhaarfpoffline.tatvik.activity.VotingStatusActivity.1
+            @Override // android.content.DialogInterface.OnClickListener
+            public void onClick(DialogInterface dialog, int which) {
+                dialog.dismiss();
+            }
+        });
+        View dialogView = getLayoutInflater().inflate(R.layout.alert_custom_layout, (ViewGroup) null);
+        alertDialogBuilder.setView(dialogView);
+        SimpleDraweeView matchUserImage = (SimpleDraweeView) dialogView.findViewById(R.id.usermatchimage);
+        ImageView imageView = (ImageView) dialogView.findViewById(R.id.image_1);
+        imageView.setVisibility(0);
+        imageView.setImageResource(R.drawable.wrong_icon_trp);
+        TextView messageText = (TextView) dialogView.findViewById(R.id.match_message);
+        TextView messageVoterOnNot = (TextView) dialogView.findViewById(R.id.message);
+        String voterimage = this.list.get(position).getMATCHED_ID_DOCUMENT_IMAGE();
+        File imgFile = new File("/sdcard/Images/" + voterimage);
+        if (imgFile.exists()) {
+            Bitmap myBitmap = BitmapFactory.decodeFile(imgFile.getAbsolutePath());
+            matchUserImage.setVisibility(0);
+            matchUserImage.setImageBitmap(myBitmap);
+        } else {
+            Uri uri1 = Uri.parse("http://cim.phoneme.in/PanchayatElectionoff/getimages/?file=" + voterimage);
+            matchUserImage.setVisibility(0);
+            matchUserImage.setImageURI(uri1);
+        }
+        String name = this.resources.getString(R.string.name) + ":";
+        if (this.lan.equalsIgnoreCase("en")) {
+            if (voter.getFM_NAME_EN() != null) {
+                name = name + voter.getFM_NAME_EN();
+            }
+            if (voter.getLASTNAME_EN() != null) {
+                name = name + " " + voter.getLASTNAME_EN();
+            }
+        } else {
+            if (voter.getFM_NAME_V1() != null) {
+                name = name + voter.getFM_NAME_V1();
+            }
+            if (voter.getLASTNAME_V1() != null) {
+                name = name + " " + voter.getLASTNAME_V1();
+            }
+        }
+        String age = this.resources.getString(R.string.age) + ":" + voter.getAge();
+        String wardnum = this.resources.getString(R.string.ward_no) + ":" + voter.getWardNo();
+        String[] words = user_id.split("_");
+        String matchslnoinward = words[words.length - 1];
+        String votingdate = this.resources.getString(R.string.voting_date) + ":" + this.db.getDateFromSlNoinWard(matchslnoinward);
+        messageText.setText(name + IOUtils.LINE_SEPARATOR_UNIX + (this.resources.getString(R.string.gender) + ":" + voter.getGENDER()) + IOUtils.LINE_SEPARATOR_UNIX + age + IOUtils.LINE_SEPARATOR_UNIX + wardnum + IOUtils.LINE_SEPARATOR_UNIX + votingdate + IOUtils.LINE_SEPARATOR_UNIX + (this.resources.getString(R.string.panchayat_id) + "/" + this.resources.getString(R.string.ward_no) + "/" + this.resources.getString(R.string.booth_no_text) + ":" + voter.getPanchayatID() + "/" + voter.getWardNo() + "/" + voter.getBoothNo()));
+        String finalmessage = this.resources.getString(R.string.u_cannot_vote_text);
+        StringBuilder sb = new StringBuilder();
+        sb.append(finalmessage);
+        sb.append(IOUtils.LINE_SEPARATOR_UNIX);
+        sb.append(this.resources.getString(R.string.fingerprintrecord_match_text));
+        sb.append(voter.getEPIC_NO());
+        sb.toString();
+        messageVoterOnNot.setVisibility(0);
+        messageVoterOnNot.setText(failedmessage);
+        AlertDialog alertDialog = alertDialogBuilder.create();
+        System.out.println("popup5");
+        alertDialog.show();
     }
 }
