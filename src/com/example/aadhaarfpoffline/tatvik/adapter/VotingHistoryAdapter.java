@@ -116,6 +116,7 @@ public class VotingHistoryAdapter extends RecyclerView.Adapter<ViewHolder> {
             this.VotingDate = (TextView) v.findViewById(R.id.voting_date);
             this.votedOrNot = (Button) v.findViewById(R.id.votednotvoted);
             this.mainLayout = (LinearLayout) v.findViewById(R.id.main_layout);
+            this.imageView = (ImageView) v.findViewById(R.id.malefemale);
         }
 
         private void setData2(int position) {
@@ -141,6 +142,11 @@ public class VotingHistoryAdapter extends RecyclerView.Adapter<ViewHolder> {
                 this.mainLayout.setBackgroundResource(R.drawable.border_synced);
             } else {
                 this.mainLayout.setBackgroundResource(R.drawable.border_unsynced);
+            }
+            if (((VotingHistoryModel) VotingHistoryAdapter.this.votingHistoryModelList.get(position)).getGender().contains("M")) {
+                this.imageView.setImageResource(R.drawable.male);
+            } else {
+                this.imageView.setImageResource(R.drawable.female);
             }
         }
     }

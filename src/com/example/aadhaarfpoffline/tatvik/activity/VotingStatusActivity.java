@@ -8,6 +8,7 @@ import android.widget.TextView;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
+import androidx.vectordrawable.graphics.drawable.PathInterpolatorCompat;
 import com.example.aadhaarfpoffline.tatvik.LocaleHelper;
 import com.example.aadhaarfpoffline.tatvik.R;
 import com.example.aadhaarfpoffline.tatvik.UserAuth;
@@ -60,10 +61,10 @@ public class VotingStatusActivity extends AppCompatActivity implements VotingHis
         textView3.setText(sb.toString());
         if (lan.equalsIgnoreCase("en")) {
             TextView textView4 = this.stateDistrict;
-            textView4.setText(this.resources.getString(R.string.panchayat_name) + ":" + this.userAuth.getPanchayat_NAME_EN() + " " + this.resources.getString(R.string.district_name_text) + ":" + this.userAuth.getDIST_NAME_EN() + " " + this.resources.getString(R.string.booth_name) + ":" + this.userAuth.getBlock_NAME_EN());
+            textView4.setText(this.resources.getString(R.string.panchayat_name) + ":" + this.userAuth.getPanchayat_NAME_EN() + " " + this.resources.getString(R.string.district_name_text) + ":" + this.userAuth.getDIST_NAME_EN() + " " + this.resources.getString(R.string.block_name) + ":" + this.userAuth.getBlock_NAME_EN());
         } else {
             TextView textView5 = this.stateDistrict;
-            textView5.setText(this.resources.getString(R.string.panchayat_name) + ":" + this.userAuth.getPanchayat_NAME_HN() + " " + this.resources.getString(R.string.district_name_text) + ":" + this.userAuth.getDIST_NAME_HN() + " " + this.resources.getString(R.string.booth_name) + ":" + this.userAuth.getBlock_NAME_HN());
+            textView5.setText(this.resources.getString(R.string.panchayat_name) + ":" + this.userAuth.getPanchayat_NAME_HN() + " " + this.resources.getString(R.string.district_name_text) + ":" + this.userAuth.getDIST_NAME_HN() + " " + this.resources.getString(R.string.block_name) + ":" + this.userAuth.getBlock_NAME_HN());
         }
         TextView textView6 = this.blockBooth;
         textView6.setText(this.resources.getString(R.string.panchayat_id) + ":" + this.userAuth.getPanchayatId() + ", " + this.resources.getString(R.string.block_no_text) + ":" + getBoothInFormat(this.userAuth.getBoothNo()) + "," + this.resources.getString(R.string.ward_no_text) + ":" + this.userAuth.getWardNo());
@@ -112,15 +113,15 @@ public class VotingStatusActivity extends AppCompatActivity implements VotingHis
             return String.valueOf(boothnum);
         }
         if (boothnum.intValue() > 1000 && boothnum.intValue() <= 2000) {
-            return String.valueOf(boothnum + "क");
+            return String.valueOf((boothnum.intValue() - 1000) + "क");
         } else if (boothnum.intValue() > 2000 && boothnum.intValue() <= 3000) {
-            return String.valueOf(boothnum + "ख");
+            return String.valueOf((boothnum.intValue() - 2000) + "ख");
         } else if (boothnum.intValue() > 3000 && boothnum.intValue() <= 4000) {
-            return String.valueOf(boothnum + "ग");
+            return String.valueOf((boothnum.intValue() - PathInterpolatorCompat.MAX_NUM_POINTS) + "ग");
         } else if (boothnum.intValue() <= 4000 || boothnum.intValue() > 5000) {
             return "";
         } else {
-            return String.valueOf(boothnum + "घ");
+            return String.valueOf((boothnum.intValue() - 4000) + "घ");
         }
     }
 }

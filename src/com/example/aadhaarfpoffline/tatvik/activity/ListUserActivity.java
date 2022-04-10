@@ -39,6 +39,7 @@ import androidx.core.view.GravityCompat;
 import androidx.drawerlayout.widget.DrawerLayout;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
+import androidx.vectordrawable.graphics.drawable.PathInterpolatorCompat;
 import com.example.aadhaarfpoffline.tatvik.BuildConfig;
 import com.example.aadhaarfpoffline.tatvik.GetDataService;
 import com.example.aadhaarfpoffline.tatvik.LocaleHelper;
@@ -248,7 +249,7 @@ public class ListUserActivity extends AppCompatActivity implements VoterListAdap
         NavigationView navigationView = (NavigationView) findViewById(R.id.nav_view);
         navigationView.setNavigationItemSelectedListener(this);
         MenuItem nav_app_version = navigationView.getMenu().findItem(R.id.nav_app_version);
-        nav_app_version.setTitle("Version 20/" + BuildConfig.VERSION_NAME);
+        nav_app_version.setTitle("Version 22/" + BuildConfig.VERSION_NAME);
         this.recyclerView = (RecyclerView) findViewById(R.id.recyclerview_vendor_list);
         this.userAuth.getBoothId();
         this.search = (EditText) findViewById(R.id.search_text);
@@ -259,10 +260,10 @@ public class ListUserActivity extends AppCompatActivity implements VoterListAdap
         this.numVoters = (TextView) findViewById(R.id.num_voters);
         if (this.lan.equalsIgnoreCase("en")) {
             TextView textView = this.stateDistrict;
-            textView.setText(this.resources.getString(R.string.panchayat_name) + ":" + this.userAuth.getPanchayat_NAME_EN() + ", " + this.resources.getString(R.string.district_name_text) + ":" + this.userAuth.getDIST_NAME_EN() + ", " + this.resources.getString(R.string.booth_name) + ":" + this.userAuth.getBlock_NAME_EN());
+            textView.setText(this.resources.getString(R.string.panchayat_name) + ":" + this.userAuth.getPanchayat_NAME_EN() + ", " + this.resources.getString(R.string.district_name_text) + ":" + this.userAuth.getDIST_NAME_EN() + ", " + this.resources.getString(R.string.block_name) + ":" + this.userAuth.getBlock_NAME_EN());
         } else {
             TextView textView2 = this.stateDistrict;
-            textView2.setText(this.resources.getString(R.string.panchayat_name) + ":" + this.userAuth.getPanchayat_NAME_HN() + ", " + this.resources.getString(R.string.district_name_text) + ":" + this.userAuth.getDIST_NAME_HN() + ", " + this.resources.getString(R.string.booth_name) + ":" + this.userAuth.getBlock_NAME_HN());
+            textView2.setText(this.resources.getString(R.string.panchayat_name) + ":" + this.userAuth.getPanchayat_NAME_HN() + ", " + this.resources.getString(R.string.district_name_text) + ":" + this.userAuth.getDIST_NAME_HN() + ", " + this.resources.getString(R.string.block_name) + ":" + this.userAuth.getBlock_NAME_HN());
         }
         this.searchButton = (Button) findViewById(R.id.search_button);
         this.searchButton.setText(this.resources.getString(R.string.search));
@@ -298,10 +299,10 @@ public class ListUserActivity extends AppCompatActivity implements VoterListAdap
             } else {
                 if (this.lan.equalsIgnoreCase("en")) {
                     TextView textView3 = this.stateDistrict;
-                    textView3.setText(this.resources.getString(R.string.panchayat_name) + ":" + this.userAuth.getPanchayat_NAME_EN() + " " + this.resources.getString(R.string.district_name_text) + ":" + this.userAuth.getDIST_NAME_EN() + " " + this.resources.getString(R.string.booth_name) + ":" + this.userAuth.getBlock_NAME_EN());
+                    textView3.setText(this.resources.getString(R.string.panchayat_name) + ":" + this.userAuth.getPanchayat_NAME_EN() + " " + this.resources.getString(R.string.district_name_text) + ":" + this.userAuth.getDIST_NAME_EN() + " " + this.resources.getString(R.string.block_name) + ":" + this.userAuth.getBlock_NAME_EN());
                 } else {
                     TextView textView4 = this.stateDistrict;
-                    textView4.setText(this.resources.getString(R.string.panchayat_name) + ":" + this.userAuth.getPanchayat_NAME_HN() + " " + this.resources.getString(R.string.district_name_text) + ":" + this.userAuth.getDIST_NAME_HN() + " " + this.resources.getString(R.string.booth_name) + ":" + this.userAuth.getBlock_NAME_HN());
+                    textView4.setText(this.resources.getString(R.string.panchayat_name) + ":" + this.userAuth.getPanchayat_NAME_HN() + " " + this.resources.getString(R.string.district_name_text) + ":" + this.userAuth.getDIST_NAME_HN() + " " + this.resources.getString(R.string.block_name) + ":" + this.userAuth.getBlock_NAME_HN());
                 }
                 TextView textView5 = this.blockBooth;
                 textView5.setText(this.userAuth.getPanchayatId() + " " + this.resources.getString(R.string.booth_no_text) + ":" + getBoothInFormat(this.userAuth.getBoothNo()) + "," + this.resources.getString(R.string.ward_no_text) + ":" + this.userAuth.getWardNo());
@@ -397,10 +398,10 @@ public class ListUserActivity extends AppCompatActivity implements VoterListAdap
                 return;
             }
             NBioBSPJNI nBioBSPJNI = this.bsp;
-            nBioBSPJNI.getClass();
+            Objects.requireNonNull(nBioBSPJNI);
             this.exportEngine = new NBioBSPJNI.Export();
             NBioBSPJNI nBioBSPJNI2 = this.bsp;
-            nBioBSPJNI2.getClass();
+            Objects.requireNonNull(nBioBSPJNI2);
             this.indexSearch = new NBioBSPJNI.IndexSearch();
         }
     }
@@ -465,23 +466,23 @@ public class ListUserActivity extends AppCompatActivity implements VoterListAdap
     public synchronized void captureFingerPrintFromNitgen() {
         try {
             NBioBSPJNI nBioBSPJNI = this.bsp;
-            nBioBSPJNI.getClass();
+            Objects.requireNonNull(nBioBSPJNI);
             NBioBSPJNI.FIR_HANDLE hCapturedFIR = new NBioBSPJNI.FIR_HANDLE();
             NBioBSPJNI nBioBSPJNI2 = this.bsp;
-            nBioBSPJNI2.getClass();
+            Objects.requireNonNull(nBioBSPJNI2);
             NBioBSPJNI.FIR_HANDLE hAuditFIR = new NBioBSPJNI.FIR_HANDLE();
             NBioBSPJNI nBioBSPJNI3 = this.bsp;
-            nBioBSPJNI3.getClass();
+            Objects.requireNonNull(nBioBSPJNI3);
             this.bsp.Capture(3, hCapturedFIR, this.timeout, hAuditFIR, new NBioBSPJNI.CAPTURED_DATA());
             if (this.bsp.IsErrorOccured()) {
                 this.msg = "NBioBSP Capture Error: " + this.bsp.GetErrorCode();
             } else {
                 NBioBSPJNI nBioBSPJNI4 = this.bsp;
-                nBioBSPJNI4.getClass();
+                Objects.requireNonNull(nBioBSPJNI4);
                 NBioBSPJNI.INPUT_FIR inputFIR = new NBioBSPJNI.INPUT_FIR();
                 inputFIR.SetFIRHandle(hCapturedFIR);
                 NBioBSPJNI.Export export = this.exportEngine;
-                export.getClass();
+                Objects.requireNonNull(export);
                 NBioBSPJNI.Export.DATA exportData = new NBioBSPJNI.Export.DATA();
                 this.exportEngine.ExportFIR(inputFIR, exportData, 3);
                 if (this.bsp.IsErrorOccured()) {
@@ -502,7 +503,7 @@ public class ListUserActivity extends AppCompatActivity implements VoterListAdap
                 this.byTemplate1 = exportData.FingerData[0].Template[0].Data;
                 inputFIR.SetFIRHandle(hAuditFIR);
                 NBioBSPJNI.Export export2 = this.exportEngine;
-                export2.getClass();
+                Objects.requireNonNull(export2);
                 NBioBSPJNI.Export.AUDIT exportAudit = new NBioBSPJNI.Export.AUDIT();
                 this.exportEngine.ExportAudit(inputFIR, exportAudit);
                 if (this.bsp.IsErrorOccured()) {
@@ -525,7 +526,7 @@ public class ListUserActivity extends AppCompatActivity implements VoterListAdap
                 this.nCapturedRawHeight1 = exportAudit.ImageHeight;
                 this.msg = "First Capture Success";
                 NBioBSPJNI nBioBSPJNI5 = this.bsp;
-                nBioBSPJNI5.getClass();
+                Objects.requireNonNull(nBioBSPJNI5);
                 NBioBSPJNI.NFIQInfo info = new NBioBSPJNI.NFIQInfo();
                 info.pRawImage = this.byCapturedRaw1;
                 info.nImgWidth = this.nCapturedRawWidth1;
@@ -544,7 +545,7 @@ public class ListUserActivity extends AppCompatActivity implements VoterListAdap
                 }
                 this.nFIQ = info.pNFIQ;
                 NBioBSPJNI nBioBSPJNI6 = this.bsp;
-                nBioBSPJNI6.getClass();
+                Objects.requireNonNull(nBioBSPJNI6);
                 NBioBSPJNI.ISOBUFFER ISOBuffer = new NBioBSPJNI.ISOBUFFER();
                 this.bsp.ExportRawToISOV1(exportAudit, ISOBuffer, false, (byte) 0);
                 if (this.bsp.IsErrorOccured()) {
@@ -559,7 +560,7 @@ public class ListUserActivity extends AppCompatActivity implements VoterListAdap
                     return;
                 }
                 NBioBSPJNI nBioBSPJNI7 = this.bsp;
-                nBioBSPJNI7.getClass();
+                Objects.requireNonNull(nBioBSPJNI7);
                 NBioBSPJNI.NIMPORTRAWSET rawSet = new NBioBSPJNI.NIMPORTRAWSET();
                 this.bsp.ImportISOToRaw(ISOBuffer, rawSet);
                 if (this.bsp.IsErrorOccured()) {
@@ -764,10 +765,10 @@ public class ListUserActivity extends AppCompatActivity implements VoterListAdap
                 ListUserActivity.this.voterDataModelList = response.body().getVoters();
                 if (ListUserActivity.this.lan.equalsIgnoreCase("en")) {
                     TextView textView = ListUserActivity.this.stateDistrict;
-                    textView.setText(ListUserActivity.this.resources.getString(R.string.panchayat_name) + ":" + ListUserActivity.this.userAuth.getPanchayat_NAME_EN() + " " + ListUserActivity.this.resources.getString(R.string.district_name_text) + ":" + ListUserActivity.this.userAuth.getDIST_NAME_EN() + " " + ListUserActivity.this.resources.getString(R.string.booth_name) + ":" + ListUserActivity.this.userAuth.getBlock_NAME_EN());
+                    textView.setText(ListUserActivity.this.resources.getString(R.string.panchayat_name) + ":" + ListUserActivity.this.userAuth.getPanchayat_NAME_EN() + " " + ListUserActivity.this.resources.getString(R.string.district_name_text) + ":" + ListUserActivity.this.userAuth.getDIST_NAME_EN() + " " + ListUserActivity.this.resources.getString(R.string.block_name) + ":" + ListUserActivity.this.userAuth.getBlock_NAME_EN());
                 } else {
                     TextView textView2 = ListUserActivity.this.stateDistrict;
-                    textView2.setText(ListUserActivity.this.resources.getString(R.string.panchayat_name) + ":" + ListUserActivity.this.userAuth.getPanchayat_NAME_HN() + " " + ListUserActivity.this.resources.getString(R.string.district_name_text) + ":" + ListUserActivity.this.userAuth.getDIST_NAME_HN() + " " + ListUserActivity.this.resources.getString(R.string.booth_name) + ":" + ListUserActivity.this.userAuth.getBlock_NAME_HN());
+                    textView2.setText(ListUserActivity.this.resources.getString(R.string.panchayat_name) + ":" + ListUserActivity.this.userAuth.getPanchayat_NAME_HN() + " " + ListUserActivity.this.resources.getString(R.string.district_name_text) + ":" + ListUserActivity.this.userAuth.getDIST_NAME_HN() + " " + ListUserActivity.this.resources.getString(R.string.block_name) + ":" + ListUserActivity.this.userAuth.getBlock_NAME_HN());
                 }
                 TextView textView3 = ListUserActivity.this.blockBooth;
                 StringBuilder sb = new StringBuilder();
@@ -809,14 +810,15 @@ public class ListUserActivity extends AppCompatActivity implements VoterListAdap
                         if (response.isSuccessful() && response.body() != null && response.body().getVoters() != null && !response.body().getVoters().isEmpty() && response.body().getVoters().size() > 0) {
                             Log.d("getVoterListNewTableByBooth", response.toString());
                             ListUserActivity.this.voterDataNewModelList = response.body().getVoters();
+                            Log.d("getVoterListNewTableByBooth2", ListUserActivity.this.voterDataNewModelList.toString());
                             $$Lambda$ListUserActivity$17$L8YlHwHJKq7cWBBju86EauHR4c r2 = $$Lambda$ListUserActivity$17$L8YlHwHJKq7cWBBju86EauHR4c.INSTANCE;
                             $$Lambda$ListUserActivity$17$IB4M3NQI4gZ2SQn48ZnTvdAeEm0 r3 = $$Lambda$ListUserActivity$17$IB4M3NQI4gZ2SQn48ZnTvdAeEm0.INSTANCE;
                             if (ListUserActivity.this.lan.equalsIgnoreCase("en")) {
                                 TextView textView = ListUserActivity.this.stateDistrict;
-                                textView.setText(ListUserActivity.this.resources.getString(R.string.panchayat_name) + ":" + ListUserActivity.this.userAuth.getPanchayat_NAME_EN() + " " + ListUserActivity.this.resources.getString(R.string.district_name_text) + ":" + ListUserActivity.this.userAuth.getDIST_NAME_EN() + " " + ListUserActivity.this.resources.getString(R.string.booth_name) + ":" + ListUserActivity.this.userAuth.getBlock_NAME_EN());
+                                textView.setText(ListUserActivity.this.resources.getString(R.string.panchayat_name) + ":" + ListUserActivity.this.userAuth.getPanchayat_NAME_EN() + " " + ListUserActivity.this.resources.getString(R.string.district_name_text) + ":" + ListUserActivity.this.userAuth.getDIST_NAME_EN() + " " + ListUserActivity.this.resources.getString(R.string.block_name) + ":" + ListUserActivity.this.userAuth.getBlock_NAME_EN());
                             } else {
                                 TextView textView2 = ListUserActivity.this.stateDistrict;
-                                textView2.setText(ListUserActivity.this.resources.getString(R.string.panchayat_name) + ":" + ListUserActivity.this.userAuth.getPanchayat_NAME_HN() + " " + ListUserActivity.this.resources.getString(R.string.district_name_text) + ":" + ListUserActivity.this.userAuth.getDIST_NAME_HN() + " " + ListUserActivity.this.resources.getString(R.string.booth_name) + ":" + ListUserActivity.this.userAuth.getBlock_NAME_HN());
+                                textView2.setText(ListUserActivity.this.resources.getString(R.string.panchayat_name) + ":" + ListUserActivity.this.userAuth.getPanchayat_NAME_HN() + " " + ListUserActivity.this.resources.getString(R.string.district_name_text) + ":" + ListUserActivity.this.userAuth.getDIST_NAME_HN() + " " + ListUserActivity.this.resources.getString(R.string.block_name) + ":" + ListUserActivity.this.userAuth.getBlock_NAME_HN());
                             }
                             TextView textView3 = ListUserActivity.this.blockBooth;
                             textView3.setText(ListUserActivity.this.resources.getString(R.string.block_no_text) + ":" + response.body().getVoters().get(0).getBlockID() + "," + ListUserActivity.this.resources.getString(R.string.ward_no_text) + ":" + response.body().getVoters().get(0).getWardNo() + "," + ListUserActivity.this.resources.getString(R.string.booth_no_text) + ":" + ListUserActivity.this.getBoothInFormat(ListUserActivity.this.userAuth.getBoothNo()));
@@ -849,10 +851,10 @@ public class ListUserActivity extends AppCompatActivity implements VoterListAdap
                     }
                     if (ListUserActivity.this.lan.equalsIgnoreCase("en")) {
                         TextView textView = ListUserActivity.this.stateDistrict;
-                        textView.setText(ListUserActivity.this.resources.getString(R.string.panchayat_name) + ":" + ListUserActivity.this.userAuth.getPanchayat_NAME_EN() + " " + ListUserActivity.this.resources.getString(R.string.district_name_text) + ":" + ListUserActivity.this.userAuth.getDIST_NAME_EN() + " " + ListUserActivity.this.resources.getString(R.string.booth_name) + ":" + ListUserActivity.this.userAuth.getBlock_NAME_EN());
+                        textView.setText(ListUserActivity.this.resources.getString(R.string.panchayat_name) + ":" + ListUserActivity.this.userAuth.getPanchayat_NAME_EN() + " " + ListUserActivity.this.resources.getString(R.string.district_name_text) + ":" + ListUserActivity.this.userAuth.getDIST_NAME_EN() + " " + ListUserActivity.this.resources.getString(R.string.block_name) + ":" + ListUserActivity.this.userAuth.getBlock_NAME_EN());
                     } else {
                         TextView textView2 = ListUserActivity.this.stateDistrict;
-                        textView2.setText(ListUserActivity.this.resources.getString(R.string.panchayat_name) + ":" + ListUserActivity.this.userAuth.getPanchayat_NAME_HN() + " " + ListUserActivity.this.resources.getString(R.string.district_name_text) + ":" + ListUserActivity.this.userAuth.getDIST_NAME_HN() + " " + ListUserActivity.this.resources.getString(R.string.booth_name) + ":" + ListUserActivity.this.userAuth.getBlock_NAME_HN());
+                        textView2.setText(ListUserActivity.this.resources.getString(R.string.panchayat_name) + ":" + ListUserActivity.this.userAuth.getPanchayat_NAME_HN() + " " + ListUserActivity.this.resources.getString(R.string.district_name_text) + ":" + ListUserActivity.this.userAuth.getDIST_NAME_HN() + " " + ListUserActivity.this.resources.getString(R.string.block_name) + ":" + ListUserActivity.this.userAuth.getBlock_NAME_HN());
                     }
                     TextView textView3 = ListUserActivity.this.blockBooth;
                     StringBuilder sb = new StringBuilder();
@@ -938,10 +940,10 @@ public class ListUserActivity extends AppCompatActivity implements VoterListAdap
                 ListUserActivity.this.voterDataNewModelList = response.body().getVoters();
                 if (ListUserActivity.this.lan.equalsIgnoreCase("en")) {
                     TextView textView = ListUserActivity.this.stateDistrict;
-                    textView.setText(ListUserActivity.this.resources.getString(R.string.panchayat_name) + ":" + ListUserActivity.this.userAuth.getPanchayat_NAME_EN() + " " + ListUserActivity.this.resources.getString(R.string.district_name_text) + ":" + ListUserActivity.this.userAuth.getDIST_NAME_EN() + " " + ListUserActivity.this.resources.getString(R.string.booth_name) + ":" + ListUserActivity.this.userAuth.getBlock_NAME_EN());
+                    textView.setText(ListUserActivity.this.resources.getString(R.string.panchayat_name) + ":" + ListUserActivity.this.userAuth.getPanchayat_NAME_EN() + " " + ListUserActivity.this.resources.getString(R.string.district_name_text) + ":" + ListUserActivity.this.userAuth.getDIST_NAME_EN() + " " + ListUserActivity.this.resources.getString(R.string.block_name) + ":" + ListUserActivity.this.userAuth.getBlock_NAME_EN());
                 } else {
                     TextView textView2 = ListUserActivity.this.stateDistrict;
-                    textView2.setText(ListUserActivity.this.resources.getString(R.string.panchayat_name) + ":" + ListUserActivity.this.userAuth.getPanchayat_NAME_HN() + " " + ListUserActivity.this.resources.getString(R.string.district_name_text) + ":" + ListUserActivity.this.userAuth.getDIST_NAME_HN() + " " + ListUserActivity.this.resources.getString(R.string.booth_name) + ":" + ListUserActivity.this.userAuth.getBlock_NAME_HN());
+                    textView2.setText(ListUserActivity.this.resources.getString(R.string.panchayat_name) + ":" + ListUserActivity.this.userAuth.getPanchayat_NAME_HN() + " " + ListUserActivity.this.resources.getString(R.string.district_name_text) + ":" + ListUserActivity.this.userAuth.getDIST_NAME_HN() + " " + ListUserActivity.this.resources.getString(R.string.block_name) + ":" + ListUserActivity.this.userAuth.getBlock_NAME_HN());
                 }
                 TextView textView3 = ListUserActivity.this.blockBooth;
                 StringBuilder sb = new StringBuilder();
@@ -1158,6 +1160,7 @@ public class ListUserActivity extends AppCompatActivity implements VoterListAdap
             cols.put("ELECTOR_TYPE", offlinevoter.get(i).getELECTOR_TYPE());
             cols.put("BlockID", offlinevoter.get(i).getBlockID());
             cols.put("PanchayatID", offlinevoter.get(i).getPanchayatID());
+            cols.put("BoothNo", offlinevoter.get(i).getBoothNo());
             cols.put("VillageName", offlinevoter.get(i).getVillageName());
             cols.put("WardNo", offlinevoter.get(i).getWardNo());
             cols.put("SlNoInWard", offlinevoter.get(i).getSlNoInWard());
@@ -1295,10 +1298,10 @@ public class ListUserActivity extends AppCompatActivity implements VoterListAdap
         this.captureFingerprint.setText(this.resources.getString(R.string.capture_text));
         if (lan.equalsIgnoreCase("en")) {
             TextView textView = this.stateDistrict;
-            textView.setText(this.resources.getString(R.string.panchayat_name) + ":" + this.userAuth.getPanchayat_NAME_EN() + ", " + this.resources.getString(R.string.district_name_text) + ":" + this.userAuth.getDIST_NAME_EN() + " ," + this.resources.getString(R.string.booth_name) + ":" + this.userAuth.getBlock_NAME_EN());
+            textView.setText(this.resources.getString(R.string.panchayat_name) + ":" + this.userAuth.getPanchayat_NAME_EN() + ", " + this.resources.getString(R.string.district_name_text) + ":" + this.userAuth.getDIST_NAME_EN() + " ," + this.resources.getString(R.string.block_name) + ":" + this.userAuth.getBlock_NAME_EN());
         } else {
             TextView textView2 = this.stateDistrict;
-            textView2.setText(this.resources.getString(R.string.panchayat_name) + ":" + this.userAuth.getPanchayat_NAME_HN() + ", " + this.resources.getString(R.string.district_name_text) + ":" + this.userAuth.getDIST_NAME_HN() + " , " + this.resources.getString(R.string.booth_name) + ":" + this.userAuth.getBlock_NAME_HN());
+            textView2.setText(this.resources.getString(R.string.panchayat_name) + ":" + this.userAuth.getPanchayat_NAME_HN() + ", " + this.resources.getString(R.string.district_name_text) + ":" + this.userAuth.getDIST_NAME_HN() + " , " + this.resources.getString(R.string.block_name) + ":" + this.userAuth.getBlock_NAME_HN());
         }
         List<VoterDataNewModel> list = this.voterDataNewModelList;
         if (list != null && !list.isEmpty() && this.voterDataNewModelList.size() > 0) {
@@ -1360,7 +1363,7 @@ public class ListUserActivity extends AppCompatActivity implements VoterListAdap
             numrows++;
             if (this.byTemplate1 != null) {
                 NBioBSPJNI nBioBSPJNI = this.bsp;
-                nBioBSPJNI.getClass();
+                Objects.requireNonNull(nBioBSPJNI);
                 NBioBSPJNI.FIR_HANDLE hLoadFIR1 = new NBioBSPJNI.FIR_HANDLE();
                 this.exportEngine.ImportFIR(finger_template1, finger_template1.length, 3, hLoadFIR1);
                 if (this.bsp.IsErrorOccured()) {
@@ -1369,7 +1372,7 @@ public class ListUserActivity extends AppCompatActivity implements VoterListAdap
                     return false;
                 }
                 NBioBSPJNI nBioBSPJNI2 = this.bsp;
-                nBioBSPJNI2.getClass();
+                Objects.requireNonNull(nBioBSPJNI2);
                 NBioBSPJNI.FIR_HANDLE hLoadFIR2 = new NBioBSPJNI.FIR_HANDLE();
                 this.exportEngine.ImportFIR(fingerprint1, fingerprint1.length, 3, hLoadFIR2);
                 if (this.bsp.IsErrorOccured()) {
@@ -1380,10 +1383,10 @@ public class ListUserActivity extends AppCompatActivity implements VoterListAdap
                 }
                 Boolean bResult = new Boolean(false);
                 NBioBSPJNI nBioBSPJNI3 = this.bsp;
-                nBioBSPJNI3.getClass();
+                Objects.requireNonNull(nBioBSPJNI3);
                 NBioBSPJNI.INPUT_FIR inputFIR1 = new NBioBSPJNI.INPUT_FIR();
                 NBioBSPJNI nBioBSPJNI4 = this.bsp;
-                nBioBSPJNI4.getClass();
+                Objects.requireNonNull(nBioBSPJNI4);
                 NBioBSPJNI.INPUT_FIR inputFIR2 = new NBioBSPJNI.INPUT_FIR();
                 inputFIR1.SetFIRHandle(hLoadFIR1);
                 inputFIR2.SetFIRHandle(hLoadFIR2);
@@ -1815,15 +1818,15 @@ public class ListUserActivity extends AppCompatActivity implements VoterListAdap
             return String.valueOf(boothnum);
         }
         if (boothnum.intValue() > 1000 && boothnum.intValue() <= 2000) {
-            return String.valueOf(boothnum + "क");
+            return String.valueOf((boothnum.intValue() - 1000) + "क");
         } else if (boothnum.intValue() > 2000 && boothnum.intValue() <= 3000) {
-            return String.valueOf(boothnum + "ख");
+            return String.valueOf((boothnum.intValue() - 2000) + "ख");
         } else if (boothnum.intValue() > 3000 && boothnum.intValue() <= 4000) {
-            return String.valueOf(boothnum + "ग");
+            return String.valueOf((boothnum.intValue() - PathInterpolatorCompat.MAX_NUM_POINTS) + "ग");
         } else if (boothnum.intValue() <= 4000 || boothnum.intValue() > 5000) {
             return "";
         } else {
-            return String.valueOf(boothnum + "घ");
+            return String.valueOf((boothnum.intValue() - 4000) + "घ");
         }
     }
 
