@@ -5,6 +5,6 @@ public final class BuildConfig {
     public static final String BUILD_TYPE = "debug";
     public static final boolean DEBUG = Boolean.parseBoolean("true");
     public static final String FLAVOR = "";
-    public static final int VERSION_CODE = 36;
-    public static final String VERSION_NAME = "Phase9v1";
+    public static final int VERSION_CODE = 37;
+    public static final String VERSION_NAME = "Phase10v0nochange";
 }
