@@ -61,7 +61,7 @@ public class LoginActivityWithoutLocation extends AppCompatActivity {
     private String responseString = "";
     String androidId = "";
     String UDevId = "";
-    private String PHASE = "9";
+    private String PHASE = "10";
 
     public LoginActivityWithoutLocation() {
         Double valueOf = Double.valueOf(0.0d);
@@ -101,7 +101,7 @@ public class LoginActivityWithoutLocation extends AppCompatActivity {
         this.appVersion = (TextView) findViewById(R.id.versioncode);
         this.progressBar = (ProgressBar) findViewById(R.id.simpleProgressBar);
         TextView textView = this.appVersion;
-        textView.setText("App version:36/" + BuildConfig.VERSION_NAME);
+        textView.setText("App version:37/" + BuildConfig.VERSION_NAME);
         MultiWaveHeader waveHeader = (MultiWaveHeader) findViewById(R.id.wavebottom);
         waveHeader.setColorAlpha(0.5f);
         waveHeader.start();
