@@ -236,7 +236,8 @@ public final class SelfieActivity extends AppCompatActivity {
         this.box_disabled = circle;
     }
 
-    @Override // androidx.appcompat.app.AppCompatActivity, androidx.fragment.app.FragmentActivity, androidx.activity.ComponentActivity, androidx.core.app.ComponentActivity, android.app.Activity
+    /* JADX INFO: Access modifiers changed from: protected */
+    @Override // androidx.fragment.app.FragmentActivity, androidx.activity.ComponentActivity, androidx.core.app.ComponentActivity, android.app.Activity
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_selfie);
@@ -731,7 +732,7 @@ public final class SelfieActivity extends AppCompatActivity {
         return filesDir;
     }
 
-    @Override // androidx.fragment.app.FragmentActivity, android.app.Activity, androidx.core.app.ActivityCompat.OnRequestPermissionsResultCallback
+    @Override // androidx.fragment.app.FragmentActivity, androidx.activity.ComponentActivity, android.app.Activity
     public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
         Intrinsics.checkParameterIsNotNull(permissions, "permissions");
         Intrinsics.checkParameterIsNotNull(grantResults, "grantResults");
@@ -772,8 +773,9 @@ public final class SelfieActivity extends AppCompatActivity {
         }
     }
 
-    @Override // androidx.fragment.app.FragmentActivity, android.app.Activity
-    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+    /* JADX INFO: Access modifiers changed from: protected */
+    @Override // androidx.fragment.app.FragmentActivity, androidx.activity.ComponentActivity, android.app.Activity
+    public void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
         if (requestCode == this.REQUEST_CODE_FOR_VERIFICATION_RESULT) {
             if (data == null) {

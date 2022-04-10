@@ -14,20 +14,29 @@ import androidx.appcompat.app.ActionBar;
 import androidx.appcompat.app.AppCompatActivity;
 import com.example.aadhaarfpoffline.tatvik.R;
 import com.example.aadhaarfpoffline.tatvik.UserAuth;
+import com.example.aadhaarfpoffline.tatvik.database.DBHelper;
 import com.example.aadhaarfpoffline.tatvik.util.Const;
+import java.text.SimpleDateFormat;
 import java.util.Arrays;
+import java.util.Date;
 import java.util.Objects;
 /* loaded from: classes2.dex */
 public class FingerprintDeviceSelectionActivity extends AppCompatActivity {
+    Button btnExportCSV;
     Button btnSubmitDevice;
+    DBHelper db;
     Spinner spnDeviceSelection;
+    UserAuth userAuth;
     String[] strDevices = {Const.Tatvik, Const.eNBioScan};
     String selectedDevice = "";
 
-    @Override // androidx.appcompat.app.AppCompatActivity, androidx.fragment.app.FragmentActivity, androidx.activity.ComponentActivity, androidx.core.app.ComponentActivity, android.app.Activity
+    /* JADX INFO: Access modifiers changed from: protected */
+    @Override // androidx.fragment.app.FragmentActivity, androidx.activity.ComponentActivity, androidx.core.app.ComponentActivity, android.app.Activity
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_fingerprint_device_selection);
+        this.db = new DBHelper(this);
+        this.userAuth = new UserAuth(this);
         ((ActionBar) Objects.requireNonNull(getSupportActionBar())).setTitle("Device Selection");
         initDropdownAndSetAdapter();
         initSubmitBtn();
@@ -57,10 +66,17 @@ public class FingerprintDeviceSelectionActivity extends AppCompatActivity {
 
     void initSubmitBtn() {
         this.btnSubmitDevice = (Button) findViewById(R.id.btnSubmitDevice);
+        this.btnExportCSV = (Button) findViewById(R.id.btnExportCSV);
         this.btnSubmitDevice.setOnClickListener(new View.OnClickListener() { // from class: com.example.aadhaarfpoffline.tatvik.activity.-$$Lambda$FingerprintDeviceSelectionActivity$B88b5WrJiOludfE_NM3ct2yU46Q
             @Override // android.view.View.OnClickListener
             public final void onClick(View view) {
                 FingerprintDeviceSelectionActivity.this.lambda$initSubmitBtn$0$FingerprintDeviceSelectionActivity(view);
+            }
+        });
+        this.btnExportCSV.setOnClickListener(new View.OnClickListener() { // from class: com.example.aadhaarfpoffline.tatvik.activity.-$$Lambda$FingerprintDeviceSelectionActivity$Tho6qp2IYddEQVvCBNA80UYzTa4
+            @Override // android.view.View.OnClickListener
+            public final void onClick(View view) {
+                FingerprintDeviceSelectionActivity.this.lambda$initSubmitBtn$1$FingerprintDeviceSelectionActivity(view);
             }
         });
     }
@@ -70,5 +86,17 @@ public class FingerprintDeviceSelectionActivity extends AppCompatActivity {
         userAuth.setFingerPrintDevice(this.selectedDevice);
         Toast.makeText(this, "Selected device is : " + userAuth.getFingerPrintDevice(), 1).show();
         startActivity(new Intent(this, ListUserActivity.class));
+    }
+
+    public /* synthetic */ void lambda$initSubmitBtn$1$FingerprintDeviceSelectionActivity(View view) {
+        this.db.exportDatabaseTransTable(this.userAuth.getDistrictNo(), this.userAuth.getBlockID(), this.userAuth.getPanchayatId(), this.userAuth.getWardNo(), this.userAuth.getBoothNo(), getCurrentTimeInFormatForCSV());
+    }
+
+    public String getCurrentTimeInFormatForCSV() {
+        SimpleDateFormat formatter = new SimpleDateFormat("yyyyMMddHHmmss");
+        Date date = new Date();
+        String timenow = formatter.format(date);
+        System.out.println(formatter.format(date));
+        return timenow;
     }
 }
