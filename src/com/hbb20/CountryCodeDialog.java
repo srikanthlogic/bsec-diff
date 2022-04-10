@@ -21,8 +21,9 @@ import com.futuremind.recyclerviewfastscroll.FastScroller;
 import java.lang.reflect.Field;
 import java.util.Iterator;
 import java.util.List;
+/* JADX INFO: Access modifiers changed from: package-private */
 /* loaded from: classes3.dex */
-class CountryCodeDialog {
+public class CountryCodeDialog {
     static Context context;
     static Dialog dialog;
     private static final Field sCursorDrawableField;
