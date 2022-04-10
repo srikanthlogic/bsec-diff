@@ -7,13 +7,16 @@ import android.graphics.Color;
 import android.location.Location;
 import android.os.Bundle;
 import android.os.Handler;
+import android.provider.Settings;
 import android.telephony.TelephonyManager;
+import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.TextView;
 import android.widget.Toast;
 import androidx.appcompat.app.AppCompatActivity;
+import com.example.aadhaarfpoffline.tatvik.BuildConfig;
 import com.example.aadhaarfpoffline.tatvik.GetDataService;
 import com.example.aadhaarfpoffline.tatvik.LocaleHelper;
 import com.example.aadhaarfpoffline.tatvik.R;
@@ -34,6 +37,7 @@ import retrofit2.Response;
 /* loaded from: classes2.dex */
 public class LoginActivityWithoutLocation extends AppCompatActivity {
     public static final int MY_PERMISSIONS_REQUEST_LOCATION = 99;
+    private TextView appVersion;
     private EditText booth;
     private Button button;
     Context context;
@@ -50,6 +54,9 @@ public class LoginActivityWithoutLocation extends AppCompatActivity {
     private int BOOTH_RADIUS = 2;
     private String device = "";
     private String responseString = "";
+    String androidId = "";
+    String UDevId = "";
+    private String PHASE = "4";
 
     public LoginActivityWithoutLocation() {
         Double valueOf = Double.valueOf(0.0d);
@@ -72,6 +79,8 @@ public class LoginActivityWithoutLocation extends AppCompatActivity {
         startHandler();
         this.context = LocaleHelper.setLocale(this, LocaleHelper.getLanguage(this));
         this.resources = this.context.getResources();
+        this.androidId = Settings.Secure.getString(getContentResolver(), "android_id");
+        this.UDevId = this.androidId;
         if (((TelephonyManager) Objects.requireNonNull((TelephonyManager) getApplicationContext().getSystemService("phone"))).getPhoneType() == 0) {
             this.device = "tablet";
         } else {
@@ -84,6 +93,9 @@ public class LoginActivityWithoutLocation extends AppCompatActivity {
         this.booth.setHintTextColor(Color.parseColor("#ffffff"));
         this.password.setHintTextColor(Color.parseColor("#ffffff"));
         this.loginMessage = (TextView) findViewById(R.id.loginmessage);
+        this.appVersion = (TextView) findViewById(R.id.versioncode);
+        TextView textView = this.appVersion;
+        textView.setText("App version:20/" + BuildConfig.VERSION_NAME);
         MultiWaveHeader waveHeader = (MultiWaveHeader) findViewById(R.id.wavebottom);
         waveHeader.setColorAlpha(0.5f);
         waveHeader.start();
@@ -137,9 +149,12 @@ public class LoginActivityWithoutLocation extends AppCompatActivity {
         map.put("BoothNo", boothid);
         map.put("password", password);
         map.put("device", device);
+        map.put("udevid", this.UDevId);
+        map.put("phaseno", this.PHASE);
         ((GetDataService) RetrofitClientInstance.getRetrofitInstanceLoginOnly().create(GetDataService.class)).getLoginWithUrl(map).enqueue(new Callback<LoginForUrlResponse>("9971791175") { // from class: com.example.aadhaarfpoffline.tatvik.activity.LoginActivityWithoutLocation.3
             @Override // retrofit2.Callback
             public void onResponse(Call<LoginForUrlResponse> call, Response<LoginForUrlResponse> response) {
+                Log.d("getloginresposne", response.raw().toString());
                 if (response == null || response.body() == null) {
                     Toast.makeText(LoginActivityWithoutLocation.this.getApplicationContext(), "Resposne not in format.Trying alternate url to login" + response.toString(), 1).show();
                     LoginActivityWithoutLocation.this.loginMethodWithDeviceUrlfailCheck(panchayat, boothid, password, device, loc);
@@ -148,12 +163,11 @@ public class LoginActivityWithoutLocation extends AppCompatActivity {
                 LoginActivityWithoutLocation.this.responseString = response.body().toString();
                 if (response.body().isLoginAllowed() == null) {
                     Toast.makeText(LoginActivityWithoutLocation.this.getApplicationContext(), "loginallowed field set to null", 1).show();
+                    LoginActivityWithoutLocation.this.loginMethodWithDeviceUrlfailCheck(panchayat, boothid, password, device, loc);
                 } else if (response.body().isLoginAllowed().booleanValue()) {
                     UserAuth userAuth = new UserAuth(LoginActivityWithoutLocation.this.getApplicationContext());
                     String BoothIdOld = userAuth.getPanchayatId() + "_" + userAuth.getWardNo() + "_" + userAuth.getBoothNo();
-                    String BoothIdNew = response.body().getPanchayatid() + "_" + response.body().getWardno() + "_" + response.body().getBoothNo();
-                    Toast.makeText(LoginActivityWithoutLocation.this.getApplicationContext(), "BoothIdold=" + BoothIdOld + " boothnew=" + BoothIdNew, 1).show();
-                    if (BoothIdOld.equalsIgnoreCase(BoothIdNew) || BoothIdOld.equalsIgnoreCase("__")) {
+                    if (BoothIdOld.equalsIgnoreCase(response.body().getPanchayatid() + "_" + response.body().getWardno() + "_" + response.body().getBoothNo()) || BoothIdOld.equalsIgnoreCase("__")) {
                         userAuth.setBoothId(response.body().getBoothid());
                         userAuth.setPhone("9971791175");
                         userAuth.setLogin(true);
@@ -163,12 +177,20 @@ public class LoginActivityWithoutLocation extends AppCompatActivity {
                         userAuth.setBoothNo(response.body().getBoothNo());
                         userAuth.setWardNo(response.body().getWardno());
                         userAuth.setBaseUrl(response.body().getUrl());
+                        userAuth.setPanchayat_NAME_EN(response.body().getPanchayat_NAME_EN());
+                        userAuth.setPanchayat_NAME_HN(response.body().getPanchayat_NAME_HN());
+                        userAuth.setDIST_NAME_EN(response.body().getDIST_NAME_EN());
+                        userAuth.setDIST_NAME_HN(response.body().getDIST_NAME_HN());
+                        userAuth.setBlock_NAME_EN(response.body().getBlock_NAME_EN());
+                        userAuth.setBlock_NAME_HN(response.body().getBlock_NAME_HN());
                         LoginActivityWithoutLocation.this.startMainActivity(response.body().getBoothid());
                         return;
                     }
+                    Toast.makeText(LoginActivityWithoutLocation.this.getApplicationContext(), "Device is mapped with " + userAuth.getBoothNo() + ", You cannot login for another booth", 1).show();
                     LoginActivityWithoutLocation.this.loginMessage.setText(LoginActivityWithoutLocation.this.resources.getString(R.string.login_message_old_data));
                 } else {
                     Toast.makeText(LoginActivityWithoutLocation.this.getApplicationContext(), "Login Failed : " + response.body().getMessage(), 1).show();
+                    LoginActivityWithoutLocation.this.loginMethodWithDeviceUrlfailCheck(panchayat, boothid, password, device, loc);
                 }
             }
 
@@ -188,16 +210,18 @@ public class LoginActivityWithoutLocation extends AppCompatActivity {
         map.put("BoothNo", boothid);
         map.put("password", password);
         map.put("device", device);
+        map.put("udevid", this.UDevId);
+        map.put("phaseno", this.PHASE);
         ((GetDataService) RetrofitClientInstance.getRetrofitInstanceLoginFailCheck().create(GetDataService.class)).getLoginWithUrl(map).enqueue(new Callback<LoginForUrlResponse>("9971791175") { // from class: com.example.aadhaarfpoffline.tatvik.activity.LoginActivityWithoutLocation.4
             @Override // retrofit2.Callback
             public void onResponse(Call<LoginForUrlResponse> call, Response<LoginForUrlResponse> response) {
                 if (response == null || response.body() == null) {
-                    Toast.makeText(LoginActivityWithoutLocation.this.getApplicationContext(), "Resposne not in format", 1).show();
+                    Toast.makeText(LoginActivityWithoutLocation.this.getApplicationContext(), "2Resposne not in format", 1).show();
                     return;
                 }
                 LoginActivityWithoutLocation.this.responseString = response.body().toString();
                 if (response.body().isLoginAllowed() == null) {
-                    Toast.makeText(LoginActivityWithoutLocation.this.getApplicationContext(), "loginallowed field set to null", 1).show();
+                    Toast.makeText(LoginActivityWithoutLocation.this.getApplicationContext(), "2loginallowed field set to null", 1).show();
                 } else if (response.body().isLoginAllowed().booleanValue()) {
                     UserAuth userAuth = new UserAuth(LoginActivityWithoutLocation.this.getApplicationContext());
                     String BoothIdOld = userAuth.getPanchayatId() + "_" + userAuth.getWardNo() + "_" + userAuth.getBoothNo();
@@ -218,7 +242,7 @@ public class LoginActivityWithoutLocation extends AppCompatActivity {
                     }
                     LoginActivityWithoutLocation.this.loginMessage.setText(LoginActivityWithoutLocation.this.resources.getString(R.string.login_message_old_data));
                 } else {
-                    Toast.makeText(LoginActivityWithoutLocation.this.getApplicationContext(), "Login Failed : " + response.body().getMessage(), 1).show();
+                    Toast.makeText(LoginActivityWithoutLocation.this.getApplicationContext(), "2Login Failed : " + response.body().getMessage(), 1).show();
                 }
             }
 
@@ -237,6 +261,8 @@ public class LoginActivityWithoutLocation extends AppCompatActivity {
         map.put("BoothNo", boothid);
         map.put("password", password);
         map.put("device", device);
+        map.put("udevid", this.UDevId);
+        map.put("phaseno", this.PHASE);
         ((GetDataService) RetrofitClientInstance.getRetrofitInstanceLoginFailCheck().create(GetDataService.class)).getLoginWithUrl(map).enqueue(new Callback<LoginForUrlResponse>("9971791175") { // from class: com.example.aadhaarfpoffline.tatvik.activity.LoginActivityWithoutLocation.5
             @Override // retrofit2.Callback
             public void onResponse(Call<LoginForUrlResponse> call, Response<LoginForUrlResponse> response) {

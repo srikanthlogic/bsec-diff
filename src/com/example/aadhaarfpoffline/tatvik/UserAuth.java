@@ -164,4 +164,64 @@ public class UserAuth {
     public String getFingerPrintDevice() {
         return this.mcontext.getSharedPreferences(this.MYPREF, 0).getString(this.FINGERPRINTDEVICE, "");
     }
+
+    public void setPanchayat_NAME_EN(String panchayat_name_en) {
+        SharedPreferences.Editor editor = this.mcontext.getSharedPreferences(this.MYPREF, 0).edit();
+        editor.putString("panchayat_name_en", panchayat_name_en);
+        editor.apply();
+    }
+
+    public String getPanchayat_NAME_EN() {
+        return this.mcontext.getSharedPreferences(this.MYPREF, 0).getString("panchayat_name_en", "");
+    }
+
+    public void setPanchayat_NAME_HN(String panchayat_name_hn) {
+        SharedPreferences.Editor editor = this.mcontext.getSharedPreferences(this.MYPREF, 0).edit();
+        editor.putString("panchayat_name_hn", panchayat_name_hn);
+        editor.apply();
+    }
+
+    public String getPanchayat_NAME_HN() {
+        return this.mcontext.getSharedPreferences(this.MYPREF, 0).getString("panchayat_name_hn", "");
+    }
+
+    public void setBlock_NAME_EN(String panchayat_name_hn) {
+        SharedPreferences.Editor editor = this.mcontext.getSharedPreferences(this.MYPREF, 0).edit();
+        editor.putString("block_name_en", panchayat_name_hn);
+        editor.apply();
+    }
+
+    public String getBlock_NAME_EN() {
+        return this.mcontext.getSharedPreferences(this.MYPREF, 0).getString("block_name_en", "");
+    }
+
+    public void setBlock_NAME_HN(String panchayat_name_hn) {
+        SharedPreferences.Editor editor = this.mcontext.getSharedPreferences(this.MYPREF, 0).edit();
+        editor.putString("block_name_hn", panchayat_name_hn);
+        editor.apply();
+    }
+
+    public String getBlock_NAME_HN() {
+        return this.mcontext.getSharedPreferences(this.MYPREF, 0).getString("block_name_hn", "");
+    }
+
+    public void setDIST_NAME_EN(String panchayat_name_hn) {
+        SharedPreferences.Editor editor = this.mcontext.getSharedPreferences(this.MYPREF, 0).edit();
+        editor.putString("dist_name_en", panchayat_name_hn);
+        editor.apply();
+    }
+
+    public String getDIST_NAME_EN() {
+        return this.mcontext.getSharedPreferences(this.MYPREF, 0).getString("dist_name_en", "");
+    }
+
+    public void setDIST_NAME_HN(String panchayat_name_hn) {
+        SharedPreferences.Editor editor = this.mcontext.getSharedPreferences(this.MYPREF, 0).edit();
+        editor.putString("dist_name_hn", panchayat_name_hn);
+        editor.apply();
+    }
+
+    public String getDIST_NAME_HN() {
+        return this.mcontext.getSharedPreferences(this.MYPREF, 0).getString("dist_name_hn", "");
+    }
 }
