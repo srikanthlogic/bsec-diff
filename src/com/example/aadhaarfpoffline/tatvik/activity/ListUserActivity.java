@@ -218,7 +218,7 @@ public class ListUserActivity extends AppCompatActivity implements VoterListAdap
         NavigationView navigationView = (NavigationView) findViewById(R.id.nav_view);
         navigationView.setNavigationItemSelectedListener(this);
         MenuItem nav_app_version = navigationView.getMenu().findItem(R.id.nav_app_version);
-        nav_app_version.setTitle("Version 9/" + BuildConfig.VERSION_NAME);
+        nav_app_version.setTitle("Version 10/" + BuildConfig.VERSION_NAME);
         this.recyclerView = (RecyclerView) findViewById(R.id.recyclerview_vendor_list);
         this.userAuth.getBoothId();
         this.search = (EditText) findViewById(R.id.search_text);
@@ -324,9 +324,7 @@ public class ListUserActivity extends AppCompatActivity implements VoterListAdap
                     } else {
                         if (ListUserActivity.this.byTemplate1 != null) {
                             ListUserActivity listUserActivity2 = ListUserActivity.this;
-                            Boolean yes = listUserActivity2.compareAndLockNetgin(listUserActivity2.byTemplate1);
-                            Toast.makeText(ListUserActivity.this.getApplicationContext(), yes.toString(), 1).show();
-                            if (yes.booleanValue()) {
+                            if (listUserActivity2.compareAndLockNetgin(listUserActivity2.byTemplate1).booleanValue()) {
                                 ListUserActivity.this.userAuth.setLock(true);
                                 ListUserActivity.this.lockButton.setVisibility(8);
                                 ListUserActivity.this.insertFpButton.setVisibility(0);
@@ -352,18 +350,16 @@ public class ListUserActivity extends AppCompatActivity implements VoterListAdap
         NBioBSPJNI.CURRENT_PRODUCT_ID = 0;
         if (this.bsp == null) {
             this.bsp = new NBioBSPJNI("010701-613E5C7F4CC7C4B0-72E340B47E034015", this, this.mCallback);
-            String msg = null;
             if (this.bsp.IsErrorOccured()) {
-                msg = "NBioBSP Error: " + this.bsp.GetErrorCode();
-            } else {
-                NBioBSPJNI nBioBSPJNI = this.bsp;
-                Objects.requireNonNull(nBioBSPJNI);
-                this.exportEngine = new NBioBSPJNI.Export();
-                NBioBSPJNI nBioBSPJNI2 = this.bsp;
-                Objects.requireNonNull(nBioBSPJNI2);
-                this.indexSearch = new NBioBSPJNI.IndexSearch();
+                Toast.makeText(getApplicationContext(), "NBioBSP Error: " + this.bsp.GetErrorCode(), 1).show();
+                return;
             }
-            Toast.makeText(getApplicationContext(), msg, 1).show();
+            NBioBSPJNI nBioBSPJNI = this.bsp;
+            Objects.requireNonNull(nBioBSPJNI);
+            this.exportEngine = new NBioBSPJNI.Export();
+            NBioBSPJNI nBioBSPJNI2 = this.bsp;
+            Objects.requireNonNull(nBioBSPJNI2);
+            this.indexSearch = new NBioBSPJNI.IndexSearch();
         }
     }
 
@@ -1065,6 +1061,7 @@ public class ListUserActivity extends AppCompatActivity implements VoterListAdap
 
     private void startLoginActivity() {
         startActivity(new Intent(this, LoginActivityNew.class));
+        finish();
     }
 
     private void translate(String lan) {

@@ -36,11 +36,11 @@ public class RetrofitClientInstance {
             }
         });
         OkHttpClient client = httpClient.build();
-        UserAuth userAuth = new UserAuth(Home.getContext());
-        if (retrofit == null || (!userAuth.ifLogin().booleanValue() && userAuth.getBaseUrl().isEmpty())) {
-            retrofit = new Retrofit.Builder().baseUrl(CIM_BASE_URL).client(client).addConverterFactory(GsonConverterFactory.create(new GsonBuilder().setLenient().create())).build();
+        new UserAuth(Home.getContext());
+        if (f23retrofit2 == null) {
+            f23retrofit2 = new Retrofit.Builder().baseUrl(CIM_BASE_URL).client(client).addConverterFactory(GsonConverterFactory.create(new GsonBuilder().setLenient().create())).build();
         }
-        return retrofit;
+        return f23retrofit2;
     }
 
     public static Retrofit getRetrofitInstance() {

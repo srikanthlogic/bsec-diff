@@ -63,6 +63,7 @@ public class FinalScreenActivityOffline extends AppCompatActivity {
     String votedDone = "0";
     String lan = "";
     int voted = 0;
+    String slnoinward = "";
 
     /* JADX INFO: Access modifiers changed from: protected */
     @Override // androidx.appcompat.app.AppCompatActivity, androidx.fragment.app.FragmentActivity, androidx.activity.ComponentActivity, androidx.core.app.ComponentActivity, android.app.Activity
@@ -87,6 +88,7 @@ public class FinalScreenActivityOffline extends AppCompatActivity {
         intent.getStringExtra("message");
         Boolean allowedtovote = Boolean.valueOf(intent.getBooleanExtra("allowedtovote", false));
         this.votedDone = intent.getStringExtra("voted");
+        this.slnoinward = intent.getStringExtra("slnoinward");
         this.votedDone = "0";
         String fpmatchvoterid = intent.getStringExtra("fpmatchvotertid");
         if (allowedtovote.booleanValue()) {
@@ -352,7 +354,7 @@ public class FinalScreenActivityOffline extends AppCompatActivity {
         });
     }
 
-    /* JADX WARN: Can't wrap try/catch for region: R(14:5|6|(1:8)|9|(4:11|54|12|(9:14|21|22|23|46|24|50|25|27))(1:19)|20|21|22|23|46|24|50|25|27) */
+    /* JADX WARN: Can't wrap try/catch for region: R(14:5|6|(1:8)|9|(3:50|11|(9:13|19|20|21|44|22|48|23|25))|18|19|20|21|44|22|48|23|25) */
     /* Code decompiled incorrectly, please refer to instructions dump */
     private Map<String, String> getTransactionRowData() {
         Cursor cursor;
@@ -382,7 +384,7 @@ public class FinalScreenActivityOffline extends AppCompatActivity {
                 int voted = cursor2.getInt(cursor2.getColumnIndex("VOTED"));
                 String voterimagename = cursor2.getString(cursor2.getColumnIndex("ID_DOCUMENT_IMAGE"));
                 int aadhaarmatch = cursor2.getInt(cursor2.getColumnIndex("AADHAAR_MATCH"));
-                String slnoinward = cursor2.getString(cursor2.getColumnIndex("SlNoInWard"));
+                this.slnoinward = cursor2.getString(cursor2.getColumnIndex("SlNoInWard"));
                 String aadhaarNo = cursor2.getString(cursor2.getColumnIndex("AADHAAR_NO"));
                 if (aadhaarNo == null) {
                     aadhaarNo = "";
@@ -392,9 +394,12 @@ public class FinalScreenActivityOffline extends AppCompatActivity {
                         try {
                             if (fp.length > 0) {
                                 fpString = Base64.encodeToString(fp, 0);
+                                StringBuilder sb = new StringBuilder();
+                                sb.append("");
                                 cursor3 = cursor2;
-                                map.put("TRANSID", "" + this.userAuth.getTransactionId());
-                                map.put("user_id", this.userAuth.getPanchayatId() + "_" + this.userAuth.getWardNo() + "_" + this.userAuth.getBoothNo() + "_" + slnoinward);
+                                sb.append(this.userAuth.getTransactionId());
+                                map.put("TRANSID", sb.toString());
+                                map.put("user_id", this.userAuth.getPanchayatId() + "_" + this.userAuth.getWardNo() + "_" + this.userAuth.getBoothNo() + "_" + this.slnoinward);
                                 map.put("FINGERPRINT_TEMPLATE", fpString);
                                 map.put("VOTED", "" + voted);
                                 map.put("ID_DOCUMENT_IMAGE", voterimagename);
@@ -422,8 +427,9 @@ public class FinalScreenActivityOffline extends AppCompatActivity {
                             throw th;
                         }
                     }
-                    map.put("TRANSID", "" + this.userAuth.getTransactionId());
-                    map.put("user_id", this.userAuth.getPanchayatId() + "_" + this.userAuth.getWardNo() + "_" + this.userAuth.getBoothNo() + "_" + slnoinward);
+                    sb.append(this.userAuth.getTransactionId());
+                    map.put("TRANSID", sb.toString());
+                    map.put("user_id", this.userAuth.getPanchayatId() + "_" + this.userAuth.getWardNo() + "_" + this.userAuth.getBoothNo() + "_" + this.slnoinward);
                     map.put("FINGERPRINT_TEMPLATE", fpString);
                     map.put("VOTED", "" + voted);
                     map.put("ID_DOCUMENT_IMAGE", voterimagename);
@@ -441,6 +447,8 @@ public class FinalScreenActivityOffline extends AppCompatActivity {
                     return map;
                 }
                 fpString = "";
+                StringBuilder sb2 = new StringBuilder();
+                sb2.append("");
                 cursor3 = cursor2;
             } else {
                 cursor2.close();
