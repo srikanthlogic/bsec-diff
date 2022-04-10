@@ -15,6 +15,7 @@ import android.widget.Toast;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
+import androidx.core.app.NotificationManagerCompat;
 import androidx.core.content.ContextCompat;
 import com.example.aadhaarfpoffline.tatvik.GetDataService;
 import com.example.aadhaarfpoffline.tatvik.R;
@@ -57,9 +58,8 @@ public class LoginActivityNew extends AppCompatActivity {
         this.latitude = valueOf;
     }
 
-    /* JADX INFO: Access modifiers changed from: protected */
-    @Override // androidx.appcompat.app.AppCompatActivity, androidx.fragment.app.FragmentActivity, androidx.activity.ComponentActivity, androidx.core.app.ComponentActivity, android.app.Activity
-    public void onCreate(Bundle savedInstanceState) {
+    @Override // androidx.fragment.app.FragmentActivity, androidx.activity.ComponentActivity, androidx.core.app.ComponentActivity, android.app.Activity
+    protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_login);
         getSupportActionBar().hide();
@@ -74,7 +74,7 @@ public class LoginActivityNew extends AppCompatActivity {
         if (((TelephonyManager) Objects.requireNonNull((TelephonyManager) getApplicationContext().getSystemService("phone"))).getPhoneType() == 0) {
             this.device = "tablet";
         } else {
-            this.device = "tablet";
+            this.device = "mobile";
         }
         this.email = (EditText) findViewById(R.id.id_phone1);
         this.booth = (EditText) findViewById(R.id.id_Booth);
@@ -183,7 +183,9 @@ public class LoginActivityNew extends AppCompatActivity {
             public void onResponse(Call<LoginForUrlResponse> call, Response<LoginForUrlResponse> response) {
                 if (response != null && response.body() != null) {
                     LoginActivityNew.this.responseString = response.body().toString();
-                    if (!response.body().isLoginAllowed().booleanValue()) {
+                    if (response.body().isLoginAllowed() == null) {
+                        Toast.makeText(LoginActivityNew.this.getApplicationContext(), "loginallowed field set to null", 1).show();
+                    } else if (!response.body().isLoginAllowed().booleanValue()) {
                         Context applicationContext = LoginActivityNew.this.getApplicationContext();
                         Toast.makeText(applicationContext, "Login Failed : " + response.body().getMessage(), 1).show();
                     } else if (response.body().getDblocation().equalsIgnoreCase("0.0:0.0")) {
@@ -197,7 +199,7 @@ public class LoginActivityNew extends AppCompatActivity {
                         userAuth.setPanchayatId(response.body().getPanchayatid());
                         userAuth.setDistrictNo(response.body().getDistNo());
                         userAuth.setBlockID(response.body().getBlockId());
-                        userAuth.setBoothNo(response.body().getBoothNo());
+                        userAuth.setBoothNo(LoginActivityNew.this.boothNoTextFormat(response.body().getBoothNo()));
                         userAuth.setWardNo(response.body().getWardno());
                         userAuth.setBaseUrl(response.body().getUrl());
                         LoginActivityNew.this.startMainActivity(response.body().getBoothid());
@@ -216,7 +218,7 @@ public class LoginActivityNew extends AppCompatActivity {
                         userAuth2.setPanchayatId(response.body().getPanchayatid());
                         userAuth2.setDistrictNo(response.body().getDistNo());
                         userAuth2.setBlockID(response.body().getBlockId());
-                        userAuth2.setBoothNo(response.body().getBoothNo());
+                        userAuth2.setBoothNo(LoginActivityNew.this.boothNoTextFormat(response.body().getBoothNo()));
                         userAuth2.setWardNo(response.body().getWardno());
                         userAuth2.setBaseUrl(response.body().getUrl());
                     }
@@ -353,7 +355,7 @@ public class LoginActivityNew extends AppCompatActivity {
         return false;
     }
 
-    @Override // androidx.fragment.app.FragmentActivity, android.app.Activity, androidx.core.app.ActivityCompat.OnRequestPermissionsResultCallback
+    @Override // androidx.fragment.app.FragmentActivity, androidx.activity.ComponentActivity, android.app.Activity
     public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
         if (requestCode == 99 && grantResults.length > 0 && grantResults[0] == 0) {
             initialLogin();
@@ -369,5 +371,33 @@ public class LoginActivityNew extends AppCompatActivity {
         boothLocation.setLatitude(boothLat.doubleValue());
         boothLocation.setLongitude(boothLong.doubleValue());
         return boothLocation;
+    }
+
+    public String boothNoTextFormat(String boothNoString) {
+        int boothNo = Integer.parseInt(boothNoString);
+        if (boothNo < 501) {
+            return String.valueOf(boothNo);
+        }
+        if (boothNo > 1000 && boothNo < 2000) {
+            int actualboothNO = boothNo + NotificationManagerCompat.IMPORTANCE_UNSPECIFIED;
+            return actualboothNO + "क";
+        } else if (boothNo > 2000 && boothNo < 3000) {
+            StringBuilder sb = new StringBuilder();
+            sb.append(boothNo - 2000);
+            sb.append("ख");
+            return sb.toString();
+        } else if (boothNo > 3000 && boothNo < 4000) {
+            StringBuilder sb2 = new StringBuilder();
+            sb2.append(boothNo - 3000);
+            sb2.append("ग");
+            return sb2.toString();
+        } else if (boothNo <= 4000 || boothNo >= 5000) {
+            return "outofrange";
+        } else {
+            StringBuilder sb3 = new StringBuilder();
+            sb3.append(boothNo - 4000);
+            sb3.append("घ");
+            return sb3.toString();
+        }
     }
 }
