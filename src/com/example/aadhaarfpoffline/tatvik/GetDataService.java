@@ -18,6 +18,7 @@ import com.example.aadhaarfpoffline.tatvik.network.MultipleFaceImageUploadRespon
 import com.example.aadhaarfpoffline.tatvik.network.MultipleFpUploadResponse;
 import com.example.aadhaarfpoffline.tatvik.network.OfficialDataGetResponse;
 import com.example.aadhaarfpoffline.tatvik.network.PostUploadResponse;
+import com.example.aadhaarfpoffline.tatvik.network.TransTableGetResponse;
 import com.example.aadhaarfpoffline.tatvik.network.TransactionRowPostResponse;
 import com.example.aadhaarfpoffline.tatvik.network.UserFaceMatchStatusUpdatePostResponse;
 import com.example.aadhaarfpoffline.tatvik.network.UserLocationUpdatePostResponse;
@@ -40,6 +41,7 @@ import retrofit2.http.Part;
 import retrofit2.http.PartMap;
 import retrofit2.http.Path;
 import retrofit2.http.Query;
+import retrofit2.http.QueryMap;
 /* loaded from: classes2.dex */
 public interface GetDataService {
     @GET("/VoterAuthenticationapi/getboothidbyphone")
@@ -66,15 +68,24 @@ public interface GetDataService {
     @POST("/api/v1/esign/report/{clientid}")
     Call<PostUploadResponse> getReport(@Path("clientid") String str, @Body String str2);
 
+    @GET("/VoterAuthenticationapi/gettranslistbyboothno")
+    Call<TransTableGetResponse> getTransTable(@QueryMap Map<String, String> map);
+
     @Headers({"Content-Type: application/json"})
     @POST("/api/v1/esign/get-upload-link")
     Call<GetUploadLinkResponse> getUploadLink(@Body String str);
 
     @GET("/VoterAuthenticationapi/getVoterData")
-    Call<VoterDataGetResponse> getVoterByUserId(@Query("user_id") String str);
+    Call<VoterDataGetResponse> getVoterByUserId(@QueryMap Map<String, String> map);
+
+    @GET("/VoterAuthenticationapi/getVoterData")
+    Call<VoterDataGetResponse> getVoterByUserId_old(@Query("user_id") String str);
 
     @GET("/VoterAuthenticationapi/aadhaaruserexists")
-    Call<AadhaarUserCheckGetResponse> getVoterByVoterAadhaarNum(@Query("aadhaarnum") String str);
+    Call<AadhaarUserCheckGetResponse> getVoterByVoterAadhaarNum(@QueryMap Map<String, String> map);
+
+    @GET("/VoterAuthenticationapi/aadhaaruserexists")
+    Call<AadhaarUserCheckGetResponse> getVoterByVoterAadhaarNum_old(@Query("aadhaarnum") String str);
 
     @GET("/VoterAuthenticationapi/getVoterData")
     Call<VoterDataGetResponse> getVoterByVoterId(@Query("voterid") String str);
@@ -89,7 +100,10 @@ public interface GetDataService {
     Call<VoterListNewTableGetResponse> getVoterListNewTableByBlockId(@Query("blockid") int i);
 
     @GET("/VoterAuthenticationapi/getvoterlistbyboothno")
-    Call<VoterListNewTableGetResponse> getVoterListNewTableByBoothNo(@Query("dist_no") String str, @Query("block_id") String str2, @Query("panchayat_id") String str3, @Query("ward_no") String str4, @Query("booth_no") String str5);
+    Call<VoterListNewTableGetResponse> getVoterListNewTableByBoothNo(@QueryMap Map<String, String> map);
+
+    @GET("/VoterAuthenticationapi/getvoterlistbyboothno")
+    Call<VoterListNewTableGetResponse> getVoterListNewTableByBoothNo_old(@Query("dist_no") String str, @Query("block_id") String str2, @Query("panchayat_id") String str3, @Query("ward_no") String str4, @Query("booth_no") String str5);
 
     @GET("/VoterAuthenticationapi/getvoterlistnewtable")
     Call<VoterListNewTableGetResponse> getVoterListNewTableByPanchayatId(@Query("panchayatid") String str);

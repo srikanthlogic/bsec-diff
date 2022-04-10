@@ -1,8 +1,6 @@
 package com.example.aadhaarfpoffline.tatvik.uid;
 
 import android.content.Intent;
-import android.content.pm.PackageManager;
-import android.content.pm.ResolveInfo;
 import android.os.Bundle;
 import android.text.TextUtils;
 import android.util.Log;
@@ -13,9 +11,7 @@ import androidx.appcompat.app.AppCompatActivity;
 import com.android.volley.NetworkResponse;
 import com.android.volley.VolleyError;
 import com.example.aadhaarfpoffline.tatvik.uid.RDService;
-import java.util.List;
 import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.TimeUnit;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 /* loaded from: classes2.dex */
@@ -135,83 +131,26 @@ public class RDService {
     }
 
     public static void __discoverAndCapture(AppCompatActivity activity, boolean demo, OnRDServiceDiscoveryAndCapture onRDServiceDiscovery2) {
-        int i;
-        if (countDownLatch != null) {
-            onRDServiceDiscovery2.onError(new VolleyError(new NetworkResponse("Please wait for existing request to finish".getBytes())));
-            return;
-        }
-        pkg = null;
         onRDServiceDiscovery = onRDServiceDiscovery2;
-        Intent intentFpsInfo = new Intent("in.gov.uidai.rdservice.fp.INFO");
-        Intent intentIrisInfo = new Intent("in.gov.uidai.rdservice.iris.INFO");
-        PackageManager packageManager = activity.getPackageManager();
-        List<ResolveInfo> activitiesFps = packageManager.queryIntentActivities(intentFpsInfo, 65536);
-        List<ResolveInfo> activitiesIris = packageManager.queryIntentActivities(intentIrisInfo, 65536);
-        if (activitiesFps.size() == 0 && activitiesIris.size() == 0) {
-            onRDServiceDiscovery.onError(new VolleyError(new NetworkResponse("RD service not available, Install from play store to continue".getBytes())));
-            return;
-        }
-        for (ResolveInfo rdActivity : activitiesFps) {
-            Intent i2 = new Intent("in.gov.uidai.rdservice.fp.INFO");
-            i2.setPackage(rdActivity.activityInfo.packageName);
-            Log.e("RD package %", rdActivity.activityInfo.packageName);
-            countDownLatch = new CountDownLatch(1);
-            currentPkg = rdActivity.activityInfo.packageName;
-            infoActivityResultLauncher.launch(i2);
-            try {
-                countDownLatch.await(20, TimeUnit.SECONDS);
-            } catch (InterruptedException e) {
-                e.printStackTrace();
+        capturePath = "in.gov.uidai.rdservice.fp.CAPTURE";
+        Intent captureIntent = new Intent(capturePath);
+        captureIntent.setPackage("in.bioenable.rdservice.fp");
+        modality = "fingerprint";
+        String PIDXml = fingerprintPIDOptionsDev;
+        if (modality.equals("iris")) {
+            if (demo) {
+                PIDXml = irisPIDOptionsDev;
+            } else {
+                PIDXml = irisPIDOptionsProd;
+            }
+        } else if (modality.equals("fingerprint")) {
+            if (demo) {
+                PIDXml = fingerprintPIDOptionsDev;
+            } else {
+                PIDXml = fingerprintPIDOptionsProd;
             }
         }
-        if (TextUtils.isEmpty(pkg)) {
-            for (ResolveInfo rdActivity2 : activitiesIris) {
-                Intent i3 = new Intent("in.gov.uidai.rdservice.iris.INFO");
-                i3.setPackage(rdActivity2.activityInfo.packageName);
-                Log.e("RD package %", rdActivity2.activityInfo.packageName);
-                countDownLatch = new CountDownLatch(1);
-                currentPkg = rdActivity2.activityInfo.packageName;
-                infoActivityResultLauncher.launch(i3);
-                try {
-                    countDownLatch.await(20, TimeUnit.SECONDS);
-                } catch (InterruptedException e2) {
-                    e2.printStackTrace();
-                }
-            }
-        }
-        countDownLatch = null;
-        if (!TextUtils.isEmpty(pkg) || (i = currentTry) >= retrties) {
-            currentTry = 0;
-            Log.e("all intents finishe %", "");
-            if (TextUtils.isEmpty(pkg)) {
-                Log.e("RD Service in ready state not detected %", "");
-                onRDServiceDiscovery.onError(new VolleyError(new NetworkResponse("Device not connected or RD service not ready".getBytes())));
-                return;
-            }
-            Log.e("pkg %s", pkg);
-            Log.e("path %s", capturePath);
-            Log.e("modality %s", modality);
-            Intent captureIntent = new Intent(capturePath);
-            captureIntent.setPackage(pkg);
-            String PIDXml = fingerprintPIDOptionsDev;
-            if (modality.equals("iris")) {
-                if (demo) {
-                    PIDXml = irisPIDOptionsDev;
-                } else {
-                    PIDXml = irisPIDOptionsProd;
-                }
-            } else if (modality.equals("fingerprint")) {
-                if (demo) {
-                    PIDXml = fingerprintPIDOptionsDev;
-                } else {
-                    PIDXml = fingerprintPIDOptionsProd;
-                }
-            }
-            captureIntent.putExtra("PID_OPTIONS", PIDXml);
-            captureActivityResultLauncher.launch(captureIntent);
-            return;
-        }
-        currentTry = i + 1;
-        discoverAndCapture(activity, demo, onRDServiceDiscovery2);
+        captureIntent.putExtra("PID_OPTIONS", PIDXml);
+        captureActivityResultLauncher.launch(captureIntent);
     }
 }

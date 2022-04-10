@@ -7,6 +7,18 @@ import com.google.firebase.analytics.FirebaseAnalytics;
 import com.google.gson.annotations.SerializedName;
 /* loaded from: classes2.dex */
 public class LoginForUrlResponse {
+    @SerializedName("Block_NAME_EN")
+    private String Block_NAME_EN;
+    @SerializedName("Block_NAME_HN")
+    private String Block_NAME_HN;
+    @SerializedName("DIST_NAME_EN")
+    private String DIST_NAME_EN;
+    @SerializedName("DIST_NAME_HN")
+    private String DIST_NAME_HN;
+    @SerializedName("Panchayat_NAME_EN")
+    private String Panchayat_NAME_EN;
+    @SerializedName("Panchayat_NAME_HN")
+    private String Panchayat_NAME_HN;
     @SerializedName("BlockID")
     private String blockId;
     @SerializedName("BoothNo")
@@ -42,6 +54,30 @@ public class LoginForUrlResponse {
 
     public String getBoothid() {
         return this.boothid;
+    }
+
+    public String getDIST_NAME_EN() {
+        return this.DIST_NAME_EN;
+    }
+
+    public String getDIST_NAME_HN() {
+        return this.DIST_NAME_HN;
+    }
+
+    public String getBlock_NAME_EN() {
+        return this.Block_NAME_EN;
+    }
+
+    public String getBlock_NAME_HN() {
+        return this.Block_NAME_HN;
+    }
+
+    public String getPanchayat_NAME_EN() {
+        return this.Panchayat_NAME_EN;
+    }
+
+    public String getPanchayat_NAME_HN() {
+        return this.Panchayat_NAME_HN;
     }
 
     public String getDistNo() {

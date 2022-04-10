@@ -1,7 +1,9 @@
 package com.example.aadhaarfpoffline.tatvik.activity;
 
+import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
+import android.provider.Settings;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
@@ -29,6 +31,8 @@ public class FingerprintDeviceSelectionActivity extends AppCompatActivity {
     UserAuth userAuth;
     String[] strDevices = {Const.Tatvik, Const.eNBioScan};
     String selectedDevice = "";
+    String androidId = "";
+    String UDevId = "";
 
     /* JADX INFO: Access modifiers changed from: protected */
     @Override // androidx.fragment.app.FragmentActivity, androidx.activity.ComponentActivity, androidx.core.app.ComponentActivity, android.app.Activity
@@ -40,6 +44,10 @@ public class FingerprintDeviceSelectionActivity extends AppCompatActivity {
         ((ActionBar) Objects.requireNonNull(getSupportActionBar())).setTitle("Device Selection");
         initDropdownAndSetAdapter();
         initSubmitBtn();
+        this.androidId = Settings.Secure.getString(getContentResolver(), "android_id");
+        Context applicationContext = getApplicationContext();
+        Toast.makeText(applicationContext, "Android id=" + this.androidId, 1).show();
+        this.UDevId = this.androidId;
     }
 
     void initDropdownAndSetAdapter() {
