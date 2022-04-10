@@ -164,15 +164,11 @@ public class UserIdCaptureActivity extends AppCompatActivity implements Progress
         this.slnoinward = intent.getStringExtra("slnoinward");
         this.votername = intent.getStringExtra("voter_name");
         this.district = intent.getStringExtra("district");
-        Context applicationContext = getApplicationContext();
-        Toast.makeText(applicationContext, "slnoinward" + this.slnoinward, 1).show();
         this.blockno = intent.getStringExtra("blockno");
         this.blockid = intent.getStringExtra("blockid");
         this.voted = intent.getStringExtra("voted");
         this.age = intent.getStringExtra("age");
         this.gender = intent.getStringExtra("gender");
-        Context applicationContext2 = getApplicationContext();
-        Toast.makeText(applicationContext2, "Age=" + this.age + " Gender=" + this.gender, 1).show();
         this.voterName.setText(this.votername);
         this.voterId.setText(this.voterid);
         this.voterDistrict.setText(this.district);
@@ -199,22 +195,17 @@ public class UserIdCaptureActivity extends AppCompatActivity implements Progress
                     if (UserIdCaptureActivity.this.imageUri != null) {
                         UserIdCaptureActivity.this.updatevoterDocumentSqlite();
                         UserIdCaptureActivity.this.updatevoterDocumentSqliteTransTable();
-                        if (Build.VERSION.SDK_INT >= 23) {
-                            if (!UserIdCaptureActivity.this.checkPermission2()) {
-                                UserIdCaptureActivity.this.requestPermissions(new String[]{"android.permission.WRITE_EXTERNAL_STORAGE", "android.permission.READ_EXTERNAL_STORAGE"}, 1000);
-                            } else if (UserIdCaptureActivity.this.imageUri != null) {
-                                UserIdCaptureActivity.this.uploadImage();
-                            }
-                            if (!UserIdCaptureActivity.this.checkLocationPermission()) {
-                                UserIdCaptureActivity.this.requestPermissions(new String[]{"android.permission.ACCESS_FINE_LOCATION"}, 99);
-                                return;
-                            }
-                            UserIdCaptureActivity.this.getLocation();
+                        if (Build.VERSION.SDK_INT < 23) {
                             return;
                         }
-                        return;
+                        if (!UserIdCaptureActivity.this.checkPermission2()) {
+                            UserIdCaptureActivity.this.requestPermissions(new String[]{"android.permission.WRITE_EXTERNAL_STORAGE", "android.permission.READ_EXTERNAL_STORAGE"}, 1000);
+                        } else if (UserIdCaptureActivity.this.imageUri != null) {
+                            UserIdCaptureActivity.this.uploadImage();
+                        }
+                    } else {
+                        Toast.makeText(UserIdCaptureActivity.this.getApplicationContext(), "Please select an ID document", 0).show();
                     }
-                    Toast.makeText(UserIdCaptureActivity.this.getApplicationContext(), "Please select an ID document", 0).show();
                 }
             }
         });
@@ -246,25 +237,17 @@ public class UserIdCaptureActivity extends AppCompatActivity implements Progress
         startActivityForResult(cameraIntent, this.IMAGE_CAPTURE_CODE);
     }
 
-    /* JADX WARN: Code restructure failed: missing block: B:10:0x0012, code lost:
-        if (r0 == 0) goto L_0x001e;
-     */
     @Override // androidx.fragment.app.FragmentActivity, androidx.activity.ComponentActivity, android.app.Activity
-    /* Code decompiled incorrectly, please refer to instructions dump */
     public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
-        if (requestCode != 99) {
-            if (requestCode == 1000) {
-                if (grantResults.length > 0) {
-                    int i = grantResults[0];
-                    getPackageManager();
+        if (requestCode != 99 && requestCode == 1000) {
+            if (grantResults.length > 0) {
+                int i = grantResults[0];
+                getPackageManager();
+                if (i == 0) {
+                    return;
                 }
-                Toast.makeText(this, "Permission denied...", 0).show();
-            } else {
-                return;
             }
-        }
-        if (grantResults.length > 0 && grantResults[0] == 0 && ContextCompat.checkSelfPermission(this, "android.permission.ACCESS_FINE_LOCATION") == 0) {
-            getLocation();
+            Toast.makeText(this, "Permission denied...", 0).show();
         }
     }
 
@@ -325,7 +308,7 @@ public class UserIdCaptureActivity extends AppCompatActivity implements Progress
     }
 
     private synchronized void postDataWithImage(HashMap<String, RequestBody> map, final File file) {
-        ((GetDataService) RetrofitClientInstance.getRetrofitInstance().create(GetDataService.class)).postVoterIdentification(MultipartBody.Part.createFormData(UriUtil.LOCAL_FILE_SCHEME, file.getName(), new ProgressRequestBody(file, "jpg", this)), map).enqueue(new Callback<ImageUploadResponse>() { // from class: com.example.aadhaarfpoffline.tatvik.activity.UserIdCaptureActivity.6
+        ((GetDataService) RetrofitClientInstance.getRetrofitInstanceCimUrlForVoterIdUpload().create(GetDataService.class)).postVoterIdentification(MultipartBody.Part.createFormData(UriUtil.LOCAL_FILE_SCHEME, file.getName(), new ProgressRequestBody(file, "jpg", this)), map).enqueue(new Callback<ImageUploadResponse>() { // from class: com.example.aadhaarfpoffline.tatvik.activity.UserIdCaptureActivity.6
             @Override // retrofit2.Callback
             public void onResponse(Call<ImageUploadResponse> call, Response<ImageUploadResponse> response) {
                 if (response == null || response.body() == null || !response.body().isAdded().booleanValue()) {
@@ -343,10 +326,11 @@ public class UserIdCaptureActivity extends AppCompatActivity implements Progress
             public void onFailure(Call<ImageUploadResponse> call, Throwable t) {
                 Log.d("taag", t.getMessage());
                 Context applicationContext = UserIdCaptureActivity.this.getApplicationContext();
-                Toast.makeText(applicationContext, "failure post" + t.getMessage(), 1).show();
-                if (!(t instanceof SocketTimeoutException) && (t instanceof IOException)) {
-                    UserIdCaptureActivity.this.startnonAadhaarfingerprintactivity();
+                Toast.makeText(applicationContext, "failure post " + t.getMessage(), 1).show();
+                if (!(t instanceof SocketTimeoutException)) {
+                    boolean z = t instanceof IOException;
                 }
+                UserIdCaptureActivity.this.startnonAadhaarfingerprintactivity();
             }
         });
     }
@@ -406,7 +390,7 @@ public class UserIdCaptureActivity extends AppCompatActivity implements Progress
 
     @Override // com.example.aadhaarfpoffline.tatvik.ProgressRequestBody.UploadCallbacks
     public void onError() {
-        Toast.makeText(getApplicationContext(), "upload image ", 0).show();
+        Toast.makeText(getApplicationContext(), "Error", 0).show();
     }
 
     @Override // com.example.aadhaarfpoffline.tatvik.ProgressRequestBody.UploadCallbacks
@@ -431,8 +415,7 @@ public class UserIdCaptureActivity extends AppCompatActivity implements Progress
         return false;
     }
 
-    /* JADX INFO: Access modifiers changed from: private */
-    public void getLocation() {
+    private void getLocation() {
         LocationTrack locationTrack = new LocationTrack(this);
         if (locationTrack.canGetLocation()) {
             double longitude = locationTrack.getLongitude();
@@ -806,7 +789,6 @@ public class UserIdCaptureActivity extends AppCompatActivity implements Progress
         cols.put("SlNoInWard", this.slnoinward);
         cols.put("AGE", this.age);
         cols.put("GENDER", this.gender);
-        Toast.makeText(getApplicationContext(), "COLS=" + cols.toString(), 1).show();
         DBHelper dBHelper = this.db;
         this.userAuth.setTransactionId(Long.valueOf(dBHelper.insertData(dBHelper.tbl_transaction, cols)));
     }
