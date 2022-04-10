@@ -91,9 +91,6 @@ public class FinalScreenActivityOffline extends AppCompatActivity {
         this.votedDone = intent.getStringExtra("voted");
         this.slnoinward = intent.getStringExtra("slnoinward");
         this.matchslnoinward = intent.getStringExtra("matchslnoinward");
-        Context applicationContext = getApplicationContext();
-        Toast.makeText(applicationContext, "slnoinward" + this.slnoinward, 1).show();
-        this.votedDone = "0";
         String fpmatchvoterid = intent.getStringExtra("fpmatchvotertid");
         if (allowedtovote.booleanValue()) {
             String votingmessage = this.resources.getString(R.string.u_can_vote_text);
@@ -139,11 +136,9 @@ public class FinalScreenActivityOffline extends AppCompatActivity {
     }
 
     private void getMatchedVoterData(String matchedvotertid) {
-        Toast.makeText(getApplicationContext(), "getMatchedVoterData just inside", 1).show();
         ((GetDataService) RetrofitClientInstance.getRetrofitInstance().create(GetDataService.class)).getVoterByUserId(matchedvotertid).enqueue(new Callback<VoterDataGetResponse>() { // from class: com.example.aadhaarfpoffline.tatvik.activity.FinalScreenActivityOffline.3
             @Override // retrofit2.Callback
             public void onResponse(Call<VoterDataGetResponse> call, Response<VoterDataGetResponse> response) {
-                Toast.makeText(FinalScreenActivityOffline.this.getApplicationContext(), "getMatchedVoterData onresponse", 1).show();
                 if (response != null && response.isSuccessful() && response.body() != null && response.body().getVoters() != null) {
                     FinalScreenActivityOffline.this.showUserInfoIncaseofMatch(response.body().getVoters());
                 }
@@ -151,11 +146,9 @@ public class FinalScreenActivityOffline extends AppCompatActivity {
 
             @Override // retrofit2.Callback
             public void onFailure(Call<VoterDataGetResponse> call, Throwable t) {
-                Toast.makeText(FinalScreenActivityOffline.this.getApplicationContext(), "getMatchedVoterData onfailure just inside", 1).show();
-                if (!(t instanceof SocketTimeoutException) && (t instanceof IOException)) {
-                    Toast.makeText(FinalScreenActivityOffline.this.getApplicationContext(), "getMatchedVoterData onfailure just inside3", 1).show();
+                if (!(t instanceof SocketTimeoutException)) {
+                    boolean z = t instanceof IOException;
                 }
-                Toast.makeText(FinalScreenActivityOffline.this.getApplicationContext(), "getMatchedVoterData onfailure just inside out", 1).show();
                 FinalScreenActivityOffline.this.showUserInfoFromLocaldb(FinalScreenActivityOffline.this.db.getVoterBySlNoInWard(FinalScreenActivityOffline.this.matchslnoinward));
             }
         });
@@ -163,7 +156,6 @@ public class FinalScreenActivityOffline extends AppCompatActivity {
 
     /* JADX INFO: Access modifiers changed from: private */
     public void showUserInfoIncaseofMatch(VoterDataNewModel Voter) {
-        Toast.makeText(getApplicationContext(), "showUserInfoIncaseofMatch just inside", 1).show();
         System.out.println("showUserInfoIncaseofMatch1");
         String name = this.resources.getString(R.string.name) + ":";
         if (this.lan.equalsIgnoreCase("en")) {
@@ -201,10 +193,7 @@ public class FinalScreenActivityOffline extends AppCompatActivity {
             Uri uri1 = Uri.parse(imageurl);
             this.matchUserImage.setVisibility(0);
             this.matchUserImage.setImageURI(uri1);
-            if (isUrlValid(imageurl)) {
-                Toast.makeText(getApplicationContext(), "Url valid", 1).show();
-            } else {
-                Toast.makeText(getApplicationContext(), "Url Not valid " + Voter.getID_DOCUMENT_IMAGE(), 1).show();
+            if (!isUrlValid(imageurl)) {
                 File imgFile = new File("/sdcard/Images/" + Voter.getID_DOCUMENT_IMAGE());
                 if (imgFile.exists()) {
                     Bitmap myBitmap = BitmapFactory.decodeFile(imgFile.getAbsolutePath());
@@ -213,12 +202,10 @@ public class FinalScreenActivityOffline extends AppCompatActivity {
                 }
             }
         }
-        Toast.makeText(getApplicationContext(), "showUserInfoIncaseofMatch outside", 1).show();
     }
 
     /* JADX INFO: Access modifiers changed from: private */
     public void showUserInfoFromLocaldb(VoterDataNewModel Voter) {
-        Toast.makeText(getApplicationContext(), "showUserInfoFromLocaldb just inside", 1).show();
         System.out.println("showUserInfoIncaseofMatch1");
         String name = this.resources.getString(R.string.name) + ":";
         if (this.lan.equalsIgnoreCase("en")) {
@@ -236,7 +223,6 @@ public class FinalScreenActivityOffline extends AppCompatActivity {
                 name = name + " " + Voter.getLASTNAME_V1();
             }
         }
-        Toast.makeText(getApplicationContext(), "showUserInfoFromLocaldb just inside2", 1).show();
         String gender = this.resources.getString(R.string.gender) + ":" + Voter.getGENDER();
         String blockNo = this.resources.getString(R.string.block_no) + ":" + Voter.getBlockID();
         System.out.println("showUserInfoIncaseofMatch 2 name=" + name);
@@ -260,7 +246,6 @@ public class FinalScreenActivityOffline extends AppCompatActivity {
                 this.matchUserImage.setImageBitmap(myBitmap);
             }
         }
-        Toast.makeText(getApplicationContext(), "showUserInfoFromLocaldb outside", 1).show();
     }
 
     private void showUserInfoIncaseofMatchOffline() {
@@ -365,8 +350,8 @@ public class FinalScreenActivityOffline extends AppCompatActivity {
     /* JADX INFO: Access modifiers changed from: private */
     public void updateVotingStatusOffline(String voterid, int voted) {
         String currentTime = getcurrentTime();
-        this.db.updateVotingStatus(voterid, voted, currentTime);
-        this.db.updateVotingStatusTransTable(voterid, voted, currentTime, 0, this.userAuth.getTransactionId().longValue());
+        this.db.updateVOTEDByUSER_ID_Maintable(this.userAuth.getPanchayatId() + "_" + this.userAuth.getWardNo() + "_" + this.userAuth.getBoothNo() + "_" + this.slnoinward, voted);
+        this.db.updateVotingStatusTransTable(voterid, voted, currentTime, 0, this.userAuth.getTransactionId().longValue(), "NON_AADHAAR");
         if (voted == 2) {
             deleteFingerprint(voterid);
         }
@@ -404,9 +389,8 @@ public class FinalScreenActivityOffline extends AppCompatActivity {
                     Context applicationContext = FinalScreenActivityOffline.this.getApplicationContext();
                     Toast.makeText(applicationContext, "Transaction row Not updated " + response.code(), 1).show();
                 } else {
-                    FinalScreenActivityOffline.this.db.updateVotingStatusTransTable(FinalScreenActivityOffline.this.voterid, FinalScreenActivityOffline.this.voted, FinalScreenActivityOffline.this.getCurrentTimeInFormat(), 1, FinalScreenActivityOffline.this.userAuth.getTransactionId().longValue());
-                    Context applicationContext2 = FinalScreenActivityOffline.this.getApplicationContext();
-                    Toast.makeText(applicationContext2, "Transaction row updated successfully" + response.code(), 1).show();
+                    FinalScreenActivityOffline.this.db.updateVOTEDByUSER_ID_Maintable(FinalScreenActivityOffline.this.userAuth.getPanchayatId() + "_" + FinalScreenActivityOffline.this.userAuth.getWardNo() + "_" + FinalScreenActivityOffline.this.userAuth.getBoothNo() + "_" + FinalScreenActivityOffline.this.slnoinward, FinalScreenActivityOffline.this.voted);
+                    FinalScreenActivityOffline.this.db.updateVotingStatusTransTable(FinalScreenActivityOffline.this.voterid, FinalScreenActivityOffline.this.voted, FinalScreenActivityOffline.this.getCurrentTimeInFormat(), 1, FinalScreenActivityOffline.this.userAuth.getTransactionId().longValue(), "NON_AADHAAR");
                 }
                 FinalScreenActivityOffline.this.UserListScreen();
             }

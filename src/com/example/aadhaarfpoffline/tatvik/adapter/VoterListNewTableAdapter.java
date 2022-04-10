@@ -11,6 +11,8 @@ import android.widget.RelativeLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 import androidx.cardview.widget.CardView;
+import androidx.core.content.ContextCompat;
+import androidx.exifinterface.media.ExifInterface;
 import androidx.recyclerview.widget.RecyclerView;
 import com.example.aadhaarfpoffline.tatvik.LocaleHelper;
 import com.example.aadhaarfpoffline.tatvik.R;
@@ -18,6 +20,7 @@ import com.example.aadhaarfpoffline.tatvik.UserAuth;
 import com.example.aadhaarfpoffline.tatvik.model.VoterDataNewModel;
 import java.text.SimpleDateFormat;
 import java.util.List;
+import okhttp3.internal.cache.DiskLruCache;
 /* loaded from: classes2.dex */
 public class VoterListNewTableAdapter extends RecyclerView.Adapter<ViewHolder> {
     private Boolean Clickable;
@@ -153,7 +156,23 @@ public class VoterListNewTableAdapter extends RecyclerView.Adapter<ViewHolder> {
             } else {
                 this.imageView.setImageResource(R.drawable.woman);
             }
-            this.votedOrNot.setVisibility(8);
+            if (((VoterDataNewModel) VoterListNewTableAdapter.this.voterDataModelList.get(position)).getVOTED() == null || ((VoterDataNewModel) VoterListNewTableAdapter.this.voterDataModelList.get(position)).getVOTED().isEmpty()) {
+                this.votedOrNot.setText(VoterListNewTableAdapter.this.resources.getString(R.string.not_voted_text));
+                this.votedOrNot.setBackgroundTintList(ContextCompat.getColorStateList(VoterListNewTableAdapter.this.mcontext, R.color.blue));
+                return;
+            }
+            if (((VoterDataNewModel) VoterListNewTableAdapter.this.voterDataModelList.get(position)).getVOTED().equalsIgnoreCase("0")) {
+                this.votedOrNot.setText(VoterListNewTableAdapter.this.resources.getString(R.string.not_voted_text));
+                this.votedOrNot.setBackgroundTintList(ContextCompat.getColorStateList(VoterListNewTableAdapter.this.mcontext, R.color.blue));
+            } else if (((VoterDataNewModel) VoterListNewTableAdapter.this.voterDataModelList.get(position)).getVOTED().equalsIgnoreCase(DiskLruCache.VERSION_1) || ((VoterDataNewModel) VoterListNewTableAdapter.this.voterDataModelList.get(position)).getVOTED().equalsIgnoreCase(ExifInterface.GPS_MEASUREMENT_3D)) {
+                this.votedOrNot.setText(VoterListNewTableAdapter.this.resources.getString(R.string.voted_text));
+                this.votedOrNot.setBackgroundTintList(ContextCompat.getColorStateList(VoterListNewTableAdapter.this.mcontext, R.color.green));
+            } else if (((VoterDataNewModel) VoterListNewTableAdapter.this.voterDataModelList.get(position)).getVOTED().equalsIgnoreCase(ExifInterface.GPS_MEASUREMENT_2D)) {
+                this.votedOrNot.setText(VoterListNewTableAdapter.this.resources.getString(R.string.not_voted_text));
+                this.votedOrNot.setBackgroundTintList(ContextCompat.getColorStateList(VoterListNewTableAdapter.this.mcontext, R.color.blue));
+            }
+            this.votedOrNot.setBackgroundResource(R.drawable.button_bg_rounded_corners_yellow_background);
+            this.votedOrNot.setBackgroundColor(VoterListNewTableAdapter.this.mcontext.getResources().getColor(R.color.greenColor));
         }
     }
 

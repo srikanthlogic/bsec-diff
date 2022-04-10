@@ -29,7 +29,7 @@ import java.util.Locale;
 /* loaded from: classes2.dex */
 public class DBHelper extends SQLiteOpenHelper {
     public static final String Database_Name = "db_BiometricAttendance.db";
-    public static final int Database_Version = 6;
+    public static final int Database_Version = 8;
     public static final String Key_ID = "_id";
     public Global global;
     private Context mContext;
@@ -39,7 +39,7 @@ public class DBHelper extends SQLiteOpenHelper {
     protected SQLiteDatabase database = getWritableDatabase();
 
     public DBHelper(Context context) {
-        super(context, Database_Name, (SQLiteDatabase.CursorFactory) null, 6);
+        super(context, Database_Name, (SQLiteDatabase.CursorFactory) null, 8);
         this.mContext = context;
     }
 
@@ -70,6 +70,7 @@ public class DBHelper extends SQLiteOpenHelper {
         tranTableCols.put("AGE", "int");
         tranTableCols.put("SYNCED", "int DEFAULT 0");
         tranTableCols.put("USER_ID", "varchar(255) DEFAULT ''");
+        tranTableCols.put("VOTING_TYPE", "varchar(30) DEFAULT ''");
         if (createTransactionTable(this.tbl_transaction, tranTableCols, db)) {
             Log.w("Create Transaction Table", "Successful on transtable new database lock");
         } else {
@@ -119,6 +120,7 @@ public class DBHelper extends SQLiteOpenHelper {
         cols.put("AADHAAR_NO", "varchar(15)");
         cols.put("EnrollTemplate", "blob");
         cols.put("BoothNo", "int");
+        cols.put("USER_ID", "varchar(255) DEFAULT ''");
         if (createTable(this.tbl_registration_master, cols, db)) {
             Log.w("Create URL", "Successful on new database");
         } else {
@@ -133,7 +135,7 @@ public class DBHelper extends SQLiteOpenHelper {
             for (String key : colums.keySet()) {
                 cmd = cmd + key + " " + colums.get(key) + ",";
             }
-            String cmd2 = (cmd + " UNIQUE('EPIC_NO')") + ");";
+            String cmd2 = (cmd + " UNIQUE('USER_ID')") + ");";
             Log.w("Create Table", "query : " + cmd2);
             db.execSQL(cmd2);
             Log.w("Create Table", "Success : " + tableName);
@@ -418,6 +420,13 @@ public class DBHelper extends SQLiteOpenHelper {
         this.database.update(this.tbl_registration_master, cv, "EPIC_NO = ?", new String[]{voterid});
     }
 
+    public void updateVOTEDByUSER_ID_Maintable(String user_id, int voted) {
+        ContentValues cv = new ContentValues();
+        cv.put("VOTED", Integer.valueOf(voted));
+        this.database = getWritableDatabase();
+        this.database.update(this.tbl_registration_master, cv, "USER_ID = ?", new String[]{user_id});
+    }
+
     public void updateVotingStatus(String voterid, int voted, String currenttime) {
         ContentValues cv = new ContentValues();
         cv.put("VOTED", Integer.valueOf(voted));
@@ -425,11 +434,12 @@ public class DBHelper extends SQLiteOpenHelper {
         this.database.update(this.tbl_registration_master, cv, "EPIC_NO = ?", new String[]{voterid});
     }
 
-    public void updateVotingStatusTransTable(String voterid, int voted, String currenttime, int synced, long transactionId) {
+    public void updateVotingStatusTransTable(String voterid, int voted, String currenttime, int synced, long transactionId, String voting_type) {
         ContentValues cv = new ContentValues();
         cv.put("VOTED", Integer.valueOf(voted));
         cv.put("VOTING_DATE", currenttime);
         cv.put("SYNCED", Integer.valueOf(synced));
+        cv.put("VOTING_TYPE", voting_type);
         this.database = getWritableDatabase();
         this.database.update(this.tbl_transaction, cv, "_id = ?", new String[]{String.valueOf(transactionId)});
     }
@@ -458,7 +468,7 @@ public class DBHelper extends SQLiteOpenHelper {
     }
 
     public String getDateFromSlNoinWard(String slnoinward) {
-        String selectQuery = "SELECT  * FROM " + this.tbl_transaction + " where SlNoInWard='" + slnoinward + "' ";
+        String selectQuery = "SELECT  * FROM " + this.tbl_transaction + " where SlNoInWard='" + slnoinward + "' AND VOTING_DATE IS NOT NULL AND VOTING_DATE != ''";
         SQLiteDatabase db = getReadableDatabase();
         try {
             Cursor cursor = db.rawQuery(selectQuery, null);
@@ -669,10 +679,15 @@ public class DBHelper extends SQLiteOpenHelper {
                     cursor.close();
                 } catch (Exception e) {
                 }
+                if (!list.isEmpty() || list.size() <= 0) {
+                    return null;
+                }
                 return list.get(0);
             }
             cursor.close();
-            return list.get(0);
+            if (!list.isEmpty()) {
+            }
+            return null;
         } finally {
             try {
                 db.close();
@@ -807,34 +822,36 @@ public class DBHelper extends SQLiteOpenHelper {
         cv.put("AADHAAR_MATCH", aadhaarmatchstatus);
         cv.put("VOTED", voted);
         cv.put("VOTING_DATE", currenttime);
+        cv.put("VOTING_TYPE", "AADHAAR");
         this.database = getWritableDatabase();
         this.database.update(this.tbl_transaction, cv, "_id = ?", new String[]{String.valueOf(lastTransactionId)});
     }
 
     public void updateFingerprintTemplate(String voterid, byte[] finger_template) {
-        this.database = getWritableDatabase();
         ContentValues cv = new ContentValues();
+        this.database = getWritableDatabase();
         cv.put("EnrollTemplate", finger_template);
         this.database.update(this.tbl_registration_master, cv, "EPIC_NO = ?", new String[]{voterid});
     }
 
     public void updateFingerprintTemplateTransTable(String voterid, byte[] finger_template, long transactionId) {
-        this.database = getWritableDatabase();
         ContentValues cv = new ContentValues();
         cv.put("FingerTemplate", finger_template);
+        this.database = getWritableDatabase();
         this.database.update(this.tbl_transaction, cv, "_id = ?", new String[]{String.valueOf(transactionId)});
     }
 
     public void updateVoterIdImage(String voterid, String voteridImageName) {
-        this.database = getWritableDatabase();
         ContentValues cv = new ContentValues();
         cv.put("ID_DOCUMENT_IMAGE", voteridImageName);
+        this.database = getWritableDatabase();
         this.database.update(this.tbl_registration_master, cv, "EPIC_NO = ?", new String[]{voterid});
     }
 
     public void updateVoterIdImageTransTable(String voterid, String voteridImageName) {
         ContentValues cv = new ContentValues();
         cv.put("ID_DOCUMENT_IMAGE", voteridImageName);
+        this.database = getWritableDatabase();
         this.database.update(this.tbl_transaction, cv, "EPIC_NO = ?", new String[]{voterid});
     }
 
@@ -842,20 +859,21 @@ public class DBHelper extends SQLiteOpenHelper {
         ContentValues cv = new ContentValues();
         cv.put("ID_DOCUMENT_IMAGE", voteridImageName);
         cv.put("EPIC_NO", voterid);
+        this.database = getWritableDatabase();
         this.database.update(this.tbl_transaction, cv, "EPIC_NO = ?", new String[]{voterid});
     }
 
     public void clearFingerprint(String voterid) {
-        this.database = getWritableDatabase();
         ContentValues cv = new ContentValues();
         cv.put("EnrollTemplate", "");
+        this.database = getWritableDatabase();
         this.database.update(this.tbl_registration_master, cv, "EPIC_NO = ?", new String[]{voterid});
     }
 
     public void clearFingerprintTransTable(long transactionId) {
-        this.database = getWritableDatabase();
         ContentValues cv = new ContentValues();
         cv.put("FingerTemplate", "");
+        this.database = getWritableDatabase();
         this.database.update(this.tbl_transaction, cv, "_id = ?", new String[]{String.valueOf(transactionId)});
     }
 
@@ -871,17 +889,22 @@ public class DBHelper extends SQLiteOpenHelper {
         return getReadableDatabase().rawQuery("SELECT  * FROM " + this.tbl_lock_boothofficer + " where FingerTemplate  IS NOT NULL", null);
     }
 
-    /* JADX INFO: Multiple debug info for r1v11 'printWriter'  java.io.PrintWriter: [D('df' java.text.DateFormat), D('printWriter' java.io.PrintWriter)] */
-    /* JADX INFO: Multiple debug info for r1v37 'printWriter'  java.io.PrintWriter: [D('printWriter' java.io.PrintWriter), D('MOBILE_NO' java.lang.String)] */
-    /* JADX WARN: Removed duplicated region for block: B:53:0x0396  */
-    /* JADX WARN: Removed duplicated region for block: B:58:0x03a5  */
-    /* JADX WARN: Removed duplicated region for block: B:75:? A[RETURN, SYNTHETIC] */
+    /* JADX INFO: Multiple debug info for r1v24 'printWriter'  java.io.PrintWriter: [D('userId' java.lang.String), D('printWriter' java.io.PrintWriter)] */
+    /* JADX WARN: Removed duplicated region for block: B:57:0x02cf  */
+    /* JADX WARN: Removed duplicated region for block: B:62:0x02de  */
+    /* JADX WARN: Removed duplicated region for block: B:79:? A[RETURN, SYNTHETIC] */
     /* Code decompiled incorrectly, please refer to instructions dump */
-    public boolean exportDatabase() {
+    public boolean exportDatabaseTransTable(String dist, String block, String panchayat, String wardNo, String boothNo, String currTime) {
         PrintWriter printWriter;
         Throwable th;
-        String str = ",";
-        DateFormat df = DateFormat.getDateInstance(3, Locale.getDefault());
+        DBHelper dBHelper = this;
+        String str = "_";
+        UserAuth userAuth = new UserAuth(dBHelper.mContext);
+        if (getTransTableCount() < 1) {
+            Toast.makeText(dBHelper.mContext, "No data in Transaction table", 1).show();
+            return false;
+        }
+        DateFormat.getDateInstance(3, Locale.getDefault());
         String state = Environment.getExternalStorageState();
         if (!"mounted".equals(state)) {
             return false;
@@ -891,70 +914,45 @@ public class DBHelper extends SQLiteOpenHelper {
             exportDir.mkdirs();
         }
         try {
-            File file = new File(exportDir, "MyCSVFile.csv");
+            File file = new File(exportDir, "SECPhase3_" + dist + str + block + str + panchayat + str + wardNo + str + boothNo + str + currTime + ".csv");
             file.createNewFile();
-            PrintWriter printWriter2 = new PrintWriter(new FileWriter(file));
             try {
-                SQLiteDatabase db = getReadableDatabase();
-                Cursor curCSV = db.rawQuery("select * from " + this.tbl_registration_master, null);
-                printWriter2.println("FIRST TABLE OF THE DATABASE");
-                printWriter2.println("ID,DIST_NO,AC_NO,PART_NO,SECTION_NO,SLNOINPART,C_HOUSE_NO,C_HOUSE_NO_V1,FM_NAME_EN,LASTNAME_EN,FM_NAME_V1,LASTNAME_V1,RLN_TYPE,STATUS_TYPE,RLN_L_NM_EN,RLN_FM_NM_V1,RLN_L_NM_V1,EPIC_NO,RLN_FM_NM_EN,GENDER,AGE,DOB,EMAIL_ID,MOBILE_NO,ELECTOR_TYPE,BlockID,PanchayatID,VillageName,WardNo,SlNoInWard,UserId,VOTED,FACE_MATCH,VOTER_IMAGE,VOTER_FINGERPRINT,ID_DOCUMENT_IMAGE,FINGERPRINT_MATCH,VOTING_DATE,AADHAAR_MATCH,AADHAAR_NO,EnrollTemplate");
-                while (curCSV.moveToNext()) {
-                    long ID = curCSV.getLong(curCSV.getColumnIndex("ID"));
-                    String DIST_NO = curCSV.getString(curCSV.getColumnIndex("DIST_NO"));
-                    int AC_NO = curCSV.getInt(curCSV.getColumnIndex("AC_NO"));
-                    int PART_NO = curCSV.getInt(curCSV.getColumnIndex("PART_NO"));
-                    int SECTION_NO = curCSV.getInt(curCSV.getColumnIndex("SECTION_NO"));
-                    String SLNOINPART = curCSV.getString(curCSV.getColumnIndex("SLNOINPART"));
-                    try {
-                        String C_HOUSE_NO = curCSV.getString(curCSV.getColumnIndex("C_HOUSE_NO"));
+                PrintWriter printWriter2 = new PrintWriter(new FileWriter(file));
+                try {
+                    SQLiteDatabase db = getReadableDatabase();
+                    Cursor curCSV = db.rawQuery("select * from " + dBHelper.tbl_transaction, null);
+                    printWriter2.println("FIRST TABLE OF THE DATABASE");
+                    printWriter2.println("_id,FingerTemplate,EPIC_NO,DIST_NO,BlockID,PanchayatID,VOTED,ID_DOCUMENT_IMAGE,VOTING_DATE,AADHAAR_MATCH,AADHAAR_NO,SlNoInWard,GENDER,AGE,SYNCED,USER_ID,VOTING_TYPE");
+                    while (curCSV.moveToNext()) {
+                        Long id_ = Long.valueOf(curCSV.getLong(curCSV.getColumnIndex(Key_ID)));
                         try {
-                            String C_HOUSE_NO_V1 = curCSV.getString(curCSV.getColumnIndex("C_HOUSE_NO_V1"));
+                            byte[] FpTemplate = curCSV.getBlob(curCSV.getColumnIndex("FingerTemplate"));
                             try {
-                                String FM_NAME_EN = curCSV.getString(curCSV.getColumnIndex("FM_NAME_EN"));
-                                String LASTNAME_EN = curCSV.getString(curCSV.getColumnIndex("LASTNAME_EN"));
-                                String FM_NAME_V1 = curCSV.getString(curCSV.getColumnIndex("FM_NAME_V1"));
-                                String LASTNAME_V1 = curCSV.getString(curCSV.getColumnIndex("LASTNAME_V1"));
+                                String EPIC_NO = curCSV.getString(curCSV.getColumnIndex("EPIC_NO"));
+                                String DIST_NO = curCSV.getString(curCSV.getColumnIndex("DIST_NO"));
+                                int BlockID = curCSV.getInt(curCSV.getColumnIndex("BlockID"));
+                                Long PanchayatID = Long.valueOf(curCSV.getLong(curCSV.getColumnIndex("PanchayatID")));
+                                int VOTED = curCSV.getInt(curCSV.getColumnIndex("VOTED"));
+                                String ID_DOCUMENT_IMAGE = curCSV.getString(curCSV.getColumnIndex("ID_DOCUMENT_IMAGE"));
+                                String VOTING_DATE = curCSV.getString(curCSV.getColumnIndex("VOTING_DATE"));
+                                String AADHAAR_MATCH = curCSV.getString(curCSV.getColumnIndex("AADHAAR_MATCH"));
                                 try {
-                                    String RLN_TYPE = curCSV.getString(curCSV.getColumnIndex("RLN_TYPE"));
-                                    String STATUS_TYPE = curCSV.getString(curCSV.getColumnIndex("STATUS_TYPE"));
-                                    String RLN_L_NM_EN = curCSV.getString(curCSV.getColumnIndex("RLN_L_NM_EN"));
-                                    String RLN_FM_NM_V1 = curCSV.getString(curCSV.getColumnIndex("RLN_FM_NM_V1"));
-                                    String RLN_L_NM_V1 = curCSV.getString(curCSV.getColumnIndex("RLN_L_NM_V1"));
-                                    String EPIC_NO = curCSV.getString(curCSV.getColumnIndex("EPIC_NO"));
-                                    String RLN_FM_NM_EN = curCSV.getString(curCSV.getColumnIndex("RLN_FM_NM_EN"));
+                                    String AADHAAR_NO = curCSV.getString(curCSV.getColumnIndex("AADHAAR_NO"));
+                                    int SlNoInWard = curCSV.getInt(curCSV.getColumnIndex("SlNoInWard"));
                                     String GENDER = curCSV.getString(curCSV.getColumnIndex("GENDER"));
                                     int AGE = curCSV.getInt(curCSV.getColumnIndex("AGE"));
-                                    String DOB = curCSV.getString(curCSV.getColumnIndex("DOB"));
-                                    String EMAIL_ID = curCSV.getString(curCSV.getColumnIndex("EMAIL_ID"));
-                                    String MOBILE_NO = curCSV.getString(curCSV.getColumnIndex("MOBILE_NO"));
-                                    String ELECTOR_TYPE = curCSV.getString(curCSV.getColumnIndex("ELECTOR_TYPE"));
-                                    curCSV.getInt(curCSV.getColumnIndex("BlockID"));
-                                    curCSV.getInt(curCSV.getColumnIndex("PanchayatID"));
-                                    curCSV.getString(curCSV.getColumnIndex("VillageName"));
-                                    curCSV.getString(curCSV.getColumnIndex("WardNo"));
-                                    curCSV.getString(curCSV.getColumnIndex("SlNoInWard"));
-                                    curCSV.getString(curCSV.getColumnIndex("UserId"));
-                                    curCSV.getInt(curCSV.getColumnIndex("VOTED"));
-                                    curCSV.getInt(curCSV.getColumnIndex("FACE_MATCH"));
-                                    curCSV.getString(curCSV.getColumnIndex("VOTER_IMAGE"));
-                                    curCSV.getString(curCSV.getColumnIndex("VOTER_FINGERPRINT"));
-                                    curCSV.getString(curCSV.getColumnIndex("ID_DOCUMENT_IMAGE"));
-                                    curCSV.getInt(curCSV.getColumnIndex("FINGERPRINT_MATCH"));
-                                    curCSV.getString(curCSV.getColumnIndex("VOTING_DATE"));
-                                    curCSV.getInt(curCSV.getColumnIndex("AADHAAR_MATCH"));
-                                    curCSV.getString(curCSV.getColumnIndex("AADHAAR_NO"));
-                                    curCSV.getBlob(curCSV.getColumnIndex("EnrollTemplate"));
+                                    int SYNCED = curCSV.getInt(curCSV.getColumnIndex("SYNCED"));
+                                    Toast.makeText(dBHelper.mContext, "Export Age=" + AGE, 1).show();
                                     printWriter = printWriter2;
                                     try {
-                                        printWriter.println(ID + str + DIST_NO + str + AC_NO + str + PART_NO + str + SECTION_NO + str + SLNOINPART + str + C_HOUSE_NO + str + C_HOUSE_NO_V1 + str + FM_NAME_EN + str + LASTNAME_EN + str + FM_NAME_V1 + str + LASTNAME_V1 + str + RLN_TYPE + str + STATUS_TYPE + str + RLN_L_NM_EN + str + RLN_FM_NM_V1 + str + RLN_L_NM_V1 + str + EPIC_NO + str + RLN_FM_NM_EN + str + GENDER + str + AGE + str + DOB + str + EMAIL_ID + str + MOBILE_NO + str + ELECTOR_TYPE);
+                                        printWriter.println(id_ + "," + FpTemplate + "," + EPIC_NO + "," + DIST_NO + "," + BlockID + "," + PanchayatID + "," + VOTED + "," + ID_DOCUMENT_IMAGE + "," + VOTING_DATE + "," + AADHAAR_MATCH + "," + AADHAAR_NO + "," + SlNoInWard + "," + GENDER + "," + AGE + "," + SYNCED + "," + (userAuth.getPanchayatId() + str + userAuth.getWardNo() + str + userAuth.getBoothNo() + str + SlNoInWard) + "," + curCSV.getString(curCSV.getColumnIndex("VOTING_TYPE")));
                                         printWriter2 = printWriter;
-                                        df = df;
                                         state = state;
                                         exportDir = exportDir;
                                         file = file;
                                         db = db;
                                         str = str;
+                                        dBHelper = this;
                                     } catch (Exception e) {
                                         if (printWriter != null) {
                                             return false;
@@ -990,147 +988,6 @@ public class DBHelper extends SQLiteOpenHelper {
                         } catch (Throwable th5) {
                             th = th5;
                             printWriter = printWriter2;
-                        }
-                    } catch (Exception e5) {
-                        printWriter = printWriter2;
-                    } catch (Throwable th6) {
-                        th = th6;
-                        printWriter = printWriter2;
-                    }
-                }
-                printWriter = printWriter2;
-                curCSV.close();
-                db.close();
-                printWriter.close();
-                return true;
-            } catch (Exception e6) {
-                printWriter = printWriter2;
-            } catch (Throwable th7) {
-                th = th7;
-                printWriter = printWriter2;
-            }
-        } catch (Exception e7) {
-            printWriter = null;
-        } catch (Throwable th8) {
-            th = th8;
-            printWriter = null;
-        }
-    }
-
-    /* JADX INFO: Multiple debug info for r1v24 'printWriter'  java.io.PrintWriter: [D('userId' java.lang.String), D('printWriter' java.io.PrintWriter)] */
-    /* JADX WARN: Removed duplicated region for block: B:57:0x02bd  */
-    /* JADX WARN: Removed duplicated region for block: B:62:0x02cc  */
-    /* JADX WARN: Removed duplicated region for block: B:79:? A[RETURN, SYNTHETIC] */
-    /* Code decompiled incorrectly, please refer to instructions dump */
-    public boolean exportDatabaseTransTable(String dist, String block, String panchayat, String wardNo, String boothNo, String currTime) {
-        PrintWriter printWriter;
-        Throwable th;
-        byte[] FpTemplate;
-        String EPIC_NO;
-        String DIST_NO;
-        int BlockID;
-        Long PanchayatID;
-        int VOTED;
-        String ID_DOCUMENT_IMAGE;
-        String VOTING_DATE;
-        String AADHAAR_MATCH;
-        String AADHAAR_NO;
-        int SlNoInWard;
-        String GENDER;
-        int AGE;
-        int SYNCED;
-        DBHelper dBHelper = this;
-        String str = "_";
-        UserAuth userAuth = new UserAuth(dBHelper.mContext);
-        if (getTransTableCount() < 1) {
-            Toast.makeText(dBHelper.mContext, "No data in Transaction table", 1).show();
-            return false;
-        }
-        DateFormat.getDateInstance(3, Locale.getDefault());
-        String state = Environment.getExternalStorageState();
-        if (!"mounted".equals(state)) {
-            return false;
-        }
-        File exportDir = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS);
-        if (!exportDir.exists()) {
-            exportDir.mkdirs();
-        }
-        try {
-            File file = new File(exportDir, "PanchayatElectionPhase2_" + dist + str + block + str + panchayat + str + wardNo + str + boothNo + str + currTime + ".csv");
-            file.createNewFile();
-            try {
-                PrintWriter printWriter2 = new PrintWriter(new FileWriter(file));
-                try {
-                    SQLiteDatabase db = getReadableDatabase();
-                    Cursor curCSV = db.rawQuery("select * from " + dBHelper.tbl_transaction, null);
-                    printWriter2.println("FIRST TABLE OF THE DATABASE");
-                    printWriter2.println("_id,FingerTemplate,EPIC_NO,DIST_NO,BlockID,PanchayatID,VOTED,ID_DOCUMENT_IMAGE,VOTING_DATE,AADHAAR_MATCH,AADHAAR_NO,SlNoInWard,GENDER,AGE,SYNCED,USER_ID");
-                    while (curCSV.moveToNext()) {
-                        Long id_ = Long.valueOf(curCSV.getLong(curCSV.getColumnIndex(Key_ID)));
-                        try {
-                            FpTemplate = curCSV.getBlob(curCSV.getColumnIndex("FingerTemplate"));
-                            try {
-                                EPIC_NO = curCSV.getString(curCSV.getColumnIndex("EPIC_NO"));
-                                DIST_NO = curCSV.getString(curCSV.getColumnIndex("DIST_NO"));
-                                BlockID = curCSV.getInt(curCSV.getColumnIndex("BlockID"));
-                                PanchayatID = Long.valueOf(curCSV.getLong(curCSV.getColumnIndex("PanchayatID")));
-                                VOTED = curCSV.getInt(curCSV.getColumnIndex("VOTED"));
-                                ID_DOCUMENT_IMAGE = curCSV.getString(curCSV.getColumnIndex("ID_DOCUMENT_IMAGE"));
-                                VOTING_DATE = curCSV.getString(curCSV.getColumnIndex("VOTING_DATE"));
-                                AADHAAR_MATCH = curCSV.getString(curCSV.getColumnIndex("AADHAAR_MATCH"));
-                                try {
-                                    AADHAAR_NO = curCSV.getString(curCSV.getColumnIndex("AADHAAR_NO"));
-                                    SlNoInWard = curCSV.getInt(curCSV.getColumnIndex("SlNoInWard"));
-                                    GENDER = curCSV.getString(curCSV.getColumnIndex("GENDER"));
-                                    AGE = curCSV.getInt(curCSV.getColumnIndex("AGE"));
-                                    SYNCED = curCSV.getInt(curCSV.getColumnIndex("SYNCED"));
-                                    Toast.makeText(dBHelper.mContext, "Export Age=" + AGE, 1).show();
-                                    printWriter = printWriter2;
-                                } catch (Exception e) {
-                                    printWriter = printWriter2;
-                                    if (printWriter != null) {
-                                        return false;
-                                    }
-                                    printWriter.close();
-                                    return false;
-                                } catch (Throwable th2) {
-                                    th = th2;
-                                    printWriter = printWriter2;
-                                    if (printWriter != null) {
-                                        printWriter.close();
-                                    }
-                                    throw th;
-                                }
-                            } catch (Exception e2) {
-                                printWriter = printWriter2;
-                            } catch (Throwable th3) {
-                                th = th3;
-                                printWriter = printWriter2;
-                            }
-                        } catch (Exception e3) {
-                            printWriter = printWriter2;
-                        } catch (Throwable th4) {
-                            th = th4;
-                            printWriter = printWriter2;
-                        }
-                        try {
-                            printWriter.println(id_ + "," + FpTemplate + "," + EPIC_NO + "," + DIST_NO + "," + BlockID + "," + PanchayatID + "," + VOTED + "," + ID_DOCUMENT_IMAGE + "," + VOTING_DATE + "," + AADHAAR_MATCH + "," + AADHAAR_NO + "," + SlNoInWard + "," + GENDER + "," + AGE + "," + SYNCED + "," + (userAuth.getPanchayatId() + str + userAuth.getWardNo() + str + userAuth.getBoothNo() + str + SlNoInWard));
-                            printWriter2 = printWriter;
-                            state = state;
-                            exportDir = exportDir;
-                            file = file;
-                            db = db;
-                            str = str;
-                            curCSV = curCSV;
-                            dBHelper = this;
-                        } catch (Exception e4) {
-                            if (printWriter != null) {
-                            }
-                        } catch (Throwable th5) {
-                            th = th5;
-                            if (printWriter != null) {
-                            }
-                            throw th;
                         }
                     }
                     printWriter = printWriter2;
@@ -1172,6 +1029,14 @@ public class DBHelper extends SQLiteOpenHelper {
 
     public long getNumberMalesVoted() {
         return (long) getReadableDatabase().rawQuery("SELECT  distinct(SlNoInWard) FROM " + this.tbl_transaction + " where (VOTED='1' or VOTED='3' or VOTED='2') AND GENDER='M'", null).getCount();
+    }
+
+    public long getAadhaarVotedCount() {
+        return (long) getReadableDatabase().rawQuery("SELECT  VOTING_TYPE FROM " + this.tbl_transaction + " where VOTING_TYPE='AADHAAR' AND VOTED!='2' AND VOTED!='0'", null).getCount();
+    }
+
+    public long getNonAadhaarVotedCount() {
+        return (long) getReadableDatabase().rawQuery("SELECT  VOTING_TYPE FROM " + this.tbl_transaction + " where VOTING_TYPE='NON_AADHAAR' AND VOTED!='2' AND VOTED!='0'", null).getCount();
     }
 
     public void updateSync(int transid, int sync) {

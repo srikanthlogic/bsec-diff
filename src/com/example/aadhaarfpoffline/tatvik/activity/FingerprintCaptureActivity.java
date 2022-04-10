@@ -222,18 +222,16 @@ public class FingerprintCaptureActivity extends AppCompatActivity implements MFS
         NBioBSPJNI.CURRENT_PRODUCT_ID = 0;
         if (this.bsp == null) {
             this.bsp = new NBioBSPJNI("010701-613E5C7F4CC7C4B0-72E340B47E034015", this, this.mCallback);
-            String msg = null;
             if (this.bsp.IsErrorOccured()) {
-                msg = "NBioBSP Error: " + this.bsp.GetErrorCode();
-            } else {
-                NBioBSPJNI nBioBSPJNI = this.bsp;
-                Objects.requireNonNull(nBioBSPJNI);
-                this.exportEngine = new NBioBSPJNI.Export();
-                NBioBSPJNI nBioBSPJNI2 = this.bsp;
-                Objects.requireNonNull(nBioBSPJNI2);
-                this.indexSearch = new NBioBSPJNI.IndexSearch();
+                Toast.makeText(getApplicationContext(), "NBioBSP Error: " + this.bsp.GetErrorCode(), 1).show();
+                return;
             }
-            Toast.makeText(getApplicationContext(), msg, 1).show();
+            NBioBSPJNI nBioBSPJNI = this.bsp;
+            Objects.requireNonNull(nBioBSPJNI);
+            this.exportEngine = new NBioBSPJNI.Export();
+            NBioBSPJNI nBioBSPJNI2 = this.bsp;
+            Objects.requireNonNull(nBioBSPJNI2);
+            this.indexSearch = new NBioBSPJNI.IndexSearch();
         }
     }
 
@@ -514,17 +512,11 @@ public class FingerprintCaptureActivity extends AppCompatActivity implements MFS
                                 }
                                 String matchvoterid2 = compareAndLockNetgin(this.voterid, this.byTemplate1);
                                 Log.e("Matchvoterid1", matchvoterid2 + "!!!");
-                                Context applicationContext = getApplicationContext();
-                                Toast.makeText(applicationContext, "matchvoterid=" + matchvoterid2 + " len=" + matchvoterid2.length(), 1).show();
                                 if (matchvoterid2.length() == 0) {
-                                    Context applicationContext2 = getApplicationContext();
-                                    Toast.makeText(applicationContext2, "matchvoterid=" + matchvoterid2 + " if len=" + matchvoterid2.length(), 1).show();
                                     updatefingerprintdbTransTable(this.byTemplate1, this.userAuth.getTransactionId().longValue());
                                     offlineNextScreen("You can vote", true, matchvoterid2);
                                     Log.e("updatefingerprintdbTransTable", "updatefingerprintdbTransTable !!!");
                                 } else {
-                                    Context applicationContext3 = getApplicationContext();
-                                    Toast.makeText(applicationContext3, "matchvoterid=" + matchvoterid2 + " else len=" + matchvoterid2.length(), 1).show();
                                     updatefingerprintdbTransTable(this.byTemplate1, this.userAuth.getTransactionId().longValue());
                                     offlineNextScreen("You can't vote", false, matchvoterid2);
                                 }
@@ -1275,7 +1267,6 @@ public class FingerprintCaptureActivity extends AppCompatActivity implements MFS
     }
 
     private void deleteFingerprint(String voterid) {
-        this.db.clearFingerprint(voterid);
         this.db.clearFingerprintTransTable(this.userAuth.getTransactionId().longValue());
     }
 
@@ -1299,20 +1290,14 @@ public class FingerprintCaptureActivity extends AppCompatActivity implements MFS
     }
 
     private String compareAndLockNetgin(String voterid, byte[] finger_template1) {
-        int i;
-        int i2 = 1;
-        Toast.makeText(getApplicationContext(), "CompareFingerprint", 1).show();
         Cursor cursor = this.db.fpcompareTransTable(voterid);
         int numrows = 0;
         if (!cursor.moveToFirst()) {
             return "";
         }
-        Toast.makeText(getApplicationContext(), "CompareFingerprint2", 1).show();
-        while (true) {
+        do {
             byte[] fingerprint1 = cursor.getBlob(cursor.getColumnIndex("FingerTemplate"));
-            numrows += i2;
-            Context applicationContext = getApplicationContext();
-            Toast.makeText(applicationContext, "CompareFingerprint3 numrows=" + numrows, i2).show();
+            numrows++;
             if (this.byTemplate1 != null) {
                 NBioBSPJNI nBioBSPJNI = this.bsp;
                 Objects.requireNonNull(nBioBSPJNI);
@@ -1320,7 +1305,7 @@ public class FingerprintCaptureActivity extends AppCompatActivity implements MFS
                 this.exportEngine.ImportFIR(finger_template1, finger_template1.length, 3, hLoadFIR1);
                 if (this.bsp.IsErrorOccured()) {
                     this.msg = "Template NBioBSP ImportFIR Error: " + this.bsp.GetErrorCode();
-                    Toast.makeText(getApplicationContext(), this.msg, i2).show();
+                    Toast.makeText(getApplicationContext(), this.msg, 1).show();
                 }
                 NBioBSPJNI nBioBSPJNI2 = this.bsp;
                 Objects.requireNonNull(nBioBSPJNI2);
@@ -1329,7 +1314,7 @@ public class FingerprintCaptureActivity extends AppCompatActivity implements MFS
                 if (this.bsp.IsErrorOccured()) {
                     hLoadFIR1.dispose();
                     this.msg = "Template NBioBSP ImportFIR Error: " + this.bsp.GetErrorCode();
-                    Toast.makeText(getApplicationContext(), this.msg, i2).show();
+                    Toast.makeText(getApplicationContext(), this.msg, 1).show();
                 }
                 Boolean bResult = new Boolean(false);
                 NBioBSPJNI nBioBSPJNI3 = this.bsp;
@@ -1343,31 +1328,22 @@ public class FingerprintCaptureActivity extends AppCompatActivity implements MFS
                 this.bsp.VerifyMatch(inputFIR1, inputFIR2, bResult, null);
                 if (this.bsp.IsErrorOccured()) {
                     this.msg = "Template NBioBSP VerifyMatch Error: " + this.bsp.GetErrorCode();
-                    Toast.makeText(getApplicationContext(), this.msg, i2).show();
+                    Toast.makeText(getApplicationContext(), this.msg, 1).show();
                 } else if (bResult.booleanValue()) {
                     this.msg = "Template VerifyMatch Successed";
-                    String matchvoterid = cursor.getString(cursor.getColumnIndex("EPIC_NO"));
-                    String slnoinward = cursor.getString(cursor.getColumnIndex("SlNoInWard"));
-                    Context applicationContext2 = getApplicationContext();
-                    Toast.makeText(applicationContext2, "Match voterid" + matchvoterid, 1).show();
-                    return slnoinward;
+                    cursor.getString(cursor.getColumnIndex("EPIC_NO"));
+                    return cursor.getString(cursor.getColumnIndex("SlNoInWard"));
                 } else {
                     this.msg = "Template VerifyMatch Failed";
-                    Toast.makeText(getApplicationContext(), this.msg, i2).show();
                 }
                 hLoadFIR1.dispose();
                 hLoadFIR2.dispose();
-                i = 1;
             } else {
                 this.msg = "Can not find captured data";
-                i = 1;
                 Toast.makeText(getApplicationContext(), this.msg, 1).show();
             }
-            if (!cursor.moveToNext()) {
-                return "";
-            }
-            i2 = i;
-        }
+        } while (cursor.moveToNext());
+        return "";
     }
 
     private String CompareFingerprintTatvik(String voterid, byte[] fingerprint2) {
