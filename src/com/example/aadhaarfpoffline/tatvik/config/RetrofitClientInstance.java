@@ -24,7 +24,7 @@ public class RetrofitClientInstance {
 
     public static Retrofit getRetrofitInstanceLoginOnly() {
         OkHttpClient.Builder httpClient = new OkHttpClient.Builder();
-        httpClient.callTimeout(10, TimeUnit.SECONDS).connectTimeout(60, TimeUnit.SECONDS).readTimeout(60, TimeUnit.SECONDS).writeTimeout(60, TimeUnit.SECONDS);
+        httpClient.callTimeout(90, TimeUnit.SECONDS).connectTimeout(60, TimeUnit.SECONDS).readTimeout(60, TimeUnit.SECONDS).writeTimeout(60, TimeUnit.SECONDS);
         HttpLoggingInterceptor logging = new HttpLoggingInterceptor();
         logging.setLevel(HttpLoggingInterceptor.Level.BASIC);
         logging.setLevel(HttpLoggingInterceptor.Level.BODY);
@@ -59,37 +59,5 @@ public class RetrofitClientInstance {
             retrofit = new Retrofit.Builder().baseUrl(userAuth.getBaseUrl()).client(client).addConverterFactory(GsonConverterFactory.create(new GsonBuilder().setLenient().create())).build();
         }
         return retrofit;
-    }
-
-    public static Retrofit getRetrofitInstanceLogin() {
-        OkHttpClient.Builder httpClient = new OkHttpClient.Builder();
-        httpClient.connectTimeout(60, TimeUnit.SECONDS).readTimeout(60, TimeUnit.SECONDS).writeTimeout(60, TimeUnit.SECONDS);
-        httpClient.addInterceptor(new Interceptor() { // from class: com.example.aadhaarfpoffline.tatvik.config.RetrofitClientInstance.3
-            @Override // okhttp3.Interceptor
-            public Response intercept(Interceptor.Chain chain) throws IOException {
-                return chain.proceed(chain.request().newBuilder().addHeader(HttpHeaders.AUTHORIZATION, "").build());
-            }
-        });
-        OkHttpClient client = httpClient.build();
-        if (retrofit == null) {
-            retrofit = new Retrofit.Builder().baseUrl("http://support.phoneme.in/").client(client).addConverterFactory(GsonConverterFactory.create(new GsonBuilder().setLenient().create())).build();
-        }
-        return retrofit;
-    }
-
-    public static Retrofit getRetrofitInstance2() {
-        OkHttpClient.Builder httpClient = new OkHttpClient.Builder();
-        httpClient.connectTimeout(60, TimeUnit.SECONDS).readTimeout(60, TimeUnit.SECONDS).writeTimeout(60, TimeUnit.SECONDS);
-        httpClient.addInterceptor(new Interceptor() { // from class: com.example.aadhaarfpoffline.tatvik.config.RetrofitClientInstance.4
-            @Override // okhttp3.Interceptor
-            public Response intercept(Interceptor.Chain chain) throws IOException {
-                return chain.proceed(chain.request().newBuilder().addHeader(HttpHeaders.AUTHORIZATION, "").build());
-            }
-        });
-        OkHttpClient client = httpClient.build();
-        if (f23retrofit2 == null) {
-            f23retrofit2 = new Retrofit.Builder().baseUrl("http://support.phoneme.in/").client(client).addConverterFactory(GsonConverterFactory.create(new GsonBuilder().setLenient().create())).build();
-        }
-        return f23retrofit2;
     }
 }

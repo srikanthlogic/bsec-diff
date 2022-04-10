@@ -19,7 +19,6 @@ import java.util.List;
 import java.util.Locale;
 import kotlin.text.Typography;
 import okhttp3.internal.cache.DiskLruCache;
-import okhttp3.internal.ws.WebSocketProtocol;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.io.IOUtils;
 import org.xmlpull.v1.XmlPullParser;
@@ -2238,7 +2237,7 @@ public class CCPCountry implements Comparable<CCPCountry> {
                 return R.drawable.flag_sri_lanka;
             case '}':
                 return R.drawable.flag_liberia;
-            case WebSocketProtocol.PAYLOAD_SHORT:
+            case '~':
                 return R.drawable.flag_lesotho;
             case 127:
                 return R.drawable.flag_lithuania;
@@ -4482,7 +4481,7 @@ public class CCPCountry implements Comparable<CCPCountry> {
                 return "🇰🇿";
             case '}':
                 return "🇱🇦";
-            case WebSocketProtocol.PAYLOAD_SHORT:
+            case '~':
                 return "🇱🇧";
             case 127:
                 return "🇱🇨";

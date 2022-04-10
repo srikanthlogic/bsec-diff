@@ -41,9 +41,8 @@ public class FinalScreenActivity extends AppCompatActivity {
     String facematchvoterid = "";
     String fpmatchovertid = "";
 
-    /* JADX INFO: Access modifiers changed from: protected */
-    @Override // androidx.appcompat.app.AppCompatActivity, androidx.fragment.app.FragmentActivity, androidx.activity.ComponentActivity, androidx.core.app.ComponentActivity, android.app.Activity
-    public void onCreate(Bundle savedInstanceState) {
+    @Override // androidx.fragment.app.FragmentActivity, androidx.activity.ComponentActivity, androidx.core.app.ComponentActivity, android.app.Activity
+    protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_final_screen);
         this.context = LocaleHelper.setLocale(this, LocaleHelper.getLanguage(this));

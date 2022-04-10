@@ -70,6 +70,9 @@ public interface GetDataService {
     @POST("/api/v1/esign/get-upload-link")
     Call<GetUploadLinkResponse> getUploadLink(@Body String str);
 
+    @GET("/VoterAuthenticationapi/getVoterData")
+    Call<VoterDataGetResponse> getVoterByUserId(@Query("user_id") String str);
+
     @GET("/VoterAuthenticationapi/aadhaaruserexists")
     Call<AadhaarUserCheckGetResponse> getVoterByVoterAadhaarNum(@Query("aadhaarnum") String str);
 

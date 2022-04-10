@@ -115,6 +115,8 @@ public class UserIdCaptureActivity extends AppCompatActivity implements Progress
     String voteridtype = "";
     String voterIdentificationImage = "";
     String voted = "";
+    String age = "";
+    String gender = "";
     private ArrayList<String> voteridtypes = new ArrayList<>();
     private ArrayList<String> voteridtypesvalues = new ArrayList<>();
     private String GeneratedClientId = "";
@@ -122,9 +124,8 @@ public class UserIdCaptureActivity extends AppCompatActivity implements Progress
     int timeout = 10000;
     int k = 0;
 
-    /* JADX INFO: Access modifiers changed from: protected */
-    @Override // androidx.appcompat.app.AppCompatActivity, androidx.fragment.app.FragmentActivity, androidx.activity.ComponentActivity, androidx.core.app.ComponentActivity, android.app.Activity
-    public void onCreate(Bundle savedInstanceState) {
+    @Override // androidx.fragment.app.FragmentActivity, androidx.activity.ComponentActivity, androidx.core.app.ComponentActivity, android.app.Activity
+    protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_voterid_capture);
         String lan = LocaleHelper.getLanguage(this);
@@ -163,9 +164,15 @@ public class UserIdCaptureActivity extends AppCompatActivity implements Progress
         this.slnoinward = intent.getStringExtra("slnoinward");
         this.votername = intent.getStringExtra("voter_name");
         this.district = intent.getStringExtra("district");
+        Context applicationContext = getApplicationContext();
+        Toast.makeText(applicationContext, "slnoinward" + this.slnoinward, 1).show();
         this.blockno = intent.getStringExtra("blockno");
         this.blockid = intent.getStringExtra("blockid");
         this.voted = intent.getStringExtra("voted");
+        this.age = intent.getStringExtra("age");
+        this.gender = intent.getStringExtra("gender");
+        Context applicationContext2 = getApplicationContext();
+        Toast.makeText(applicationContext2, "Age=" + this.age + " Gender=" + this.gender, 1).show();
         this.voterName.setText(this.votername);
         this.voterId.setText(this.voterid);
         this.voterDistrict.setText(this.district);
@@ -242,7 +249,7 @@ public class UserIdCaptureActivity extends AppCompatActivity implements Progress
     /* JADX WARN: Code restructure failed: missing block: B:10:0x0012, code lost:
         if (r0 == 0) goto L_0x001e;
      */
-    @Override // androidx.fragment.app.FragmentActivity, android.app.Activity, androidx.core.app.ActivityCompat.OnRequestPermissionsResultCallback
+    @Override // androidx.fragment.app.FragmentActivity, androidx.activity.ComponentActivity, android.app.Activity
     /* Code decompiled incorrectly, please refer to instructions dump */
     public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
         if (requestCode != 99) {
@@ -261,7 +268,7 @@ public class UserIdCaptureActivity extends AppCompatActivity implements Progress
         }
     }
 
-    @Override // androidx.fragment.app.FragmentActivity, android.app.Activity
+    @Override // androidx.fragment.app.FragmentActivity, androidx.activity.ComponentActivity, android.app.Activity
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         if (resultCode == -1) {
             this.mImageView.setImageURI(this.imageUri);
@@ -367,6 +374,7 @@ public class UserIdCaptureActivity extends AppCompatActivity implements Progress
         Intent intent = new Intent(getApplicationContext(), AadharActivity.class);
         intent.putExtra("voter_id", this.voterid);
         intent.putExtra("voted", this.voted);
+        intent.putExtra("slnoinward", this.slnoinward);
         startActivity(intent);
     }
 
@@ -507,7 +515,7 @@ public class UserIdCaptureActivity extends AppCompatActivity implements Progress
         Uri imageUri = Uri.parse("android.resource://" + getApplicationContext().getPackageName() + R.drawable.faceimage2);
         PrintStream printStream = System.out;
         printStream.println("fileuripath=" + imageUri.getPath());
-        String photoAg1 = Uri.parse("android.resource://com.example.aadhaarfpoffline.tatvik/2131230872").getPath();
+        String photoAg1 = Uri.parse("android.resource://com.example.aadhaarfpoffline.tatvik/2131230867").getPath();
         PrintStream printStream2 = System.out;
         printStream2.println("fileuripath2=" + photoAg1);
         File file = getFile3();
@@ -792,6 +800,13 @@ public class UserIdCaptureActivity extends AppCompatActivity implements Progress
         ContentValues cols = new ContentValues();
         cols.put("ID_DOCUMENT_IMAGE", filename);
         cols.put("EPIC_NO", this.voterid);
+        cols.put("DIST_NO", this.userAuth.getDistrictNo());
+        cols.put("BlockID", this.userAuth.getBlockID());
+        cols.put("PanchayatID", this.userAuth.getPanchayatId());
+        cols.put("SlNoInWard", this.slnoinward);
+        cols.put("AGE", this.age);
+        cols.put("GENDER", this.gender);
+        Toast.makeText(getApplicationContext(), "COLS=" + cols.toString(), 1).show();
         DBHelper dBHelper = this.db;
         this.userAuth.setTransactionId(Long.valueOf(dBHelper.insertData(dBHelper.tbl_transaction, cols)));
     }

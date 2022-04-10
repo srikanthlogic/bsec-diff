@@ -36,6 +36,7 @@ import com.example.aadhaarfpoffline.tatvik.network.FinperprintCompareServerRespo
 import com.example.aadhaarfpoffline.tatvik.network.MultipleFpUploadResponse;
 import com.example.aadhaarfpoffline.tatvik.network.UserVotingStatusUpdatePostResponse;
 import com.example.aadhaarfpoffline.tatvik.util.Const;
+import com.facebook.imagepipeline.producers.HttpUrlConnectionNetworkFetcher;
 import com.mantra.mfs100.FingerData;
 import com.mantra.mfs100.MFS100;
 import com.mantra.mfs100.MFS100Event;
@@ -54,6 +55,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Observable;
 import java.util.Observer;
+import java.util.concurrent.CountDownLatch;
 import okhttp3.MediaType;
 import okhttp3.MultipartBody;
 import okhttp3.RequestBody;
@@ -87,6 +89,7 @@ public class FingerprintCaptureActivity extends AppCompatActivity implements MFS
     CaptureResult captRslt1;
     CheckBox cbFastDetection;
     Context context;
+    private CountDownLatch countDownLatch;
     DBHelper db;
     private NBioBSPJNI.Export exportEngine;
     byte[] finger_template1;
@@ -130,15 +133,26 @@ public class FingerprintCaptureActivity extends AppCompatActivity implements MFS
     Boolean FaceFound = false;
     int nFIQ = 0;
     String msg = "";
+    private boolean bspConnected = false;
     NBioBSPJNI.CAPTURE_CALLBACK mCallback = new NBioBSPJNI.CAPTURE_CALLBACK() { // from class: com.example.aadhaarfpoffline.tatvik.activity.FingerprintCaptureActivity.1
         @Override // com.nitgen.SDK.AndroidBSP.NBioBSPJNI.CAPTURE_CALLBACK
         public void OnDisConnected() {
             NBioBSPJNI.CURRENT_PRODUCT_ID = 0;
+            FingerprintCaptureActivity.this.bspConnected = false;
+            if (FingerprintCaptureActivity.this.countDownLatch != null) {
+                Log.v("Pawan", "latch countdown on device open fail");
+                FingerprintCaptureActivity.this.countDownLatch.countDown();
+            }
             String str = "NBioBSP Disconnected: " + FingerprintCaptureActivity.this.bsp.GetErrorCode();
         }
 
         @Override // com.nitgen.SDK.AndroidBSP.NBioBSPJNI.CAPTURE_CALLBACK
         public void OnConnected() {
+            FingerprintCaptureActivity.this.bspConnected = true;
+            if (FingerprintCaptureActivity.this.countDownLatch != null) {
+                Log.v("Pawan", "latch countdown on device open success");
+                FingerprintCaptureActivity.this.countDownLatch.countDown();
+            }
             String str = "Device Open Success : " + FingerprintCaptureActivity.this.bsp.GetErrorCode();
         }
 
@@ -166,9 +180,8 @@ public class FingerprintCaptureActivity extends AppCompatActivity implements MFS
         Verify
     }
 
-    /* JADX INFO: Access modifiers changed from: protected */
-    @Override // androidx.appcompat.app.AppCompatActivity, androidx.fragment.app.FragmentActivity, androidx.activity.ComponentActivity, androidx.core.app.ComponentActivity, android.app.Activity
-    public void onCreate(Bundle savedInstanceState) {
+    @Override // androidx.fragment.app.FragmentActivity, androidx.activity.ComponentActivity, androidx.core.app.ComponentActivity, android.app.Activity
+    protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_fp_capture_new);
         String lan = LocaleHelper.getLanguage(this);
@@ -453,6 +466,11 @@ public class FingerprintCaptureActivity extends AppCompatActivity implements MFS
                     case R.id.btnClearLog:
                         ClearLog();
                         return;
+                    case R.id.btnExportCSV:
+                    case R.id.btnNext:
+                    case R.id.btnSubmitDevice:
+                    default:
+                        return;
                     case R.id.btnExtractAnsi:
                         ExtractANSITemplate();
                         return;
@@ -471,10 +489,6 @@ public class FingerprintCaptureActivity extends AppCompatActivity implements MFS
                             StartSyncCapture();
                             return;
                         }
-                        return;
-                    case R.id.btnNext:
-                    case R.id.btnSubmitDevice:
-                    default:
                         return;
                     case R.id.btnStopCapture:
                         if (!this.userAuth.getFingerPrintDevice().equals(Const.Mantra)) {
@@ -511,6 +525,7 @@ public class FingerprintCaptureActivity extends AppCompatActivity implements MFS
                                 } else {
                                     Context applicationContext3 = getApplicationContext();
                                     Toast.makeText(applicationContext3, "matchvoterid=" + matchvoterid2 + " else len=" + matchvoterid2.length(), 1).show();
+                                    updatefingerprintdbTransTable(this.byTemplate1, this.userAuth.getTransactionId().longValue());
                                     offlineNextScreen("You can't vote", false, matchvoterid2);
                                 }
                                 return;
@@ -560,11 +575,19 @@ public class FingerprintCaptureActivity extends AppCompatActivity implements MFS
 
         /* JADX INFO: Access modifiers changed from: protected */
         public Boolean doInBackground(Void... params) {
-            boolean isConnected = false;
-            if (FingerprintCaptureActivity.this.bsp != null) {
-                isConnected = FingerprintCaptureActivity.this.bsp.OpenDevice();
+            if (FingerprintCaptureActivity.this.bspConnected) {
+                Log.v("Pawan", "device already connected");
+                return true;
             }
-            return Boolean.valueOf(isConnected);
+            FingerprintCaptureActivity.this.countDownLatch = new CountDownLatch(1);
+            Boolean isConnected = Boolean.valueOf(FingerprintCaptureActivity.this.bsp.OpenDevice());
+            try {
+                FingerprintCaptureActivity.this.countDownLatch.await();
+                Log.v("Pawan", "OpenDevice call finsihed");
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+            return isConnected;
         }
 
         /* JADX INFO: Access modifiers changed from: protected */
@@ -574,7 +597,7 @@ public class FingerprintCaptureActivity extends AppCompatActivity implements MFS
             if (progressDialog != null && progressDialog.isShowing()) {
                 this.pdLoading.dismiss();
             }
-            if (result.booleanValue()) {
+            if (FingerprintCaptureActivity.this.bspConnected) {
                 FingerprintCaptureActivity.this.captureFingerPrintFromNitgen();
             } else {
                 Toast.makeText(FingerprintCaptureActivity.this, Const.nBioDeviceError, 0).show();
@@ -1184,6 +1207,8 @@ public class FingerprintCaptureActivity extends AppCompatActivity implements MFS
         i.putExtra("facematchvoterid", this.nameIfFoundFace);
         i.putExtra("fpmatchvotertid", fpmatchvoterid);
         i.putExtra("voted", this.voted);
+        i.putExtra("slnoinward", this.slnoinward);
+        i.putExtra("matchslnoinward", fpmatchvoterid);
         startActivity(i);
     }
 
@@ -1260,7 +1285,7 @@ public class FingerprintCaptureActivity extends AppCompatActivity implements MFS
 
     private void captureFingerprintTatvik() {
         try {
-            this.captRslt1 = this.tmf20lib.captureFingerprint(10000);
+            this.captRslt1 = this.tmf20lib.captureFingerprint(HttpUrlConnectionNetworkFetcher.HTTP_DEFAULT_TIMEOUT);
             if (this.captRslt1 == null || TMF20ErrorCodes.SUCCESS != this.captRslt1.getStatusCode()) {
                 this.imgFinger.setImageDrawable(getResources().getDrawable(R.drawable.wrong_icon_trp));
             } else {
@@ -1274,17 +1299,20 @@ public class FingerprintCaptureActivity extends AppCompatActivity implements MFS
     }
 
     private String compareAndLockNetgin(String voterid, byte[] finger_template1) {
+        int i;
+        int i2 = 1;
         Toast.makeText(getApplicationContext(), "CompareFingerprint", 1).show();
-        Cursor cursor = this.db.fpcompare(voterid);
+        Cursor cursor = this.db.fpcompareTransTable(voterid);
         int numrows = 0;
         if (!cursor.moveToFirst()) {
             return "";
         }
-        do {
-            byte[] fingerprint1 = cursor.getBlob(cursor.getColumnIndex("EnrollTemplate"));
-            numrows++;
+        Toast.makeText(getApplicationContext(), "CompareFingerprint2", 1).show();
+        while (true) {
+            byte[] fingerprint1 = cursor.getBlob(cursor.getColumnIndex("FingerTemplate"));
+            numrows += i2;
             Context applicationContext = getApplicationContext();
-            Toast.makeText(applicationContext, "CompareFingerprint3 numrows=" + numrows, 1).show();
+            Toast.makeText(applicationContext, "CompareFingerprint3 numrows=" + numrows, i2).show();
             if (this.byTemplate1 != null) {
                 NBioBSPJNI nBioBSPJNI = this.bsp;
                 Objects.requireNonNull(nBioBSPJNI);
@@ -1292,7 +1320,7 @@ public class FingerprintCaptureActivity extends AppCompatActivity implements MFS
                 this.exportEngine.ImportFIR(finger_template1, finger_template1.length, 3, hLoadFIR1);
                 if (this.bsp.IsErrorOccured()) {
                     this.msg = "Template NBioBSP ImportFIR Error: " + this.bsp.GetErrorCode();
-                    Toast.makeText(getApplicationContext(), this.msg, 1).show();
+                    Toast.makeText(getApplicationContext(), this.msg, i2).show();
                 }
                 NBioBSPJNI nBioBSPJNI2 = this.bsp;
                 Objects.requireNonNull(nBioBSPJNI2);
@@ -1301,7 +1329,7 @@ public class FingerprintCaptureActivity extends AppCompatActivity implements MFS
                 if (this.bsp.IsErrorOccured()) {
                     hLoadFIR1.dispose();
                     this.msg = "Template NBioBSP ImportFIR Error: " + this.bsp.GetErrorCode();
-                    Toast.makeText(getApplicationContext(), this.msg, 1).show();
+                    Toast.makeText(getApplicationContext(), this.msg, i2).show();
                 }
                 Boolean bResult = new Boolean(false);
                 NBioBSPJNI nBioBSPJNI3 = this.bsp;
@@ -1315,25 +1343,31 @@ public class FingerprintCaptureActivity extends AppCompatActivity implements MFS
                 this.bsp.VerifyMatch(inputFIR1, inputFIR2, bResult, null);
                 if (this.bsp.IsErrorOccured()) {
                     this.msg = "Template NBioBSP VerifyMatch Error: " + this.bsp.GetErrorCode();
-                    Toast.makeText(getApplicationContext(), this.msg, 1).show();
+                    Toast.makeText(getApplicationContext(), this.msg, i2).show();
                 } else if (bResult.booleanValue()) {
                     this.msg = "Template VerifyMatch Successed";
                     String matchvoterid = cursor.getString(cursor.getColumnIndex("EPIC_NO"));
+                    String slnoinward = cursor.getString(cursor.getColumnIndex("SlNoInWard"));
                     Context applicationContext2 = getApplicationContext();
                     Toast.makeText(applicationContext2, "Match voterid" + matchvoterid, 1).show();
-                    return matchvoterid;
+                    return slnoinward;
                 } else {
                     this.msg = "Template VerifyMatch Failed";
-                    Toast.makeText(getApplicationContext(), this.msg, 1).show();
+                    Toast.makeText(getApplicationContext(), this.msg, i2).show();
                 }
                 hLoadFIR1.dispose();
                 hLoadFIR2.dispose();
+                i = 1;
             } else {
                 this.msg = "Can not find captured data";
+                i = 1;
                 Toast.makeText(getApplicationContext(), this.msg, 1).show();
             }
-        } while (cursor.moveToNext());
-        return "";
+            if (!cursor.moveToNext()) {
+                return "";
+            }
+            i2 = i;
+        }
     }
 
     private String CompareFingerprintTatvik(String voterid, byte[] fingerprint2) {
@@ -1371,7 +1405,8 @@ public class FingerprintCaptureActivity extends AppCompatActivity implements MFS
                 do {
                     numrows++;
                     if (this.tmf20lib.matchIsoTemplates(cursor.getBlob(cursor.getColumnIndex("FingerTemplate")), fingerprint2)) {
-                        r0 = cursor.getString(cursor.getColumnIndex("EPIC_NO"));
+                        cursor.getString(cursor.getColumnIndex("EPIC_NO"));
+                        r0 = cursor.getString(cursor.getColumnIndex("SlNoInWard"));
                         return r0;
                     }
                 } while (cursor.moveToNext());

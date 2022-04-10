@@ -224,7 +224,8 @@ public final class InitSDK extends AppCompatActivity {
         this.editor = editor;
     }
 
-    @Override // androidx.appcompat.app.AppCompatActivity, androidx.fragment.app.FragmentActivity, androidx.activity.ComponentActivity, androidx.core.app.ComponentActivity, android.app.Activity
+    /* JADX INFO: Access modifiers changed from: protected */
+    @Override // androidx.fragment.app.FragmentActivity, androidx.activity.ComponentActivity, androidx.core.app.ComponentActivity, android.app.Activity
     public void onCreate(Bundle savedInstanceState) {
         String str;
         super.onCreate(savedInstanceState);
@@ -463,8 +464,9 @@ public final class InitSDK extends AppCompatActivity {
         finish();
     }
 
-    @Override // androidx.fragment.app.FragmentActivity, android.app.Activity
-    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+    /* JADX INFO: Access modifiers changed from: protected */
+    @Override // androidx.fragment.app.FragmentActivity, androidx.activity.ComponentActivity, android.app.Activity
+    public void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
         if (requestCode == this.REQUEST_CODE_FOR_VERIFICATION_RESULT) {
             Intent resultIntent = new Intent();

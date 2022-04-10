@@ -31,6 +31,7 @@ import android.widget.Toast;
 import androidx.appcompat.app.ActionBarDrawerToggle;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
+import androidx.core.app.NotificationCompat;
 import androidx.core.content.ContextCompat;
 import androidx.core.view.GravityCompat;
 import androidx.drawerlayout.widget.DrawerLayout;
@@ -75,6 +76,7 @@ import java.util.Objects;
 import java.util.Observable;
 import java.util.Observer;
 import java.util.Set;
+import java.util.concurrent.CountDownLatch;
 import okhttp3.internal.cache.DiskLruCache;
 import org.tatvik.fp.CaptureResult;
 import org.tatvik.fp.TMF20API;
@@ -98,6 +100,7 @@ public class ListUserActivity extends AppCompatActivity implements VoterListAdap
     private Button captureFingerprint;
     CheckBox cbFastDetection;
     Context context;
+    private CountDownLatch countDownLatch;
     DBHelper db;
     private DrawerLayout drawer;
     private NBioBSPJNI.Export exportEngine;
@@ -135,16 +138,27 @@ public class ListUserActivity extends AppCompatActivity implements VoterListAdap
     private int IMAGE_CAPTURE_CODE = 1001;
     int nFIQ = 0;
     String msg = "";
+    private boolean bspConnected = false;
     NBioBSPJNI.CAPTURE_CALLBACK mCallback = new NBioBSPJNI.CAPTURE_CALLBACK() { // from class: com.example.aadhaarfpoffline.tatvik.activity.ListUserActivity.8
         @Override // com.nitgen.SDK.AndroidBSP.NBioBSPJNI.CAPTURE_CALLBACK
         public void OnDisConnected() {
             NBioBSPJNI.CURRENT_PRODUCT_ID = 0;
+            ListUserActivity.this.bspConnected = false;
+            if (ListUserActivity.this.countDownLatch != null) {
+                Log.v("Pawan", "latch countdown on device open fail");
+                ListUserActivity.this.countDownLatch.countDown();
+            }
             String str = "NBioBSP Disconnected: " + ListUserActivity.this.bsp.GetErrorCode();
         }
 
         @Override // com.nitgen.SDK.AndroidBSP.NBioBSPJNI.CAPTURE_CALLBACK
         public void OnConnected() {
             String str = "Device Open Success : " + ListUserActivity.this.bsp.GetErrorCode();
+            ListUserActivity.this.bspConnected = true;
+            if (ListUserActivity.this.countDownLatch != null) {
+                Log.v("Pawan", "latch countdown on device open success");
+                ListUserActivity.this.countDownLatch.countDown();
+            }
         }
 
         @Override // com.nitgen.SDK.AndroidBSP.NBioBSPJNI.CAPTURE_CALLBACK
@@ -164,7 +178,8 @@ public class ListUserActivity extends AppCompatActivity implements VoterListAdap
     private long mLastAttTime = 0;
     long mLastDttTime = 0;
 
-    @Override // androidx.appcompat.app.AppCompatActivity, androidx.fragment.app.FragmentActivity, androidx.activity.ComponentActivity, androidx.core.app.ComponentActivity, android.app.Activity
+    /* JADX INFO: Access modifiers changed from: protected */
+    @Override // androidx.fragment.app.FragmentActivity, androidx.activity.ComponentActivity, androidx.core.app.ComponentActivity, android.app.Activity
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_voterlist);
@@ -218,7 +233,7 @@ public class ListUserActivity extends AppCompatActivity implements VoterListAdap
         NavigationView navigationView = (NavigationView) findViewById(R.id.nav_view);
         navigationView.setNavigationItemSelectedListener(this);
         MenuItem nav_app_version = navigationView.getMenu().findItem(R.id.nav_app_version);
-        nav_app_version.setTitle("Version 10/" + BuildConfig.VERSION_NAME);
+        nav_app_version.setTitle("Version 13/" + BuildConfig.VERSION_NAME);
         this.recyclerView = (RecyclerView) findViewById(R.id.recyclerview_vendor_list);
         this.userAuth.getBoothId();
         this.search = (EditText) findViewById(R.id.search_text);
@@ -262,7 +277,7 @@ public class ListUserActivity extends AppCompatActivity implements VoterListAdap
                 TextView textView = this.stateDistrict;
                 textView.setText(this.resources.getString(R.string.district_name_text) + ":" + this.userAuth.getDistrictNo());
                 TextView textView2 = this.blockBooth;
-                textView2.setText(this.userAuth.getPanchayatId() + " " + this.resources.getString(R.string.block_no_text) + ":" + this.userAuth.getBoothNo() + "," + this.resources.getString(R.string.ward_no_text) + ":" + this.userAuth.getWardNo());
+                textView2.setText(this.userAuth.getPanchayatId() + " " + this.resources.getString(R.string.booth_no_text) + ":" + this.userAuth.getBoothNo() + "," + this.resources.getString(R.string.ward_no_text) + ":" + this.userAuth.getWardNo());
                 this.numVoters.setText(this.resources.getString(R.string.total_no_voters_text, Integer.valueOf(this.voterDataNewModelList.size())));
                 setRecyclerViewNewTable();
             }
@@ -391,7 +406,19 @@ public class ListUserActivity extends AppCompatActivity implements VoterListAdap
         }
 
         public Boolean doInBackground(Void... params) {
-            return Boolean.valueOf(ListUserActivity.this.bsp.OpenDevice());
+            if (ListUserActivity.this.bspConnected) {
+                Log.v("Pawan", "device already connected");
+                return true;
+            }
+            ListUserActivity.this.countDownLatch = new CountDownLatch(1);
+            Boolean isConnected = Boolean.valueOf(ListUserActivity.this.bsp.OpenDevice());
+            try {
+                ListUserActivity.this.countDownLatch.await();
+                Log.v("Pawan", "OpenDevice call finsihed");
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+            return isConnected;
         }
 
         public void onPostExecute(Boolean result) {
@@ -400,7 +427,7 @@ public class ListUserActivity extends AppCompatActivity implements VoterListAdap
             if (progressDialog != null && progressDialog.isShowing()) {
                 this.pdLoading.dismiss();
             }
-            if (result.booleanValue()) {
+            if (ListUserActivity.this.bspConnected) {
                 ListUserActivity.this.captureFingerPrintFromNitgen();
             } else {
                 Toast.makeText(ListUserActivity.this, Const.nBioDeviceError, 0).show();
@@ -621,6 +648,8 @@ public class ListUserActivity extends AppCompatActivity implements VoterListAdap
         intent.putExtra("blockno", this.voterDataModelList.get(position).getBlockNo());
         intent.putExtra("blockid", this.voterDataModelList.get(position).getBooth_id());
         intent.putExtra("slnoinward", this.voterDataNewModelList.get(position).getSlNoInWard());
+        intent.putExtra("age", this.voterDataNewModelList.get(position).getAge());
+        intent.putExtra("gender", this.voterDataNewModelList.get(position).getGENDER());
         startActivity(intent);
     }
 
@@ -633,6 +662,8 @@ public class ListUserActivity extends AppCompatActivity implements VoterListAdap
         intent.putExtra("blockno", this.voterDataModelList.get(position).getBlockNo());
         intent.putExtra("blockid", this.voterDataModelList.get(position).getBooth_id());
         intent.putExtra("slnoinward", this.voterDataNewModelList.get(position).getSlNoInWard());
+        intent.putExtra("age", this.voterDataNewModelList.get(position).getAge());
+        intent.putExtra("gender", this.voterDataNewModelList.get(position).getGENDER());
         startActivity(intent);
     }
 
@@ -665,6 +696,8 @@ public class ListUserActivity extends AppCompatActivity implements VoterListAdap
                 intent.putExtra("blockid", this.voterDataNewModelList.get(position).getBlockID());
                 intent.putExtra("voted", this.voterDataNewModelList.get(position).getVOTED());
                 intent.putExtra("slnoinward", this.voterDataNewModelList.get(position).getSlNoInWard());
+                intent.putExtra("age", this.voterDataNewModelList.get(position).getAge());
+                intent.putExtra("gender", this.voterDataNewModelList.get(position).getGENDER());
                 startActivity(intent);
                 return;
             }
@@ -700,7 +733,7 @@ public class ListUserActivity extends AppCompatActivity implements VoterListAdap
                 TextView textView = ListUserActivity.this.stateDistrict;
                 textView.setText(ListUserActivity.this.resources.getString(R.string.district_name_text) + ":" + ListUserActivity.this.userAuth.getDistrictNo());
                 TextView textView2 = ListUserActivity.this.blockBooth;
-                textView2.setText(ListUserActivity.this.userAuth.getPanchayatId() + " " + ListUserActivity.this.resources.getString(R.string.block_no_text) + ":" + ListUserActivity.this.userAuth.getBoothNo() + "," + ListUserActivity.this.resources.getString(R.string.ward_no_text) + ":" + ListUserActivity.this.userAuth.getWardNo());
+                textView2.setText(ListUserActivity.this.userAuth.getPanchayatId() + " " + ListUserActivity.this.resources.getString(R.string.booth_no_text) + ":" + ListUserActivity.this.userAuth.getBoothNo() + "," + ListUserActivity.this.resources.getString(R.string.ward_no_text) + ":" + ListUserActivity.this.userAuth.getWardNo());
                 ListUserActivity.this.numVoters.setText(ListUserActivity.this.resources.getString(R.string.total_no_voters_text, Integer.valueOf(ListUserActivity.this.voterDataNewModelList.size())));
                 ListUserActivity.this.setRecyclerView();
             }
@@ -713,24 +746,18 @@ public class ListUserActivity extends AppCompatActivity implements VoterListAdap
 
     private void getVoterListNewTableByBooth(String dist, String block, String panchayatId, String ward, String booth) {
         ((GetDataService) RetrofitClientInstance.getRetrofitInstance().create(GetDataService.class)).getVoterListNewTableByBoothNo(dist, block, panchayatId, ward, booth).enqueue(new Callback<VoterListNewTableGetResponse>() { // from class: com.example.aadhaarfpoffline.tatvik.activity.ListUserActivity.17
-            /* JADX WARN: Type inference failed for: r1v0 */
-            /* JADX WARN: Type inference failed for: r1v1 */
-            /* JADX WARN: Type inference failed for: r1v2, types: [android.widget.Toast] */
-            /* JADX WARN: Unknown variable types count: 1 */
             @Override // retrofit2.Callback
-            /* Code decompiled incorrectly, please refer to instructions dump */
             public void onResponse(Call<VoterListNewTableGetResponse> call, Response<VoterListNewTableGetResponse> response) {
-                ?? r1 = 1;
                 if (response != null) {
                     try {
                         if (response.isSuccessful() && response.body() != null && response.body().getVoters() != null && !response.body().getVoters().isEmpty() && response.body().getVoters().size() > 0) {
                             ListUserActivity.this.voterDataNewModelList = response.body().getVoters();
-                            $$Lambda$ListUserActivity$17$L8YlHwHJKq7cWBBju86EauHR4c r2 = $$Lambda$ListUserActivity$17$L8YlHwHJKq7cWBBju86EauHR4c.INSTANCE;
-                            $$Lambda$ListUserActivity$17$IB4M3NQI4gZ2SQn48ZnTvdAeEm0 r3 = $$Lambda$ListUserActivity$17$IB4M3NQI4gZ2SQn48ZnTvdAeEm0.INSTANCE;
+                            $$Lambda$ListUserActivity$17$L8YlHwHJKq7cWBBju86EauHR4c r3 = $$Lambda$ListUserActivity$17$L8YlHwHJKq7cWBBju86EauHR4c.INSTANCE;
+                            $$Lambda$ListUserActivity$17$IB4M3NQI4gZ2SQn48ZnTvdAeEm0 r4 = $$Lambda$ListUserActivity$17$IB4M3NQI4gZ2SQn48ZnTvdAeEm0.INSTANCE;
                             TextView textView = ListUserActivity.this.stateDistrict;
                             textView.setText(ListUserActivity.this.resources.getString(R.string.district_name_text) + ":" + response.body().getVoters().get(0).getDIST_NO());
                             TextView textView2 = ListUserActivity.this.blockBooth;
-                            textView2.setText(ListUserActivity.this.resources.getString(R.string.block_no_text) + ":" + response.body().getVoters().get(0).getBlockID() + "," + ListUserActivity.this.resources.getString(R.string.ward_no_text) + ":" + response.body().getVoters().get(0).getWardNo());
+                            textView2.setText(ListUserActivity.this.resources.getString(R.string.block_no_text) + ":" + response.body().getVoters().get(0).getBlockID() + "," + ListUserActivity.this.resources.getString(R.string.ward_no_text) + ":" + response.body().getVoters().get(0).getWardNo() + "," + ListUserActivity.this.resources.getString(R.string.booth_no_text) + ":" + ListUserActivity.this.userAuth.getBoothNo());
                             ListUserActivity.this.numVoters.setText(ListUserActivity.this.resources.getString(R.string.total_no_voters_text, Integer.valueOf(response.body().getVoters().size())));
                             ListUserActivity.this.setRecyclerViewNewTable();
                             ListUserActivity.this.insertUsersOffline();
@@ -739,8 +766,7 @@ public class ListUserActivity extends AppCompatActivity implements VoterListAdap
                     } catch (Exception e) {
                         while (true) {
                             Context applicationContext = ListUserActivity.this.getApplicationContext();
-                            r1 = Toast.makeText(applicationContext, "Exception Response" + e.getMessage(), r1 == true ? 1 : 0);
-                            r1.show();
+                            Toast.makeText(applicationContext, "Exception Response" + e.getMessage(), 1).show();
                             return;
                         }
                     }
@@ -764,7 +790,7 @@ public class ListUserActivity extends AppCompatActivity implements VoterListAdap
                     TextView textView = ListUserActivity.this.stateDistrict;
                     textView.setText(ListUserActivity.this.resources.getString(R.string.district_name_text) + ":" + ListUserActivity.this.userAuth.getDistrictNo());
                     TextView textView2 = ListUserActivity.this.blockBooth;
-                    textView2.setText(ListUserActivity.this.userAuth.getPanchayatId() + " " + ListUserActivity.this.resources.getString(R.string.block_no_text) + ":" + ListUserActivity.this.userAuth.getBoothNo() + "," + ListUserActivity.this.resources.getString(R.string.ward_no_text) + ":" + ListUserActivity.this.userAuth.getWardNo());
+                    textView2.setText(ListUserActivity.this.userAuth.getPanchayatId() + " " + ListUserActivity.this.resources.getString(R.string.block_no_text) + ":" + ListUserActivity.this.userAuth.getBoothNo() + "," + ListUserActivity.this.resources.getString(R.string.ward_no_text) + ":" + ListUserActivity.this.userAuth.getWardNo() + "," + ListUserActivity.this.resources.getString(R.string.booth_no_text) + ":" + ListUserActivity.this.userAuth.getBoothNo());
                     ListUserActivity.this.numVoters.setText(ListUserActivity.this.resources.getString(R.string.total_no_voters_text, Integer.valueOf(ListUserActivity.this.voterDataNewModelList.size())));
                     ListUserActivity.this.setRecyclerViewNewTable();
                 }
@@ -786,7 +812,7 @@ public class ListUserActivity extends AppCompatActivity implements VoterListAdap
                 TextView textView = ListUserActivity.this.stateDistrict;
                 textView.setText(ListUserActivity.this.resources.getString(R.string.district_name_text) + ":" + ListUserActivity.this.userAuth.getDistrictNo());
                 TextView textView2 = ListUserActivity.this.blockBooth;
-                textView2.setText(ListUserActivity.this.userAuth.getPanchayatId() + " " + ListUserActivity.this.resources.getString(R.string.block_no_text) + ":" + ListUserActivity.this.userAuth.getBoothNo() + "," + ListUserActivity.this.resources.getString(R.string.ward_no_text) + ":" + ListUserActivity.this.userAuth.getWardNo());
+                textView2.setText(ListUserActivity.this.userAuth.getPanchayatId() + " " + ListUserActivity.this.resources.getString(R.string.booth_no_text) + ":" + ListUserActivity.this.userAuth.getBoothNo() + "," + ListUserActivity.this.resources.getString(R.string.ward_no_text) + ":" + ListUserActivity.this.userAuth.getWardNo());
                 ListUserActivity.this.numVoters.setText(ListUserActivity.this.resources.getString(R.string.total_no_voters_text, Integer.valueOf(ListUserActivity.this.voterDataNewModelList.size())));
                 ListUserActivity.this.setRecyclerViewNewTable();
                 ListUserActivity.this.insertUsersOffline();
@@ -802,7 +828,7 @@ public class ListUserActivity extends AppCompatActivity implements VoterListAdap
                     TextView textView = ListUserActivity.this.stateDistrict;
                     textView.setText(ListUserActivity.this.resources.getString(R.string.district_name_text) + ":" + ListUserActivity.this.userAuth.getDistrictNo());
                     TextView textView2 = ListUserActivity.this.blockBooth;
-                    textView2.setText(ListUserActivity.this.userAuth.getPanchayatId() + " " + ListUserActivity.this.resources.getString(R.string.block_no_text) + ":" + ListUserActivity.this.userAuth.getBoothNo() + "," + ListUserActivity.this.resources.getString(R.string.ward_no_text) + ":" + ListUserActivity.this.userAuth.getWardNo());
+                    textView2.setText(ListUserActivity.this.userAuth.getPanchayatId() + " " + ListUserActivity.this.resources.getString(R.string.booth_no_text) + ":" + ListUserActivity.this.userAuth.getBoothNo() + "," + ListUserActivity.this.resources.getString(R.string.ward_no_text) + ":" + ListUserActivity.this.userAuth.getWardNo());
                     ListUserActivity.this.numVoters.setText(ListUserActivity.this.resources.getString(R.string.total_no_voters_text, Integer.valueOf(ListUserActivity.this.voterDataNewModelList.size())));
                     ListUserActivity.this.setRecyclerViewNewTable();
                 }
@@ -819,7 +845,7 @@ public class ListUserActivity extends AppCompatActivity implements VoterListAdap
                 TextView textView = ListUserActivity.this.stateDistrict;
                 textView.setText(ListUserActivity.this.resources.getString(R.string.district_name_text) + ":" + ListUserActivity.this.userAuth.getDistrictNo());
                 TextView textView2 = ListUserActivity.this.blockBooth;
-                textView2.setText(ListUserActivity.this.userAuth.getPanchayatId() + " " + ListUserActivity.this.resources.getString(R.string.block_no_text) + ":" + ListUserActivity.this.userAuth.getBoothNo() + "," + ListUserActivity.this.resources.getString(R.string.ward_no_text) + ":" + ListUserActivity.this.userAuth.getWardNo());
+                textView2.setText(ListUserActivity.this.userAuth.getPanchayatId() + " " + ListUserActivity.this.resources.getString(R.string.booth_no_text) + ":" + ListUserActivity.this.userAuth.getBoothNo() + "," + ListUserActivity.this.resources.getString(R.string.ward_no_text) + ":" + ListUserActivity.this.userAuth.getWardNo());
                 ListUserActivity.this.numVoters.setText(ListUserActivity.this.resources.getString(R.string.total_no_voters_text, Integer.valueOf(ListUserActivity.this.voterDataNewModelList.size())));
                 ListUserActivity.this.setRecyclerViewNewTable();
             }
@@ -941,9 +967,17 @@ public class ListUserActivity extends AppCompatActivity implements VoterListAdap
         } else if (id == R.id.nav_count_offline) {
             getsqlitedata();
         } else if (id == R.id.nav_sync) {
-            syncTransTable();
+            if (this.db.getUnSyncCount() > 0) {
+                syncTransTable();
+            } else {
+                Toast.makeText(getApplicationContext(), "All data already synced", 1).show();
+            }
         } else if (id == R.id.nav_export) {
-            this.db.exportDatabase();
+            boolean exportsuccess = this.db.exportDatabaseTransTable(this.userAuth.getDistrictNo(), this.userAuth.getBlockID(), this.userAuth.getPanchayatId(), this.userAuth.getWardNo(), this.userAuth.getBoothNo(), getCurrentTimeInFormatForCSV());
+            Context applicationContext = getApplicationContext();
+            Toast.makeText(applicationContext, "Export " + exportsuccess, 1).show();
+        } else if (id == R.id.nav_voting_status) {
+            startVotingStatusActivity();
         } else if (id == R.id.nav_lock) {
             if (this.userAuth.ifLockedVisible().booleanValue()) {
                 this.isLockLayoutVisible = false;
@@ -958,7 +992,7 @@ public class ListUserActivity extends AppCompatActivity implements VoterListAdap
             throw new RuntimeException("Test Crash");
         } else if (id == R.id.nav_logout) {
             setlogin(this.userAuth, false);
-            startLoginActivity();
+            logoutEvent();
         } else if (id == R.id.nav_changeFingerprintDevice) {
             startActivity(new Intent(this, FingerprintDeviceSelectionActivity.class));
         }
@@ -994,7 +1028,7 @@ public class ListUserActivity extends AppCompatActivity implements VoterListAdap
             cols.put("EPIC_NO", offlinevoter.get(i).getEPIC_NO());
             cols.put("RLN_FM_NM_EN", offlinevoter.get(i).getRLN_FM_NM_EN());
             cols.put("GENDER", offlinevoter.get(i).getGENDER());
-            cols.put("AGE", "age" + offlinevoter.get(i).getAge());
+            cols.put("AGE", offlinevoter.get(i).getAge());
             cols.put("DOB", offlinevoter.get(i).getDOB());
             cols.put("EMAIL_ID", offlinevoter.get(i).getEMAIL_ID());
             cols.put("MOBILE_NO", offlinevoter.get(i).getMOBILE_NO());
@@ -1059,7 +1093,7 @@ public class ListUserActivity extends AppCompatActivity implements VoterListAdap
         }
     }
 
-    private void startLoginActivity() {
+    public void startLoginActivity() {
         startActivity(new Intent(this, LoginActivityNew.class));
         finish();
     }
@@ -1077,7 +1111,7 @@ public class ListUserActivity extends AppCompatActivity implements VoterListAdap
             TextView textView = this.stateDistrict;
             textView.setText(this.resources.getString(R.string.district_name_text) + ":" + this.userAuth.getDistrictNo());
             TextView textView2 = this.blockBooth;
-            textView2.setText(this.userAuth.getPanchayatId() + " " + this.resources.getString(R.string.block_no_text) + ":" + this.userAuth.getBoothNo() + "," + this.resources.getString(R.string.ward_no_text) + ":" + this.userAuth.getWardNo());
+            textView2.setText(this.userAuth.getPanchayatId() + " " + this.resources.getString(R.string.booth_no_text) + ":" + this.userAuth.getBoothNo() + "," + this.resources.getString(R.string.ward_no_text) + ":" + this.userAuth.getWardNo());
             this.numVoters.setText(this.resources.getString(R.string.total_no_voters_text, Integer.valueOf(this.voterDataNewModelList.size())));
             this.adapter2.changeLanguage(lan);
         }
@@ -1211,7 +1245,7 @@ public class ListUserActivity extends AppCompatActivity implements VoterListAdap
         startActivityForResult(cameraIntent, this.IMAGE_CAPTURE_CODE);
     }
 
-    @Override // androidx.fragment.app.FragmentActivity, android.app.Activity, androidx.core.app.ActivityCompat.OnRequestPermissionsResultCallback
+    @Override // androidx.fragment.app.FragmentActivity, androidx.activity.ComponentActivity, android.app.Activity
     public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
         if (requestCode == 1000) {
             if (grantResults.length > 0) {
@@ -1225,8 +1259,9 @@ public class ListUserActivity extends AppCompatActivity implements VoterListAdap
         }
     }
 
-    @Override // androidx.fragment.app.FragmentActivity, android.app.Activity
-    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+    /* JADX INFO: Access modifiers changed from: protected */
+    @Override // androidx.fragment.app.FragmentActivity, androidx.activity.ComponentActivity, android.app.Activity
+    public void onActivityResult(int requestCode, int resultCode, Intent data) {
         PrintStream printStream = System.out;
         printStream.println("resultcode=" + resultCode);
         super.onActivityResult(requestCode, resultCode, data);
@@ -1257,7 +1292,7 @@ public class ListUserActivity extends AppCompatActivity implements VoterListAdap
     /* JADX WARN: Unknown variable types count: 1 */
     /* Code decompiled incorrectly, please refer to instructions dump */
     public void captureFingerPrintFromTatvik() {
-        ?? r0 = 2131231198;
+        ?? r0 = 2131231193;
         try {
             this.captRslt1 = this.tmf20lib.captureFingerprint(10000);
             if (this.captRslt1 == null || TMF20ErrorCodes.SUCCESS != this.captRslt1.getStatusCode()) {
@@ -1396,90 +1431,129 @@ public class ListUserActivity extends AppCompatActivity implements VoterListAdap
         ((GetDataService) RetrofitClientInstance.getRetrofitInstance().create(GetDataService.class)).postDBUpdate(map);
     }
 
-    /* JADX WARN: Removed duplicated region for block: B:21:0x012b A[LOOP:0: B:5:0x0027->B:21:0x012b, LOOP_END] */
-    /* JADX WARN: Removed duplicated region for block: B:34:0x015b A[SYNTHETIC] */
+    /* JADX WARN: Removed duplicated region for block: B:25:0x01d4 A[LOOP:0: B:5:0x002d->B:25:0x01d4, LOOP_END] */
+    /* JADX WARN: Removed duplicated region for block: B:36:0x020a A[SYNTHETIC] */
     /* Code decompiled incorrectly, please refer to instructions dump */
     private void syncTransTable() {
         Exception e;
+        String str;
+        String str2;
+        String str3;
+        int count;
+        String str4;
+        String str5;
+        String aadhaarNo;
         String fpString;
-        String str = "AADHAAR_NO";
-        int count = 0;
+        String str6 = "user_id";
+        String str7 = "AADHAAR_NO";
+        String slnoinward = "AADHAAR_MATCH";
+        String voterimagename = "GENDER";
+        String str8 = "AGE";
+        int count2 = 0;
+        int i = 1;
         Toast.makeText(getApplicationContext(), "sync", 1).show();
         try {
             Cursor cursor = this.db.getAllRowsofTransTableCursor();
             if (cursor.moveToFirst()) {
                 while (true) {
-                    Map<String, String> map = new HashMap<>();
-                    byte[] fp = cursor.getBlob(cursor.getColumnIndex("FingerTemplate"));
+                    long transid = cursor.getLong(cursor.getColumnIndex(DBHelper.Key_ID));
+                    int synced = cursor.getInt(cursor.getColumnIndex("SYNCED"));
                     int voted = cursor.getInt(cursor.getColumnIndex("VOTED"));
-                    String voterimagename = cursor.getString(cursor.getColumnIndex("ID_DOCUMENT_IMAGE"));
-                    int aadhaarmatch = cursor.getInt(cursor.getColumnIndex("AADHAAR_MATCH"));
-                    String aadhaarNo = cursor.getString(cursor.getColumnIndex(str));
-                    if (aadhaarNo == null) {
-                        aadhaarNo = "";
-                    }
-                    try {
-                        if (fp != null) {
-                            try {
-                                if (fp.length >= 0) {
-                                    fpString = Base64.encodeToString(fp, 0);
-                                    long transid = cursor.getLong(cursor.getColumnIndex(DBHelper.Key_ID));
-                                    map.put("TRANSID", "" + transid);
-                                    String slnoinward = cursor.getString(cursor.getColumnIndex("SlNoInWard"));
-                                    map.put("user_id", this.userAuth.getPanchayatId() + "_" + this.userAuth.getWardNo() + "_" + this.userAuth.getBoothNo() + "_" + slnoinward);
-                                    map.put("FINGERPRINT_TEMPLATE", fpString);
-                                    StringBuilder sb = new StringBuilder();
-                                    sb.append("");
-                                    sb.append(voted);
-                                    map.put("VOTED", sb.toString());
-                                    map.put("ID_DOCUMENT_IMAGE", voterimagename);
-                                    map.put("AADHAAR_MATCH", "" + aadhaarmatch);
-                                    map.put(str, aadhaarNo);
-                                    map.put("VOTING_DATE", getCurrentTimeInFormat());
-                                    map.put("VOTING_TYPE", "NON_AADHAAR");
-                                    uploadTransactionRow(map);
-                                    if (!cursor.moveToNext()) {
-                                        count = count;
-                                        str = str;
-                                    } else {
-                                        return;
-                                    }
-                                }
-                            } catch (Exception e2) {
-                                e = e2;
-                                Context applicationContext = getApplicationContext();
-                                Toast.makeText(applicationContext, "sync exception=" + e.getMessage(), 1).show();
+                    if (synced == i) {
+                        count = count2;
+                        try {
+                            Toast.makeText(getApplicationContext(), "Already synced transid " + transid, 1).show();
+                            str = str6;
+                            str3 = str7;
+                            str2 = slnoinward;
+                            str5 = voterimagename;
+                            str4 = str8;
+                            if (cursor.moveToNext()) {
+                                voterimagename = str5;
+                                str8 = str4;
+                                count2 = count;
+                                str7 = str3;
+                                slnoinward = str2;
+                                str6 = str;
+                                i = 1;
+                            } else {
                                 return;
                             }
+                        } catch (Exception e2) {
+                            e = e2;
+                            Toast.makeText(getApplicationContext(), "sync exception=" + e.getMessage(), 1).show();
+                            return;
                         }
-                        long transid2 = cursor.getLong(cursor.getColumnIndex(DBHelper.Key_ID));
-                        map.put("TRANSID", "" + transid2);
-                        String slnoinward2 = cursor.getString(cursor.getColumnIndex("SlNoInWard"));
-                        map.put("user_id", this.userAuth.getPanchayatId() + "_" + this.userAuth.getWardNo() + "_" + this.userAuth.getBoothNo() + "_" + slnoinward2);
+                    } else {
+                        count = count2;
+                        Map<String, String> map = new HashMap<>();
+                        byte[] fp = cursor.getBlob(cursor.getColumnIndex("FingerTemplate"));
+                        int age = cursor.getInt(cursor.getColumnIndex(str8));
+                        String gender = cursor.getString(cursor.getColumnIndex(voterimagename));
+                        String voterimagename2 = cursor.getString(cursor.getColumnIndex("ID_DOCUMENT_IMAGE"));
+                        int aadhaarmatch = cursor.getInt(cursor.getColumnIndex(slnoinward));
+                        String aadhaarNo2 = cursor.getString(cursor.getColumnIndex(str7));
+                        if (aadhaarNo2 == null) {
+                            aadhaarNo2 = "";
+                        }
+                        if (fp != null) {
+                            aadhaarNo = aadhaarNo2;
+                            if (fp.length >= 0) {
+                                fpString = Base64.encodeToString(fp, 0);
+                                map.put("TRANSID", "" + transid);
+                                String userId = this.userAuth.getPanchayatId() + "_" + this.userAuth.getWardNo() + "_" + this.userAuth.getBoothNo() + "_" + cursor.getString(cursor.getColumnIndex("SlNoInWard"));
+                                map.put(str6, userId);
+                                map.put(str6, userId);
+                                map.put("FINGERPRINT_TEMPLATE", fpString);
+                                map.put("VOTED", "" + voted);
+                                map.put("ID_DOCUMENT_IMAGE", voterimagename2);
+                                str = str6;
+                                map.put(slnoinward, "" + aadhaarmatch);
+                                str2 = slnoinward;
+                                map.put(str7, aadhaarNo);
+                                str3 = str7;
+                                map.put("VOTING_DATE", getCurrentTimeInFormat());
+                                map.put("VOTING_TYPE", "NON_AADHAAR");
+                                map.put("booth_id", this.userAuth.getPanchayatId() + "_" + this.userAuth.getWardNo() + "_" + this.userAuth.getBoothNo());
+                                str4 = str8;
+                                map.put(str4, "" + age);
+                                str5 = voterimagename;
+                                map.put(str5, gender);
+                                uploadTransactionRow(map);
+                                if (cursor.moveToNext()) {
+                                }
+                            }
+                        } else {
+                            aadhaarNo = aadhaarNo2;
+                        }
+                        fpString = "";
+                        map.put("TRANSID", "" + transid);
+                        String userId2 = this.userAuth.getPanchayatId() + "_" + this.userAuth.getWardNo() + "_" + this.userAuth.getBoothNo() + "_" + cursor.getString(cursor.getColumnIndex("SlNoInWard"));
+                        map.put(str6, userId2);
+                        map.put(str6, userId2);
                         map.put("FINGERPRINT_TEMPLATE", fpString);
-                        StringBuilder sb2 = new StringBuilder();
-                        sb2.append("");
-                        sb2.append(voted);
-                        map.put("VOTED", sb2.toString());
-                        map.put("ID_DOCUMENT_IMAGE", voterimagename);
-                        map.put("AADHAAR_MATCH", "" + aadhaarmatch);
-                        map.put(str, aadhaarNo);
+                        map.put("VOTED", "" + voted);
+                        map.put("ID_DOCUMENT_IMAGE", voterimagename2);
+                        str = str6;
+                        map.put(slnoinward, "" + aadhaarmatch);
+                        str2 = slnoinward;
+                        map.put(str7, aadhaarNo);
+                        str3 = str7;
                         map.put("VOTING_DATE", getCurrentTimeInFormat());
                         map.put("VOTING_TYPE", "NON_AADHAAR");
+                        map.put("booth_id", this.userAuth.getPanchayatId() + "_" + this.userAuth.getWardNo() + "_" + this.userAuth.getBoothNo());
+                        str4 = str8;
+                        map.put(str4, "" + age);
+                        str5 = voterimagename;
+                        map.put(str5, gender);
                         uploadTransactionRow(map);
-                        if (!cursor.moveToNext()) {
+                        if (cursor.moveToNext()) {
                         }
-                    } catch (Exception e3) {
-                        e = e3;
-                        Context applicationContext2 = getApplicationContext();
-                        Toast.makeText(applicationContext2, "sync exception=" + e.getMessage(), 1).show();
-                        return;
                     }
-                    fpString = "";
                 }
             }
-        } catch (Exception e4) {
-            e = e4;
+        } catch (Exception e3) {
+            e = e3;
         }
     }
 
@@ -1508,23 +1582,49 @@ public class ListUserActivity extends AppCompatActivity implements VoterListAdap
         if (((TelephonyManager) Objects.requireNonNull((TelephonyManager) getApplicationContext().getSystemService("phone"))).getPhoneType() == 0) {
             device = "tablet";
         } else {
-            device = "tablet";
+            device = "mobile";
         }
         if (islock) {
             map.put("lockdate", getCurrentTimeInFormat());
+            map.put(NotificationCompat.CATEGORY_EVENT, "lock");
         } else {
             map.put("unlockdate", getCurrentTimeInFormat());
+            map.put(NotificationCompat.CATEGORY_EVENT, "unlock");
         }
         map.put("machine", device);
-        map.put("user_id", this.userAuth.getPanchayatId() + "_" + this.userAuth.getBoothNo());
+        map.put("user_id", this.userAuth.getPanchayatId() + "_" + this.userAuth.getWardNo() + "_" + this.userAuth.getBoothNo());
         ((GetDataService) RetrofitClientInstance.getRetrofitInstance().create(GetDataService.class)).lockRecordUpdate(map).enqueue(new Callback<LockUpdateResponse>() { // from class: com.example.aadhaarfpoffline.tatvik.activity.ListUserActivity.25
             @Override // retrofit2.Callback
             public void onResponse(Call<LockUpdateResponse> call, Response<LockUpdateResponse> response) {
-                Toast.makeText(ListUserActivity.this.getApplicationContext(), "response positive", 1).show();
             }
 
             @Override // retrofit2.Callback
             public void onFailure(Call<LockUpdateResponse> call, Throwable t) {
+            }
+        });
+    }
+
+    private void logoutEvent() {
+        String device;
+        Map<String, String> map = new HashMap<>();
+        if (((TelephonyManager) Objects.requireNonNull((TelephonyManager) getApplicationContext().getSystemService("phone"))).getPhoneType() == 0) {
+            device = "tablet";
+        } else {
+            device = "mobile";
+        }
+        map.put(NotificationCompat.CATEGORY_EVENT, "logout");
+        map.put("machine", device);
+        map.put("user_id", this.userAuth.getPanchayatId() + "_" + this.userAuth.getWardNo() + "_" + this.userAuth.getBoothNo());
+        ((GetDataService) RetrofitClientInstance.getRetrofitInstance().create(GetDataService.class)).lockRecordUpdate(map).enqueue(new Callback<LockUpdateResponse>() { // from class: com.example.aadhaarfpoffline.tatvik.activity.ListUserActivity.26
+            @Override // retrofit2.Callback
+            public void onResponse(Call<LockUpdateResponse> call, Response<LockUpdateResponse> response) {
+                Toast.makeText(ListUserActivity.this.getApplicationContext(), "response positive", 1).show();
+                ListUserActivity.this.startLoginActivity();
+            }
+
+            @Override // retrofit2.Callback
+            public void onFailure(Call<LockUpdateResponse> call, Throwable t) {
+                ListUserActivity.this.startLoginActivity();
             }
         });
     }
@@ -1537,8 +1637,17 @@ public class ListUserActivity extends AppCompatActivity implements VoterListAdap
         return timenow;
     }
 
+    public String getCurrentTimeInFormatForCSV() {
+        SimpleDateFormat formatter = new SimpleDateFormat("yyyyMMddHHmmss");
+        Date date = new Date();
+        String timenow = formatter.format(date);
+        System.out.println(formatter.format(date));
+        return timenow;
+    }
+
     private void uploadTransactionRow(Map<String, String> map) {
-        ((GetDataService) RetrofitClientInstance.getRetrofitInstance().create(GetDataService.class)).updateTransactionRow(map).enqueue(new Callback<TransactionRowPostResponse>() { // from class: com.example.aadhaarfpoffline.tatvik.activity.ListUserActivity.26
+        final String transId = map.get("TRANSID");
+        ((GetDataService) RetrofitClientInstance.getRetrofitInstanceLoginOnly().create(GetDataService.class)).updateTransactionRow(map).enqueue(new Callback<TransactionRowPostResponse>() { // from class: com.example.aadhaarfpoffline.tatvik.activity.ListUserActivity.27
             @Override // retrofit2.Callback
             public void onResponse(Call<TransactionRowPostResponse> call, Response<TransactionRowPostResponse> response) {
                 if (response == null || response.body() == null || !response.body().getUpdated()) {
@@ -1546,6 +1655,7 @@ public class ListUserActivity extends AppCompatActivity implements VoterListAdap
                     Toast.makeText(applicationContext, "voterlistTransaction row Not updated " + response.code(), 1).show();
                     return;
                 }
+                ListUserActivity.this.db.updateSync(Integer.parseInt(transId), 1);
                 Context applicationContext2 = ListUserActivity.this.getApplicationContext();
                 Toast.makeText(applicationContext2, "voterlistTransaction row updated successfully" + response.code(), 1).show();
             }
@@ -1556,5 +1666,9 @@ public class ListUserActivity extends AppCompatActivity implements VoterListAdap
                 Toast.makeText(applicationContext, "voterlistTransaction update Error. " + t.getMessage(), 1).show();
             }
         });
+    }
+
+    private void startVotingStatusActivity() {
+        startActivity(new Intent(this, VotingStatusActivity.class));
     }
 }
