@@ -1,98 +1,98 @@
 [
 	{
 		"file": "apk/1.5v2_ee32d59c341de07242c08a1d72d5d48ef50618ee9a3da8d98fa8aaadfe536a74.apk",
-		"release_time": "2021-09-28 00:33:43+05:30",
+		"releasetime": "2021-09-28 00:33:43+05:30",
 		"sha256": "ee32d59c341de07242c08a1d72d5d48ef50618ee9a3da8d98fa8aaadfe536a74",
 		"version": "1.5v2",
         "source": "zip/ce1ead619b0fe7118559f087f7f24610-java.zip"
 	},
 	{
 		"file": "apk/3.1v1_4f3aa36947a3fff7d00bea05f3a33ab3aa062a1aebc3b2151f097aa8415ea865.apk",
-		"release_time": "2021-09-28 18:40:25+05:30",
+		"releasetime": "2021-09-28 18:40:25+05:30",
 		"sha256": "4f3aa36947a3fff7d00bea05f3a33ab3aa062a1aebc3b2151f097aa8415ea865",
 		"version": "3.1v1",
         "source": "zip/86240f8520ff68f0196b5a75302ad90a-java.zip"
 	},
 	{
 		"file": "apk/3.1v2_a92dfbb9672ba2ee7d367b260667dd2823a4bb55c47d71f5a3435ee4773b83e2.apk",
-		"release_time": "2021-09-29 04:57:57+05:30",
+		"releasetime": "2021-09-29 04:57:57+05:30",
 		"sha256": "a92dfbb9672ba2ee7d367b260667dd2823a4bb55c47d71f5a3435ee4773b83e2",
 		"version": "3.1v2",
         "source": "zip/f3f1d7ced78a3d5d5e1303d44f4d50f2-java.zip"
 	},
 	{
 		"file": "apk/3.1v9_d1dfd28dd43b3e50c0b94a1dce1097bd7f3b8e55ea6400eedc05b2af1b2bfc5d.apk",
-		"release_time": "2021-10-06 15:18:42+05:30",
+		"releasetime": "2021-10-06 15:18:42+05:30",
 		"sha256": "d1dfd28dd43b3e50c0b94a1dce1097bd7f3b8e55ea6400eedc05b2af1b2bfc5d",
 		"version": "3.1v9",
         "source": "zip/e09303b17d9610ff60fb142106a464ce-java.zip"
 	},
 	{
 		"file": "apk/Phase3v1_10ef4d9e4f99916f8c989bd58f9c357f6809ce1fcc86c7b85c14a8457561dff8.apk",
-		"release_time": "2021-10-07 19:56:12+05:30",
+		"releasetime": "2021-10-07 19:56:12+05:30",
 		"sha256": "10ef4d9e4f99916f8c989bd58f9c357f6809ce1fcc86c7b85c14a8457561dff8",
 		"version": "Phase3v1",
         "source": "zip/f2cddb1459b32853977919377e2a3fe9-java.zip"
 	},
 	{
 		"file": "apk/Phase4v4_ecf883c8b7b85ef0d267b07a20bd1f4a27e9590832de57b5f04def6a978e5156.apk",
-		"release_time": "2021-10-18 11:04:03+05:30",
+		"releasetime": "2021-10-18 11:04:03+05:30",
 		"sha256": "ecf883c8b7b85ef0d267b07a20bd1f4a27e9590832de57b5f04def6a978e5156",
 		"version": "Phase4v4",
         "source": "zip/36b882647b014680b6355986cf031b10-java.zip"
 	},
 	{
 		"file": "apk/Phase4v6_b469483ee89fd9a00121a14f2d34c033db0c9e680f8f1206d972c73588d4a8a8.apk",
-		"release_time": "2021-10-19 10:53:52+05:30",
+		"releasetime": "2021-10-19 10:53:52+05:30",
 		"sha256": "b469483ee89fd9a00121a14f2d34c033db0c9e680f8f1206d972c73588d4a8a8",
 		"version": "Phase4v6",
         "source": "zip/c9c08dc77d7f35a383525a74d6940c9c-java.zip"
 	},
 	{
 		"file": "apk/Phase5v4_fdac895dbaaa09361da495ce8d79919d18528f4b630129d0967126fd3809b7a4.apk",
-		"release_time": "2021-10-23 15:01:40+05:30",
+		"releasetime": "2021-10-23 15:01:40+05:30",
 		"sha256": "fdac895dbaaa09361da495ce8d79919d18528f4b630129d0967126fd3809b7a4",
 		"version": "Phase5v4",
         "source": "zip/9293d4adab3493c8f13762cd6c10cf11-java.zip"
 	},
 	{
 		"file": "apk/Phase6v2_5abb138a09c1479607741f34f2b36323d21c45032a40b11b3a6ac94b49137487.apk",
-		"release_time": "2021-11-01 15:21:41+05:30",
+		"releasetime": "2021-11-01 15:21:41+05:30",
 		"sha256": "5abb138a09c1479607741f34f2b36323d21c45032a40b11b3a6ac94b49137487",
 		"version": "Phase6v2",
         "source": "zip/a1ed9cab41815a97579df862b73f6c7c-java.zip"
 	},
 	{
 		"file": "apk/Phase7v501a480e6c9c279cdb2b52780912f4c658cce8fae9f113a9592beff8a874404b5.apk",
-		"release_time": "2021-11-13 13:44:39+05:30",
+		"releasetime": "2021-11-13 13:44:39+05:30",
 		"sha256": "01a480e6c9c279cdb2b52780912f4c658cce8fae9f113a9592beff8a874404b5",
 		"version": "Phase7v5",
         "source": "zip/36bc7dd97062d5df5bbb1d765f741d07-java.zip"
 	},
 	{
 		"file": "apk/Phase8v1_d416330c8ca512c413c9ecbb90790e0b9d7a915da6ce7ec8ee1534a5b4a455d2.apk",
-		"release_time": "2021-11-23 02:51:14+05:30",
+		"releasetime": "2021-11-23 02:51:14+05:30",
 		"sha256": "d416330c8ca512c413c9ecbb90790e0b9d7a915da6ce7ec8ee1534a5b4a455d2",
 		"version": "Phase8v1",
         "source": "zip/50c526bb1df3741cbd14cdf1a3cff71a-java.zip"
 	},
 	{
 		"file": "apk/Phase_9_v1Nov28_893f431917c4e492cf524f3f46124fd30f33282d16ea94f7fc1d941b779cbe60.apk",
-		"release_time": "2021-11-28 00:42:42+05:30",
+		"releasetime": "2021-11-28 00:42:42+05:30",
 		"sha256": "893f431917c4e492cf524f3f46124fd30f33282d16ea94f7fc1d941b779cbe60",
 		"version": "Phase9v1",
         "source": "zip/7f71da88397597fcbe776c9a00756688-java.zip"
 	},
 	{
 		"file": "apk/Phase_10_a3f8fbdfcb09e2de8abffb3a4083e8148792b2a09b08adbb58e6d64b2c79b1e3.apk",
-		"release_time": "2021-12-05 15:35:28+05:30",
+		"releasetime": "2021-12-05 15:35:28+05:30",
 		"sha256": "a3f8fbdfcb09e2de8abffb3a4083e8148792b2a09b08adbb58e6d64b2c79b1e3",
 		"version": "Phase10v0nochange",
         "source": "zip/e31dc74e5a8e3f5758436a0798ca36a0-java.zip"
 	},
 	{
 		"file": "apk/Phase_11_332549319b7846e4fea1d8aeece7bb10c6b24c3e0b8fba33d484e55bfcaa8d22.apk",
-		"release_time": "2022-01-04 06:44:51+05:30",
+		"releasetime": "2022-01-04 06:44:51+05:30",
 		"sha256": "332549319b7846e4fea1d8aeece7bb10c6b24c3e0b8fba33d484e55bfcaa8d22",
 		"version": "Phase11v0nochange",
         "source": "zip/8227c9bff0d52c396ba4c7765f4dd614-java.zip"
