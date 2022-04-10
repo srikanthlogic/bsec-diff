@@ -11,7 +11,9 @@ import java.util.ArrayList;
 import java.util.List;
 /* loaded from: classes3.dex */
 public class BaseActivity extends AppCompatActivity {
-    public static String a;
+
+    /* renamed from: a  reason: collision with root package name */
+    public static String f36a;
     private static List<String> d = null;
     private static final byte[] e = {48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 97, 98, 99, 100, 101, 102};
     int b = 0;

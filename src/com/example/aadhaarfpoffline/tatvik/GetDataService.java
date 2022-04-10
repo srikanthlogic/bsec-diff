@@ -11,12 +11,14 @@ import com.example.aadhaarfpoffline.tatvik.network.FinperprintCompareServerRespo
 import com.example.aadhaarfpoffline.tatvik.network.GetUploadLinkResponse;
 import com.example.aadhaarfpoffline.tatvik.network.ImageUploadResponse;
 import com.example.aadhaarfpoffline.tatvik.network.InitializeResponse;
+import com.example.aadhaarfpoffline.tatvik.network.LockUpdateResponse;
 import com.example.aadhaarfpoffline.tatvik.network.LoginForUrlResponse;
 import com.example.aadhaarfpoffline.tatvik.network.LoginTimeUpdateGetResponse;
 import com.example.aadhaarfpoffline.tatvik.network.MultipleFaceImageUploadResponse;
 import com.example.aadhaarfpoffline.tatvik.network.MultipleFpUploadResponse;
 import com.example.aadhaarfpoffline.tatvik.network.OfficialDataGetResponse;
 import com.example.aadhaarfpoffline.tatvik.network.PostUploadResponse;
+import com.example.aadhaarfpoffline.tatvik.network.TransactionRowPostResponse;
 import com.example.aadhaarfpoffline.tatvik.network.UserFaceMatchStatusUpdatePostResponse;
 import com.example.aadhaarfpoffline.tatvik.network.UserLocationUpdatePostResponse;
 import com.example.aadhaarfpoffline.tatvik.network.UserVotingStatusUpdatePostResponse;
@@ -40,24 +42,24 @@ import retrofit2.http.Path;
 import retrofit2.http.Query;
 /* loaded from: classes2.dex */
 public interface GetDataService {
-    @GET("/election/VoterAuthenticationapi/getboothidbyphone")
+    @GET("/VoterAuthenticationapi/getboothidbyphone")
     Call<OfficialDataGetResponse> getBoothIdBasedOnPhone(@Query("phone") String str);
 
     @Headers({"Content-Type: application/json"})
     @POST("/api/v1/esign/initialize")
     Call<InitializeResponse> getInitialize2(@Body String str);
 
-    @GET("/election/VoterAuthenticationapi/getLoginNew")
+    @GET("/VoterAuthenticationapi/getLoginNew")
     Call<ElectionBoothLoginGetResponse> getLoginNewMethod(@Query("phone") String str, @Query("otp") String str2, @Query("location") String str3);
 
-    @GET("/election/VoterAuthenticationapi/LoginUpdate")
+    @GET("/VoterAuthenticationapi/LoginUpdate")
     Call<LoginTimeUpdateGetResponse> getLoginTimeUpdateMethod(@Query("phone") String str);
 
-    @GET("/election/VoterAuthenticationapi/getLoginWithMultipleCluster")
+    @GET("/VoterAuthenticationapi/getLoginWithMultipleCluster")
     Call<ElectionBoothLoginGetResponse> getLoginWithMultipleCluster(@Query("phone") String str, @Query("otp") String str2, @Query("location") String str3);
 
     @FormUrlEncoded
-    @POST("/PanchayatElection/login")
+    @POST("/VoterAuthenticationapi/login")
     Call<LoginForUrlResponse> getLoginWithUrl(@FieldMap Map<String, String> map);
 
     @Headers({"Content-Type: application/json"})
@@ -68,46 +70,50 @@ public interface GetDataService {
     @POST("/api/v1/esign/get-upload-link")
     Call<GetUploadLinkResponse> getUploadLink(@Body String str);
 
-    @GET("/election/VoterAuthenticationapi/aadhaaruserexists")
+    @GET("/VoterAuthenticationapi/aadhaaruserexists")
     Call<AadhaarUserCheckGetResponse> getVoterByVoterAadhaarNum(@Query("aadhaarnum") String str);
 
-    @GET("/election/VoterAuthenticationapi/getVoterData")
+    @GET("/VoterAuthenticationapi/getVoterData")
     Call<VoterDataGetResponse> getVoterByVoterId(@Query("voterid") String str);
 
-    @GET("/election/VoterAuthenticationapi/getvoterlist")
+    @GET("/VoterAuthenticationapi/getvoterlist")
     Call<VoterListGetResponse> getVoterList();
 
-    @GET("/election/VoterAuthenticationapi/getvoterlistbasedonboothid")
+    @GET("/VoterAuthenticationapi/getvoterlistbasedonboothid")
     Call<VoterListGetResponse> getVoterListByBoothId(@Query("boothid") String str);
 
-    @GET("/election/VoterAuthenticationapi/getvoterlistnewtable")
+    @GET("/VoterAuthenticationapi/getvoterlistnewtable")
     Call<VoterListNewTableGetResponse> getVoterListNewTableByBlockId(@Query("blockid") int i);
 
-    @GET("/election/VoterAuthenticationapi/getvoterlistbyboothno")
+    @GET("/VoterAuthenticationapi/getvoterlistbyboothno")
     Call<VoterListNewTableGetResponse> getVoterListNewTableByBoothNo(@Query("dist_no") String str, @Query("block_id") String str2, @Query("panchayat_id") String str3, @Query("ward_no") String str4, @Query("booth_no") String str5);
 
-    @GET("/election/VoterAuthenticationapi/getvoterlistnewtable")
+    @GET("/VoterAuthenticationapi/getvoterlistnewtable")
     Call<VoterListNewTableGetResponse> getVoterListNewTableByPanchayatId(@Query("panchayatid") String str);
 
-    @GET("/election/VoterAuthenticationapi/getvoterlistbyward")
+    @GET("/VoterAuthenticationapi/getvoterlistbyward")
     Call<VoterListNewTableGetResponse> getVoterListNewTableByWard(@Query("ward_no") String str);
 
-    @GET("/election/VoterAuthenticationapi/gettableforsync")
+    @GET("/VoterAuthenticationapi/gettableforsync")
     Call<VoterListNewTableGetResponse> getVoterListTableForSync(@Query("dist_no") String str, @Query("block_id") String str2, @Query("panchayat_id") String str3, @Query("ward_no") String str4, @Query("booth_no") String str5);
 
     @FormUrlEncoded
-    @POST("/election/VoterAuthenticationapi/aadhaarmatchupdate")
+    @POST("/VoterAuthenticationapi/savemachineinfo")
+    Call<LockUpdateResponse> lockRecordUpdate(@FieldMap Map<String, String> map);
+
+    @FormUrlEncoded
+    @POST("/VoterAuthenticationapi/aadhaarmatchupdate")
     Call<AadhaarMatchUpdatePostResponse> postAadhaarMatchUpdate(@FieldMap Map<String, String> map);
 
-    @POST("/election/VoterAuthenticationapi/comparefingerprintmfs100")
+    @POST("/VoterAuthenticationapi/comparefingerprintmfs100")
     Call<FinperprintCompareServerResponse> postCompareFpServer(@Query("voterid") String str, @Query("fpbytearray") byte[] bArr);
 
-    @POST("/election/VoterAuthenticationapi/comparefingerprintmfs100")
+    @POST("/VoterAuthenticationapi/comparefingerprintmfs100")
     @Multipart
     Call<FinperprintCompareServerResponse> postCompareFpServer2(@PartMap Map<String, RequestBody> map);
 
     @FormUrlEncoded
-    @POST("/election/VoterAuthenticationapi/syncdataserver")
+    @POST("/VoterAuthenticationapi/syncdataserver")
     Call<DBUpdateResponse> postDBUpdate(@FieldMap Map<String, String> map);
 
     @Headers({"Content-Type: application/xml"})
@@ -118,39 +124,39 @@ public interface GetDataService {
     @POST("/baafprodv25/auaservice/authenticate/")
     Call<String> postFPAadhaar1(@Body RequestBody requestBody);
 
-    @POST("/election/VoterAuthenticationapi/uploadfp")
+    @POST("/VoterAuthenticationapi/uploadfp")
     @Multipart
     Call<ImageUploadResponse> postFPUploadWithImage(@Part MultipartBody.Part part, @PartMap Map<String, RequestBody> map);
 
-    @POST("/election/VoterAuthenticationapi/uploadface")
+    @POST("/VoterAuthenticationapi/uploadface")
     @Multipart
     Call<ImageUploadResponse> postFaceImage(@Part MultipartBody.Part part, @PartMap Map<String, RequestBody> map);
 
-    @POST("/election/VoterAuthenticationapi/uploadfaceforchecking")
+    @POST("/VoterAuthenticationapi/uploadfaceforchecking")
     @Multipart
     Call<FaceImageUploadCheckResponse> postFaceImageForCheck(@Part MultipartBody.Part part, @PartMap Map<String, RequestBody> map);
 
     @FormUrlEncoded
-    @POST("/election/VoterAuthenticationapi/facematchstatusupdate")
+    @POST("/VoterAuthenticationapi/facematchstatusupdate")
     Call<UserFaceMatchStatusUpdatePostResponse> postFaceMatchStatusUpdate(@FieldMap Map<String, String> map);
 
-    @POST("/election/VoterAuthenticationapi/uploadfingerprint")
+    @POST("/VoterAuthenticationapi/uploadfingerprint")
     @Multipart
     Call<ImageUploadResponse> postFingerprintImage(@Part MultipartBody.Part part, @PartMap Map<String, RequestBody> map);
 
-    @POST("/election/VoterAuthenticationapi/comparefingerprintmfs100")
+    @POST("/VoterAuthenticationapi/comparefingerprintmfs100")
     @Multipart
     Call<FinperprintCompareServerResponse> postFingerprintTemplateCompare(@Part MultipartBody.Part part, @PartMap Map<String, RequestBody> map);
 
     @FormUrlEncoded
-    @POST("/election/VoterAuthenticationapi/updatedevicedetachedtimeboothofficer")
+    @POST("/VoterAuthenticationapi/updatedevicedetachedtimeboothofficer")
     Call<BoothOfficerDeviceStatusUpdatePostResponse> postFpDeviceStatusUpdate(@FieldMap Map<String, String> map);
 
     @FormUrlEncoded
-    @POST("/election/VoterAuthenticationapi/locationupdate")
+    @POST("/VoterAuthenticationapi/locationupdate")
     Call<UserLocationUpdatePostResponse> postLocationUpdate(@FieldMap Map<String, String> map);
 
-    @POST("/election/VoterAuthenticationapi/syncdatawithimage")
+    @POST("/VoterAuthenticationapi/syncdatawithimage")
     @Multipart
     Call<ImageUploadResponse> postUpdateDBrow(@Part MultipartBody.Part part, @PartMap Map<String, RequestBody> map);
 
@@ -158,27 +164,31 @@ public interface GetDataService {
     @Multipart
     Call<String> postUploadFile(@PartMap Map<String, RequestBody> map, @Part MultipartBody.Part part);
 
-    @POST("/election/VoterAuthenticationapi/uploadvoteridentification")
+    @POST("/VoterAuthenticationapi/uploadvoteridentification")
     @Multipart
     Call<ImageUploadResponse> postVoterIdentification(@Part MultipartBody.Part part, @PartMap Map<String, RequestBody> map);
 
-    @POST("/election/VoterAuthenticationapi/uploadmultiplefingerprintsforchecking")
+    @POST("/VoterAuthenticationapi/uploadmultiplefingerprintsforchecking")
     @Multipart
     Call<MultipleFpUploadResponse> postVoterIdentificationMultiFingerP(@Part MultipartBody.Part[] partArr, @PartMap Map<String, RequestBody> map);
 
-    @POST("/election/VoterAuthenticationapi/uploadmultiplefacesforchecking")
+    @POST("/VoterAuthenticationapi/uploadmultiplefacesforchecking")
     @Multipart
     Call<MultipleFaceImageUploadResponse> postVoterIdentificationMultiImages(@Part MultipartBody.Part[] partArr, @PartMap Map<String, RequestBody> map);
 
     @FormUrlEncoded
-    @POST("/election/VoterAuthenticationapi/votingstatusupdate")
+    @POST("/VoterAuthenticationapi/votingstatusupdate")
     Call<UserVotingStatusUpdatePostResponse> postVotingStatusUpdate(@FieldMap Map<String, String> map);
 
     @FormUrlEncoded
-    @POST("/election/VoterAuthenticationapi/voteridmatchupdate")
+    @POST("/VoterAuthenticationapi/voteridmatchupdate")
     Call<FacefpmatchvoteridUpdatePostResponse> postfacefpmatchvoterid(@FieldMap Map<String, String> map);
 
     @FormUrlEncoded
-    @POST("/election/VoterAuthenticationapi/updatefpasstring")
+    @POST("/VoterAuthenticationapi/updatefpasstring")
     Call<FinperprintCompareServerResponse> updateFpServer2(@FieldMap Map<String, String> map);
+
+    @FormUrlEncoded
+    @POST("/VoterAuthenticationapi/updatetransactionrow")
+    Call<TransactionRowPostResponse> updateTransactionRow(@FieldMap Map<String, String> map);
 }

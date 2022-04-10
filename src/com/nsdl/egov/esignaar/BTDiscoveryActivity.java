@@ -30,7 +30,9 @@ public class BTDiscoveryActivity extends AppCompatActivity {
     public static BluetoothAdapter e = BluetoothAdapter.getDefaultAdapter();
     TextView h;
     private boolean i;
-    String a = "";
+
+    /* renamed from: a */
+    String f27a = "";
     String b = "";
     String c = "";
     String d = "";
@@ -236,7 +238,7 @@ public class BTDiscoveryActivity extends AppCompatActivity {
                 sb.append("\" value=\"");
                 sb.append(BTDiscoveryActivity.this.n);
                 sb.append("\" /> </CustOpts> </PidOptions>");
-                bTDiscoveryActivity.a = sb.toString();
+                bTDiscoveryActivity.f27a = sb.toString();
                 BiometricActivityPieSupport.e = 30;
                 BiometricActivityPieSupport.f = 5;
                 WithoutOTGSupportBiometricActivity.I = 30;
@@ -244,7 +246,7 @@ public class BTDiscoveryActivity extends AppCompatActivity {
                 Intent intent2 = new Intent();
                 intent2.putExtra("DEVICENAME", BTDiscoveryActivity.this.o);
                 intent2.putExtra("DEVICEMAC", BTDiscoveryActivity.this.n);
-                intent2.putExtra("ResponseXml", BTDiscoveryActivity.this.a);
+                intent2.putExtra("ResponseXml", BTDiscoveryActivity.this.f27a);
                 BTDiscoveryActivity.this.setResult(-1, intent2);
                 BTDiscoveryActivity.this.finish();
             }

@@ -4,6 +4,7 @@ import android.content.Context;
 import android.content.res.Resources;
 import android.util.Log;
 import androidx.recyclerview.widget.ItemTouchHelper;
+import com.alcorlink.camera.AlErrorCode;
 import com.facebook.imagepipeline.common.RotationOptions;
 import com.facebook.imageutils.JfifUtil;
 import com.google.android.gms.measurement.api.AppMeasurementSdk;
@@ -2243,11 +2244,11 @@ public class CCPCountry implements Comparable<CCPCountry> {
                 return R.drawable.flag_lithuania;
             case 128:
                 return R.drawable.flag_luxembourg;
-            case 129:
+            case AlErrorCode.ERR_INVALID_PARAM:
                 return R.drawable.flag_latvia;
-            case 130:
+            case AlErrorCode.ERR_NOT_SUPPORTED:
                 return R.drawable.flag_libya;
-            case 131:
+            case AlErrorCode.ERR_LENGTH:
                 return R.drawable.flag_morocco;
             case 132:
                 return R.drawable.flag_monaco;
@@ -2273,17 +2274,17 @@ public class CCPCountry implements Comparable<CCPCountry> {
                 return R.drawable.flag_macao;
             case 143:
                 return R.drawable.flag_northern_mariana_islands;
-            case 144:
+            case AlErrorCode.ERR_RESOURCE:
                 return R.drawable.flag_martinique;
-            case 145:
+            case AlErrorCode.ERR_PERMISSION_DENIED:
                 return R.drawable.flag_mauritania;
-            case 146:
+            case AlErrorCode.ERR_NO_MEM:
                 return R.drawable.flag_montserrat;
-            case 147:
+            case AlErrorCode.ERR_NULL_POINTER:
                 return R.drawable.flag_malta;
-            case 148:
+            case AlErrorCode.ERR_VERIFY:
                 return R.drawable.flag_mauritius;
-            case 149:
+            case AlErrorCode.ERR_NATIVE_LAYER:
                 return R.drawable.flag_maldives;
             case 150:
                 return R.drawable.flag_malawi;
@@ -2305,17 +2306,17 @@ public class CCPCountry implements Comparable<CCPCountry> {
                 return R.drawable.flag_nigeria;
             case 159:
                 return R.drawable.flag_nicaragua;
-            case 160:
+            case AlErrorCode.ERR_COMMAND:
                 return R.drawable.flag_netherlands;
-            case MXErrCode.ERR_FAILED_TEE:
+            case 161:
                 return R.drawable.flag_norway;
-            case MXErrCode.ERR_KEY_LEN_TEE:
+            case 162:
                 return R.drawable.flag_nepal;
-            case MXErrCode.ERR_DATA_LEN_TEE:
+            case 163:
                 return R.drawable.flag_nauru;
-            case MXErrCode.ERR_KEY_ENCRYPT_TEE:
+            case 164:
                 return R.drawable.flag_niue;
-            case MXErrCode.ERR_KEY_DECRYPT_TEE:
+            case 165:
                 return R.drawable.flag_new_zealand;
             case MXErrCode.ERR_NO_CERT_TEE:
                 return R.drawable.flag_oman;
@@ -2369,21 +2370,21 @@ public class CCPCountry implements Comparable<CCPCountry> {
                 return R.drawable.flag_sudan;
             case 191:
                 return R.drawable.flag_sweden;
-            case JfifUtil.MARKER_SOFn:
+            case 192:
                 return R.drawable.flag_singapore;
-            case 193:
+            case AlErrorCode.ERR_NO_DEVICE:
                 return R.drawable.flag_saint_helena;
-            case 194:
+            case AlErrorCode.ERR_INVALID_DEVICE:
                 return R.drawable.flag_slovenia;
-            case 195:
+            case AlErrorCode.ERR_NO_SPACE:
                 return R.drawable.flag_slovakia;
-            case 196:
+            case AlErrorCode.ERR_IN_USE:
                 return R.drawable.flag_sierra_leone;
-            case 197:
+            case AlErrorCode.ERR_NOT_INIT:
                 return R.drawable.flag_san_marino;
-            case 198:
+            case AlErrorCode.ERR_TRANSFER:
                 return R.drawable.flag_senegal;
-            case 199:
+            case AlErrorCode.ERR_NOT_FOUND:
                 return R.drawable.flag_somalia;
             case ItemTouchHelper.Callback.DEFAULT_DRAG_ANIMATION_DURATION:
                 return R.drawable.flag_suriname;
@@ -2401,9 +2402,9 @@ public class CCPCountry implements Comparable<CCPCountry> {
                 return R.drawable.flag_swaziland;
             case 207:
                 return R.drawable.flag_turks_and_caicos_islands;
-            case JfifUtil.MARKER_RST0:
+            case 208:
                 return R.drawable.flag_chad;
-            case 209:
+            case AlErrorCode.ERR_BAD_FRAME:
                 return R.drawable.flag_togo;
             case 210:
                 return R.drawable.flag_thailand;
@@ -4487,11 +4488,11 @@ public class CCPCountry implements Comparable<CCPCountry> {
                 return "🇱🇨";
             case 128:
                 return "🇱🇮";
-            case 129:
+            case AlErrorCode.ERR_INVALID_PARAM:
                 return "🇱🇰";
-            case 130:
+            case AlErrorCode.ERR_NOT_SUPPORTED:
                 return "🇱🇷";
-            case 131:
+            case AlErrorCode.ERR_LENGTH:
                 return "🇱🇸";
             case 132:
                 return "🇱🇹";
@@ -4517,17 +4518,17 @@ public class CCPCountry implements Comparable<CCPCountry> {
                 return "🇲🇭";
             case 143:
                 return "🇲🇰";
-            case 144:
+            case AlErrorCode.ERR_RESOURCE:
                 return "🇲🇱";
-            case 145:
+            case AlErrorCode.ERR_PERMISSION_DENIED:
                 return "🇲🇲";
-            case 146:
+            case AlErrorCode.ERR_NO_MEM:
                 return "🇲🇳";
-            case 147:
+            case AlErrorCode.ERR_NULL_POINTER:
                 return "🇲🇴";
-            case 148:
+            case AlErrorCode.ERR_VERIFY:
                 return "🇲🇵";
-            case 149:
+            case AlErrorCode.ERR_NATIVE_LAYER:
                 return "🇲🇶";
             case 150:
                 return "🇲🇷";
@@ -4549,17 +4550,17 @@ public class CCPCountry implements Comparable<CCPCountry> {
                 return "🇲🇿";
             case 159:
                 return "🇳🇦";
-            case 160:
+            case AlErrorCode.ERR_COMMAND:
                 return "🇳🇨";
-            case MXErrCode.ERR_FAILED_TEE:
+            case 161:
                 return "🇳🇪";
-            case MXErrCode.ERR_KEY_LEN_TEE:
+            case 162:
                 return "🇳🇫";
-            case MXErrCode.ERR_DATA_LEN_TEE:
+            case 163:
                 return "🇳🇬";
-            case MXErrCode.ERR_KEY_ENCRYPT_TEE:
+            case 164:
                 return "🇳🇮";
-            case MXErrCode.ERR_KEY_DECRYPT_TEE:
+            case 165:
                 return "🇳🇱";
             case MXErrCode.ERR_NO_CERT_TEE:
                 return "🇳🇴";
@@ -4613,21 +4614,21 @@ public class CCPCountry implements Comparable<CCPCountry> {
                 return "🇷🇺";
             case 191:
                 return "🇷🇼";
-            case JfifUtil.MARKER_SOFn:
+            case 192:
                 return "🇸🇦";
-            case 193:
+            case AlErrorCode.ERR_NO_DEVICE:
                 return "🇸🇧";
-            case 194:
+            case AlErrorCode.ERR_INVALID_DEVICE:
                 return "🇸🇨";
-            case 195:
+            case AlErrorCode.ERR_NO_SPACE:
                 return "🇸🇩";
-            case 196:
+            case AlErrorCode.ERR_IN_USE:
                 return "🇸🇪";
-            case 197:
+            case AlErrorCode.ERR_NOT_INIT:
                 return "🇸🇬";
-            case 198:
+            case AlErrorCode.ERR_TRANSFER:
                 return "🇸🇭";
-            case 199:
+            case AlErrorCode.ERR_NOT_FOUND:
                 return "🇸🇮";
             case ItemTouchHelper.Callback.DEFAULT_DRAG_ANIMATION_DURATION:
                 return "🇸🇯";
@@ -4645,9 +4646,9 @@ public class CCPCountry implements Comparable<CCPCountry> {
                 return "🇸🇷";
             case 207:
                 return "🇸🇸";
-            case JfifUtil.MARKER_RST0:
+            case 208:
                 return "🇸🇹";
-            case 209:
+            case AlErrorCode.ERR_BAD_FRAME:
                 return "🇸🇻";
             case 210:
                 return "🇸🇽";

@@ -18,7 +18,7 @@ public class RetrofitClientInstanceAadhaar {
     private static Retrofit retrofit;
 
     /* renamed from: retrofit2  reason: collision with root package name */
-    private static Retrofit f4retrofit2;
+    private static Retrofit f24retrofit2;
 
     public static Retrofit getRetrofitInstance() {
         OkHttpClient.Builder httpClient = new OkHttpClient.Builder();
@@ -46,9 +46,9 @@ public class RetrofitClientInstanceAadhaar {
             }
         });
         OkHttpClient client = httpClient.build();
-        if (f4retrofit2 == null) {
-            f4retrofit2 = new Retrofit.Builder().baseUrl("http://support.phoneme.in/").client(client).addConverterFactory(GsonConverterFactory.create(new GsonBuilder().setLenient().create())).build();
+        if (f24retrofit2 == null) {
+            f24retrofit2 = new Retrofit.Builder().baseUrl("http://support.phoneme.in/").client(client).addConverterFactory(GsonConverterFactory.create(new GsonBuilder().setLenient().create())).build();
         }
-        return f4retrofit2;
+        return f24retrofit2;
     }
 }
