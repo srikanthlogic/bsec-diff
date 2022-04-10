@@ -411,7 +411,7 @@ public class UserIdCaptureActivity extends AppCompatActivity implements Progress
             return true;
         }
         if (ActivityCompat.shouldShowRequestPermissionRationale(this, "android.permission.ACCESS_FINE_LOCATION")) {
-            new AlertDialog.Builder(this).setTitle("Dhansu title").setMessage("Dhansu message").setPositiveButton("Dhansu ok", new DialogInterface.OnClickListener() { // from class: com.example.aadhaarfpoffline.tatvik.activity.UserIdCaptureActivity.7
+            new AlertDialog.Builder(this).setTitle("Permission Denied").setMessage("Please approve permission again").setPositiveButton("Okay", new DialogInterface.OnClickListener() { // from class: com.example.aadhaarfpoffline.tatvik.activity.UserIdCaptureActivity.7
                 @Override // android.content.DialogInterface.OnClickListener
                 public void onClick(DialogInterface dialogInterface, int i) {
                     ActivityCompat.requestPermissions(UserIdCaptureActivity.this, new String[]{"android.permission.ACCESS_FINE_LOCATION"}, 99);
