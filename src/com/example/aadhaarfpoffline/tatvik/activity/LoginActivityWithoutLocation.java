@@ -95,7 +95,7 @@ public class LoginActivityWithoutLocation extends AppCompatActivity {
         this.loginMessage = (TextView) findViewById(R.id.loginmessage);
         this.appVersion = (TextView) findViewById(R.id.versioncode);
         TextView textView = this.appVersion;
-        textView.setText("App version:20/" + BuildConfig.VERSION_NAME);
+        textView.setText("App version:22/" + BuildConfig.VERSION_NAME);
         MultiWaveHeader waveHeader = (MultiWaveHeader) findViewById(R.id.wavebottom);
         waveHeader.setColorAlpha(0.5f);
         waveHeader.start();
@@ -237,6 +237,12 @@ public class LoginActivityWithoutLocation extends AppCompatActivity {
                         userAuth.setBoothNo(response.body().getBoothNo());
                         userAuth.setWardNo(response.body().getWardno());
                         userAuth.setBaseUrl(response.body().getUrl());
+                        userAuth.setPanchayat_NAME_EN(response.body().getPanchayat_NAME_EN());
+                        userAuth.setPanchayat_NAME_HN(response.body().getPanchayat_NAME_HN());
+                        userAuth.setDIST_NAME_EN(response.body().getDIST_NAME_EN());
+                        userAuth.setDIST_NAME_HN(response.body().getDIST_NAME_HN());
+                        userAuth.setBlock_NAME_EN(response.body().getBlock_NAME_EN());
+                        userAuth.setBlock_NAME_HN(response.body().getBlock_NAME_HN());
                         LoginActivityWithoutLocation.this.startMainActivity(response.body().getBoothid());
                         return;
                     }

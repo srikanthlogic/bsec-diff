@@ -151,7 +151,7 @@ public class VoterListNewTableAdapter extends RecyclerView.Adapter<ViewHolder> {
             textView4.setText(VoterListNewTableAdapter.this.resources.getString(R.string.age_text) + ":" + ((VoterDataNewModel) VoterListNewTableAdapter.this.voterDataModelList.get(position)).getAge());
             TextView textView5 = this.SlNoInWard;
             textView5.setText(VoterListNewTableAdapter.this.resources.getString(R.string.slnoinward) + ":" + ((VoterDataNewModel) VoterListNewTableAdapter.this.voterDataModelList.get(position)).getSlNoInWard());
-            if (((VoterDataNewModel) VoterListNewTableAdapter.this.voterDataModelList.get(position)).getGENDER().equalsIgnoreCase("M")) {
+            if (((VoterDataNewModel) VoterListNewTableAdapter.this.voterDataModelList.get(position)).getGENDER().contains("M")) {
                 this.imageView.setImageResource(R.drawable.man);
             } else {
                 this.imageView.setImageResource(R.drawable.woman);

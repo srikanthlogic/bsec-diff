@@ -5,6 +5,8 @@ import com.google.gson.annotations.SerializedName;
 public class VotingHistoryModel {
     @SerializedName("SlNoInWard")
     private String SlNoInWard;
+    @SerializedName("GENDER")
+    private String gender;
     @SerializedName("SYNCED")
     private int synced;
     @SerializedName("VOTED")
@@ -42,5 +44,13 @@ public class VotingHistoryModel {
 
     public int getSynced() {
         return this.synced;
+    }
+
+    public String getGender() {
+        return this.gender;
+    }
+
+    public void setGender(String gender) {
+        this.gender = gender;
     }
 }

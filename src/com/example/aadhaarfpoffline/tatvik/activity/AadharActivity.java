@@ -67,6 +67,7 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Observable;
 import java.util.Observer;
 import java.util.concurrent.CountDownLatch;
@@ -259,7 +260,7 @@ public class AadharActivity extends AppCompatActivity implements MFS100Event, Ob
             public void onResponse(Call<AadhaarUserCheckGetResponse> call, Response<AadhaarUserCheckGetResponse> response) {
                 ?? r0 = 2131820578;
                 String str = ",";
-                ?? r2 = 2131820871;
+                ?? r2 = 2131820872;
                 if (response == null || !response.isSuccessful() || response.body() == null) {
                     Toast.makeText(AadharActivity.this.getApplicationContext(), "Error getting response.", 0).show();
                     if (AadharActivity.this.db.getSlNoInWardForAadhaar(aadhaarnum) > 0) {
@@ -785,7 +786,7 @@ public class AadharActivity extends AppCompatActivity implements MFS100Event, Ob
         String wardnum = this.resources.getString(R.string.ward_no) + ":" + voter.getWardNo();
         String votingdate = this.resources.getString(R.string.voting_date) + ":" + this.db.getDateFromSlNoinWard(this.matchslnoinward);
         String str = "Voterid:" + voter.getEPIC_NO();
-        messageText.setText(name + IOUtils.LINE_SEPARATOR_UNIX + (this.resources.getString(R.string.gender) + ":" + voter.getGENDER()) + IOUtils.LINE_SEPARATOR_UNIX + age + IOUtils.LINE_SEPARATOR_UNIX + wardnum + IOUtils.LINE_SEPARATOR_UNIX + votingdate + IOUtils.LINE_SEPARATOR_UNIX + (this.resources.getString(R.string.block_no) + ":" + voter.getBlockID()));
+        messageText.setText(name + IOUtils.LINE_SEPARATOR_UNIX + (this.resources.getString(R.string.gender) + ":" + voter.getGENDER()) + IOUtils.LINE_SEPARATOR_UNIX + age + IOUtils.LINE_SEPARATOR_UNIX + wardnum + IOUtils.LINE_SEPARATOR_UNIX + votingdate + IOUtils.LINE_SEPARATOR_UNIX + (this.resources.getString(R.string.panchayat_id) + "/" + this.resources.getString(R.string.ward_no) + "/" + this.resources.getString(R.string.booth_no_text) + ":" + voter.getPanchayatID() + "/" + voter.getWardNo() + "/" + voter.getBoothNo()));
         String finalmessage = this.resources.getString(R.string.u_cannot_vote_text);
         StringBuilder sb = new StringBuilder();
         sb.append(finalmessage);
@@ -1401,7 +1402,7 @@ public class AadharActivity extends AppCompatActivity implements MFS100Event, Ob
                 this.matchslnoinward = cursor.getString(cursor.getColumnIndex("SlNoInWard"));
                 Context applicationContext = getApplicationContext();
                 Toast.makeText(applicationContext, "Match voterid" + matchvoterid, 1).show();
-                return matchvoterid;
+                return this.matchslnoinward;
             }
         } while (cursor.moveToNext());
         return "";
@@ -1456,10 +1457,10 @@ public class AadharActivity extends AppCompatActivity implements MFS100Event, Ob
                 return;
             }
             NBioBSPJNI nBioBSPJNI = this.bsp;
-            nBioBSPJNI.getClass();
+            Objects.requireNonNull(nBioBSPJNI);
             this.exportEngine = new NBioBSPJNI.Export();
             NBioBSPJNI nBioBSPJNI2 = this.bsp;
-            nBioBSPJNI2.getClass();
+            Objects.requireNonNull(nBioBSPJNI2);
             this.indexSearch = new NBioBSPJNI.IndexSearch();
             new AsyncCaller().execute(new Void[0]);
             return;
@@ -1529,24 +1530,24 @@ public class AadharActivity extends AppCompatActivity implements MFS100Event, Ob
     /* JADX INFO: Access modifiers changed from: private */
     public void captureFingerPrintFromNitgen() {
         NBioBSPJNI nBioBSPJNI = this.bsp;
-        nBioBSPJNI.getClass();
+        Objects.requireNonNull(nBioBSPJNI);
         NBioBSPJNI.FIR_HANDLE hCapturedFIR = new NBioBSPJNI.FIR_HANDLE();
         NBioBSPJNI nBioBSPJNI2 = this.bsp;
-        nBioBSPJNI2.getClass();
+        Objects.requireNonNull(nBioBSPJNI2);
         NBioBSPJNI.FIR_HANDLE hAuditFIR = new NBioBSPJNI.FIR_HANDLE();
         NBioBSPJNI nBioBSPJNI3 = this.bsp;
-        nBioBSPJNI3.getClass();
+        Objects.requireNonNull(nBioBSPJNI3);
         this.bsp.Capture(3, hCapturedFIR, this.timeout, hAuditFIR, new NBioBSPJNI.CAPTURED_DATA());
         if (this.bsp.IsErrorOccured()) {
             this.msg = "NBioBSP Capture Error: " + this.bsp.GetErrorCode();
             return;
         }
         NBioBSPJNI nBioBSPJNI4 = this.bsp;
-        nBioBSPJNI4.getClass();
+        Objects.requireNonNull(nBioBSPJNI4);
         NBioBSPJNI.INPUT_FIR inputFIR = new NBioBSPJNI.INPUT_FIR();
         inputFIR.SetFIRHandle(hCapturedFIR);
         NBioBSPJNI.Export export = this.exportEngine;
-        export.getClass();
+        Objects.requireNonNull(export);
         NBioBSPJNI.Export.DATA exportData = new NBioBSPJNI.Export.DATA();
         this.exportEngine.ExportFIR(inputFIR, exportData, 3);
         if (this.bsp.IsErrorOccured()) {
@@ -1567,7 +1568,7 @@ public class AadharActivity extends AppCompatActivity implements MFS100Event, Ob
         this.byTemplate1 = exportData.FingerData[0].Template[0].Data;
         inputFIR.SetFIRHandle(hAuditFIR);
         NBioBSPJNI.Export export2 = this.exportEngine;
-        export2.getClass();
+        Objects.requireNonNull(export2);
         NBioBSPJNI.Export.AUDIT exportAudit = new NBioBSPJNI.Export.AUDIT();
         this.exportEngine.ExportAudit(inputFIR, exportAudit);
         if (this.bsp.IsErrorOccured()) {
@@ -1590,7 +1591,7 @@ public class AadharActivity extends AppCompatActivity implements MFS100Event, Ob
         this.nCapturedRawHeight1 = exportAudit.ImageHeight;
         this.msg = "First Capture Success";
         NBioBSPJNI nBioBSPJNI5 = this.bsp;
-        nBioBSPJNI5.getClass();
+        Objects.requireNonNull(nBioBSPJNI5);
         NBioBSPJNI.NFIQInfo info = new NBioBSPJNI.NFIQInfo();
         info.pRawImage = this.byCapturedRaw1;
         info.nImgWidth = this.nCapturedRawWidth1;
@@ -1609,7 +1610,7 @@ public class AadharActivity extends AppCompatActivity implements MFS100Event, Ob
         }
         this.nFIQ = info.pNFIQ;
         NBioBSPJNI nBioBSPJNI6 = this.bsp;
-        nBioBSPJNI6.getClass();
+        Objects.requireNonNull(nBioBSPJNI6);
         NBioBSPJNI.ISOBUFFER ISOBuffer = new NBioBSPJNI.ISOBUFFER();
         this.bsp.ExportRawToISOV1(exportAudit, ISOBuffer, false, (byte) 0);
         if (this.bsp.IsErrorOccured()) {
@@ -1624,7 +1625,7 @@ public class AadharActivity extends AppCompatActivity implements MFS100Event, Ob
             return;
         }
         NBioBSPJNI nBioBSPJNI7 = this.bsp;
-        nBioBSPJNI7.getClass();
+        Objects.requireNonNull(nBioBSPJNI7);
         NBioBSPJNI.NIMPORTRAWSET rawSet = new NBioBSPJNI.NIMPORTRAWSET();
         this.bsp.ImportISOToRaw(ISOBuffer, rawSet);
         if (this.bsp.IsErrorOccured()) {
@@ -1693,7 +1694,7 @@ public class AadharActivity extends AppCompatActivity implements MFS100Event, Ob
             numrows++;
             if (this.byTemplate1 != null) {
                 NBioBSPJNI nBioBSPJNI = this.bsp;
-                nBioBSPJNI.getClass();
+                Objects.requireNonNull(nBioBSPJNI);
                 NBioBSPJNI.FIR_HANDLE hLoadFIR1 = new NBioBSPJNI.FIR_HANDLE();
                 this.exportEngine.ImportFIR(finger_template1, finger_template1.length, 3, hLoadFIR1);
                 if (this.bsp.IsErrorOccured()) {
@@ -1701,7 +1702,7 @@ public class AadharActivity extends AppCompatActivity implements MFS100Event, Ob
                     Toast.makeText(getApplicationContext(), this.msg, 1).show();
                 }
                 NBioBSPJNI nBioBSPJNI2 = this.bsp;
-                nBioBSPJNI2.getClass();
+                Objects.requireNonNull(nBioBSPJNI2);
                 NBioBSPJNI.FIR_HANDLE hLoadFIR2 = new NBioBSPJNI.FIR_HANDLE();
                 this.exportEngine.ImportFIR(fingerprint1, fingerprint1.length, 3, hLoadFIR2);
                 if (this.bsp.IsErrorOccured()) {
@@ -1711,10 +1712,10 @@ public class AadharActivity extends AppCompatActivity implements MFS100Event, Ob
                 }
                 Boolean bResult = new Boolean(false);
                 NBioBSPJNI nBioBSPJNI3 = this.bsp;
-                nBioBSPJNI3.getClass();
+                Objects.requireNonNull(nBioBSPJNI3);
                 NBioBSPJNI.INPUT_FIR inputFIR1 = new NBioBSPJNI.INPUT_FIR();
                 NBioBSPJNI nBioBSPJNI4 = this.bsp;
-                nBioBSPJNI4.getClass();
+                Objects.requireNonNull(nBioBSPJNI4);
                 NBioBSPJNI.INPUT_FIR inputFIR2 = new NBioBSPJNI.INPUT_FIR();
                 inputFIR1.SetFIRHandle(hLoadFIR1);
                 inputFIR2.SetFIRHandle(hLoadFIR2);
@@ -1724,9 +1725,9 @@ public class AadharActivity extends AppCompatActivity implements MFS100Event, Ob
                     Toast.makeText(getApplicationContext(), this.msg, 1).show();
                 } else if (bResult.booleanValue()) {
                     this.msg = "Template VerifyMatch Successed";
-                    String matchvoterid = cursor.getString(cursor.getColumnIndex("EPIC_NO"));
+                    cursor.getString(cursor.getColumnIndex("EPIC_NO"));
                     this.matchslnoinward = cursor.getString(cursor.getColumnIndex("SlNoInWard"));
-                    return matchvoterid;
+                    return this.matchslnoinward;
                 } else {
                     this.msg = "Template VerifyMatch Failed";
                     Toast.makeText(getApplicationContext(), this.msg, 1).show();

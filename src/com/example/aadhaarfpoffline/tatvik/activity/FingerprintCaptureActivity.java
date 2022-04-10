@@ -53,6 +53,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Observable;
 import java.util.Observer;
 import java.util.concurrent.CountDownLatch;
@@ -231,10 +232,10 @@ public class FingerprintCaptureActivity extends AppCompatActivity implements MFS
                 return;
             }
             NBioBSPJNI nBioBSPJNI = this.bsp;
-            nBioBSPJNI.getClass();
+            Objects.requireNonNull(nBioBSPJNI);
             this.exportEngine = new NBioBSPJNI.Export();
             NBioBSPJNI nBioBSPJNI2 = this.bsp;
-            nBioBSPJNI2.getClass();
+            Objects.requireNonNull(nBioBSPJNI2);
             this.indexSearch = new NBioBSPJNI.IndexSearch();
         }
     }
@@ -242,24 +243,24 @@ public class FingerprintCaptureActivity extends AppCompatActivity implements MFS
     /* JADX INFO: Access modifiers changed from: private */
     public void captureFingerPrintFromNitgen() {
         NBioBSPJNI nBioBSPJNI = this.bsp;
-        nBioBSPJNI.getClass();
+        Objects.requireNonNull(nBioBSPJNI);
         NBioBSPJNI.FIR_HANDLE hCapturedFIR = new NBioBSPJNI.FIR_HANDLE();
         NBioBSPJNI nBioBSPJNI2 = this.bsp;
-        nBioBSPJNI2.getClass();
+        Objects.requireNonNull(nBioBSPJNI2);
         NBioBSPJNI.FIR_HANDLE hAuditFIR = new NBioBSPJNI.FIR_HANDLE();
         NBioBSPJNI nBioBSPJNI3 = this.bsp;
-        nBioBSPJNI3.getClass();
+        Objects.requireNonNull(nBioBSPJNI3);
         this.bsp.Capture(3, hCapturedFIR, this.timeout, hAuditFIR, new NBioBSPJNI.CAPTURED_DATA());
         if (this.bsp.IsErrorOccured()) {
             this.msg = "NBioBSP Capture Error: " + this.bsp.GetErrorCode();
             return;
         }
         NBioBSPJNI nBioBSPJNI4 = this.bsp;
-        nBioBSPJNI4.getClass();
+        Objects.requireNonNull(nBioBSPJNI4);
         NBioBSPJNI.INPUT_FIR inputFIR = new NBioBSPJNI.INPUT_FIR();
         inputFIR.SetFIRHandle(hCapturedFIR);
         NBioBSPJNI.Export export = this.exportEngine;
-        export.getClass();
+        Objects.requireNonNull(export);
         NBioBSPJNI.Export.DATA exportData = new NBioBSPJNI.Export.DATA();
         this.exportEngine.ExportFIR(inputFIR, exportData, 3);
         if (this.bsp.IsErrorOccured()) {
@@ -280,7 +281,7 @@ public class FingerprintCaptureActivity extends AppCompatActivity implements MFS
         this.byTemplate1 = exportData.FingerData[0].Template[0].Data;
         inputFIR.SetFIRHandle(hAuditFIR);
         NBioBSPJNI.Export export2 = this.exportEngine;
-        export2.getClass();
+        Objects.requireNonNull(export2);
         NBioBSPJNI.Export.AUDIT exportAudit = new NBioBSPJNI.Export.AUDIT();
         this.exportEngine.ExportAudit(inputFIR, exportAudit);
         if (this.bsp.IsErrorOccured()) {
@@ -303,7 +304,7 @@ public class FingerprintCaptureActivity extends AppCompatActivity implements MFS
         this.nCapturedRawHeight1 = exportAudit.ImageHeight;
         this.msg = "First Capture Success";
         NBioBSPJNI nBioBSPJNI5 = this.bsp;
-        nBioBSPJNI5.getClass();
+        Objects.requireNonNull(nBioBSPJNI5);
         NBioBSPJNI.NFIQInfo info = new NBioBSPJNI.NFIQInfo();
         info.pRawImage = this.byCapturedRaw1;
         info.nImgWidth = this.nCapturedRawWidth1;
@@ -322,7 +323,7 @@ public class FingerprintCaptureActivity extends AppCompatActivity implements MFS
         }
         this.nFIQ = info.pNFIQ;
         NBioBSPJNI nBioBSPJNI6 = this.bsp;
-        nBioBSPJNI6.getClass();
+        Objects.requireNonNull(nBioBSPJNI6);
         NBioBSPJNI.ISOBUFFER ISOBuffer = new NBioBSPJNI.ISOBUFFER();
         this.bsp.ExportRawToISOV1(exportAudit, ISOBuffer, false, (byte) 0);
         if (this.bsp.IsErrorOccured()) {
@@ -337,7 +338,7 @@ public class FingerprintCaptureActivity extends AppCompatActivity implements MFS
             return;
         }
         NBioBSPJNI nBioBSPJNI7 = this.bsp;
-        nBioBSPJNI7.getClass();
+        Objects.requireNonNull(nBioBSPJNI7);
         NBioBSPJNI.NIMPORTRAWSET rawSet = new NBioBSPJNI.NIMPORTRAWSET();
         this.bsp.ImportISOToRaw(ISOBuffer, rawSet);
         if (this.bsp.IsErrorOccured()) {
@@ -1309,7 +1310,7 @@ public class FingerprintCaptureActivity extends AppCompatActivity implements MFS
             numrows++;
             if (this.byTemplate1 != null) {
                 NBioBSPJNI nBioBSPJNI = this.bsp;
-                nBioBSPJNI.getClass();
+                Objects.requireNonNull(nBioBSPJNI);
                 NBioBSPJNI.FIR_HANDLE hLoadFIR1 = new NBioBSPJNI.FIR_HANDLE();
                 this.exportEngine.ImportFIR(finger_template1, finger_template1.length, 3, hLoadFIR1);
                 if (this.bsp.IsErrorOccured()) {
@@ -1317,7 +1318,7 @@ public class FingerprintCaptureActivity extends AppCompatActivity implements MFS
                     Toast.makeText(getApplicationContext(), this.msg, 1).show();
                 }
                 NBioBSPJNI nBioBSPJNI2 = this.bsp;
-                nBioBSPJNI2.getClass();
+                Objects.requireNonNull(nBioBSPJNI2);
                 NBioBSPJNI.FIR_HANDLE hLoadFIR2 = new NBioBSPJNI.FIR_HANDLE();
                 this.exportEngine.ImportFIR(fingerprint1, fingerprint1.length, 3, hLoadFIR2);
                 if (this.bsp.IsErrorOccured()) {
@@ -1327,10 +1328,10 @@ public class FingerprintCaptureActivity extends AppCompatActivity implements MFS
                 }
                 Boolean bResult = new Boolean(false);
                 NBioBSPJNI nBioBSPJNI3 = this.bsp;
-                nBioBSPJNI3.getClass();
+                Objects.requireNonNull(nBioBSPJNI3);
                 NBioBSPJNI.INPUT_FIR inputFIR1 = new NBioBSPJNI.INPUT_FIR();
                 NBioBSPJNI nBioBSPJNI4 = this.bsp;
-                nBioBSPJNI4.getClass();
+                Objects.requireNonNull(nBioBSPJNI4);
                 NBioBSPJNI.INPUT_FIR inputFIR2 = new NBioBSPJNI.INPUT_FIR();
                 inputFIR1.SetFIRHandle(hLoadFIR1);
                 inputFIR2.SetFIRHandle(hLoadFIR2);
