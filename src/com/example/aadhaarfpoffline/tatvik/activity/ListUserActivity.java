@@ -248,7 +248,7 @@ public class ListUserActivity extends AppCompatActivity implements MFS100Event, 
         NavigationView navigationView = (NavigationView) findViewById(R.id.nav_view);
         navigationView.setNavigationItemSelectedListener(this);
         MenuItem nav_app_version = navigationView.getMenu().findItem(R.id.nav_app_version);
-        nav_app_version.setTitle("Version 37/" + BuildConfig.VERSION_NAME);
+        nav_app_version.setTitle("Version 38/" + BuildConfig.VERSION_NAME);
         this.recyclerView = (RecyclerView) findViewById(R.id.recyclerview_vendor_list);
         this.userAuth.getBoothId();
         this.search = (EditText) findViewById(R.id.search_text);
