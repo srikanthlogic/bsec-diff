@@ -5,5 +5,5 @@ public class Const {
     public static String eNBioScan = "eNBioScan";
     public static String Mantra = "Mantra";
     public static String nBioDeviceError = "Please connect eNBioScan Device.";
-    public static String PublicImageName = "ImagesPhase10";
+    public static String PublicImageName = "ImagesPhase11";
 }
