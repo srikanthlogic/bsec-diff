@@ -98,7 +98,6 @@ public class ListUserActivity extends AppCompatActivity implements VoterListAdap
     public static final String MULTIPART_FORM_DATA;
     private static final int PERMISSION_CODE;
     public static final int QUALITY_LIMIT;
-    private static long Threshold = 1500;
     private VoterListAdapter adapter;
     private VoterListNewTableAdapter adapter2;
     private Button alternateButton;
@@ -140,6 +139,9 @@ public class ListUserActivity extends AppCompatActivity implements VoterListAdap
     private List<VoterDataNewModel> voterDataNewModelList2;
     private List<VoterDataNewModel> voterListFromServer;
     List<Integer> voterlist;
+    private static long Threshold = 1500;
+    private static long mLastClkTime = 0;
+    private static long ThresholdFPcapture = 3000;
     private boolean isCaptureRunning = false;
     private FingerData lastCapFingerData = null;
     int timeout = 10000;
@@ -249,7 +251,7 @@ public class ListUserActivity extends AppCompatActivity implements VoterListAdap
         NavigationView navigationView = (NavigationView) findViewById(R.id.nav_view);
         navigationView.setNavigationItemSelectedListener(this);
         MenuItem nav_app_version = navigationView.getMenu().findItem(R.id.nav_app_version);
-        nav_app_version.setTitle("Version 22/" + BuildConfig.VERSION_NAME);
+        nav_app_version.setTitle("Version 26/" + BuildConfig.VERSION_NAME);
         this.recyclerView = (RecyclerView) findViewById(R.id.recyclerview_vendor_list);
         this.userAuth.getBoothId();
         this.search = (EditText) findViewById(R.id.search_text);
@@ -320,6 +322,11 @@ public class ListUserActivity extends AppCompatActivity implements VoterListAdap
         this.captureFingerprint.setOnClickListener(new View.OnClickListener() { // from class: com.example.aadhaarfpoffline.tatvik.activity.ListUserActivity.4
             @Override // android.view.View.OnClickListener
             public void onClick(View view) {
+                if (SystemClock.elapsedRealtime() - ListUserActivity.mLastClkTime < ListUserActivity.ThresholdFPcapture) {
+                    Toast.makeText(ListUserActivity.this.getApplicationContext(), "Please wait for some time", 1).show();
+                    return;
+                }
+                long unused = ListUserActivity.mLastClkTime = SystemClock.elapsedRealtime();
                 if (ListUserActivity.this.userAuth.getFingerPrintDevice().equals(Const.Mantra)) {
                     ListUserActivity.this.StartSyncCapture();
                 } else if (ListUserActivity.this.userAuth.getFingerPrintDevice().equals(Const.Tatvik)) {
@@ -710,6 +717,48 @@ public class ListUserActivity extends AppCompatActivity implements VoterListAdap
                 if (i >= this.voterDataNewModelList.size()) {
                     break;
                 } else if (this.voterDataNewModelList.get(i).getEPIC_NO().equalsIgnoreCase(voterid)) {
+                    position = i;
+                    break;
+                } else {
+                    i++;
+                }
+            }
+            if (position > -1) {
+                Intent intent = new Intent(this, UserIdCaptureActivity.class);
+                intent.putExtra("voter_name", this.voterDataNewModelList.get(position).getFM_NAME_EN() + " " + this.voterDataNewModelList.get(position).getLASTNAME_EN());
+                intent.putExtra("voter_id", this.voterDataNewModelList.get(position).getEPIC_NO());
+                intent.putExtra("district", this.voterDataNewModelList.get(position).getDIST_NO());
+                intent.putExtra("blockno", this.voterDataNewModelList.get(position).getWardNo());
+                intent.putExtra("blockid", this.voterDataNewModelList.get(position).getBlockID());
+                if (this.voterDataNewModelList.get(position).getVOTED() == null || this.voterDataNewModelList.get(position).getVOTED().isEmpty()) {
+                    intent.putExtra("voted", "0");
+                } else {
+                    intent.putExtra("voted", this.voterDataNewModelList.get(position).getVOTED());
+                }
+                intent.putExtra("slnoinward", this.voterDataNewModelList.get(position).getSlNoInWard());
+                intent.putExtra("age", this.voterDataNewModelList.get(position).getAge());
+                intent.putExtra("gender", this.voterDataNewModelList.get(position).getGENDER());
+                startActivity(intent);
+                return;
+            }
+            Toast.makeText(getApplicationContext(), "Voterid not retroeved properly ", 1).show();
+        }
+    }
+
+    @Override // com.example.aadhaarfpoffline.tatvik.adapter.VoterListNewTableAdapter.OnItemClickListener
+    public void onItemClick4(int pos, String slnoinward) {
+        List<VoterDataNewModel> list = this.voterDataNewModelList;
+        if (list == null || list.isEmpty() || this.voterDataNewModelList.size() < 1) {
+            Toast.makeText(getApplicationContext(), "No voter data", 1).show();
+        } else if (slnoinward == null || slnoinward.length() < 1) {
+            Toast.makeText(getApplicationContext(), "slnoinward Empty", 1).show();
+        } else {
+            int position = -1;
+            int i = 0;
+            while (true) {
+                if (i >= this.voterDataNewModelList.size()) {
+                    break;
+                } else if (this.voterDataNewModelList.get(i).getSlNoInWard().equalsIgnoreCase(slnoinward)) {
                     position = i;
                     break;
                 } else {
@@ -1196,21 +1245,18 @@ public class ListUserActivity extends AppCompatActivity implements VoterListAdap
             Toast.makeText(getApplicationContext(), "Empty transation table", 0).show();
             return;
         }
-        Context applicationContext = getApplicationContext();
-        int i2 = 1;
-        Toast.makeText(applicationContext, "Inside insertTransTable 2 size=" + transTableDataModelList.size(), 1).show();
-        int i3 = 0;
-        while (i3 < transTableDataModelList.size()) {
-            String voted = list.get(i3).getVOTED();
+        int i2 = 0;
+        while (i2 < transTableDataModelList.size()) {
+            String voted = list.get(i2).getVOTED();
             if (!voted.equalsIgnoreCase("0")) {
                 ContentValues cols = new ContentValues();
-                String fptemplate = list.get(i3).getFINGERPRINT_TEMPLATE();
-                String user_id = list.get(i3).getUser_id();
+                String fptemplate = list.get(i2).getFINGERPRINT_TEMPLATE();
+                String user_id = list.get(i2).getUser_id();
                 if (user_id != null && !user_id.isEmpty() && user_id.length() > 0) {
                     String[] parts = user_id.split("_");
                     if (parts.length == 4) {
                         String panchayateid = parts[i];
-                        String wardno = parts[i2];
+                        String wardno = parts[1];
                         String boothno = parts[2];
                         String slnoinward = parts[3];
                         cols.put("PanchayatID", panchayateid);
@@ -1218,33 +1264,34 @@ public class ListUserActivity extends AppCompatActivity implements VoterListAdap
                     }
                 }
                 byte[] fingerprintBlob = Base64.decode(fptemplate, i);
-                cols.put(DBHelper.Key_ID, list.get(i3).getTRANSID());
+                cols.put(DBHelper.Key_ID, list.get(i2).getTRANSID());
                 cols.put("FingerTemplate", fingerprintBlob);
-                cols.put("VOTED", Integer.valueOf(Integer.parseInt(list.get(i3).getVOTED())));
-                cols.put("VOTING_DATE", list.get(i3).getVOTING_DATE());
-                cols.put("ID_DOCUMENT_IMAGE", list.get(i3).getID_DOCUMENT_IMAGE());
-                cols.put("AADHAAR_MATCH", Integer.valueOf(Integer.parseInt(list.get(i3).getAADHAAR_MATCH())));
-                cols.put("AADHAAR_NO", list.get(i3).getAADHAAR_NO());
-                cols.put("VOTING_TYPE", list.get(i3).getVOTING_TYPE());
-                cols.put("GENDER", list.get(i3).getGENDER());
-                cols.put("AGE", Integer.valueOf(Integer.parseInt(list.get(i3).getAGE())));
+                cols.put("VOTED", Integer.valueOf(Integer.parseInt(list.get(i2).getVOTED())));
+                cols.put("VOTING_DATE", list.get(i2).getVOTING_DATE());
+                cols.put("ID_DOCUMENT_IMAGE", list.get(i2).getID_DOCUMENT_IMAGE());
+                cols.put("AADHAAR_MATCH", Integer.valueOf(Integer.parseInt(list.get(i2).getAADHAAR_MATCH())));
+                cols.put("AADHAAR_NO", list.get(i2).getAADHAAR_NO());
+                cols.put("VOTING_TYPE", list.get(i2).getVOTING_TYPE());
+                cols.put("GENDER", list.get(i2).getGENDER());
+                cols.put("AGE", Integer.valueOf(Integer.parseInt(list.get(i2).getAGE())));
                 cols.put("USER_ID", user_id);
-                cols.put("SYNCED", Integer.valueOf(i2));
-                cols.put("IMAGE_SYNCED", Integer.valueOf(i2));
+                cols.put("SYNCED", (Integer) 1);
+                cols.put("IMAGE_SYNCED", (Integer) 1);
+                cols.put("MATCHED_ID_DOCUMENT_IMAGE", list.get(i2).getMATCHED_ID_DOCUMENT_IMAGE());
+                cols.put("MATCHED_USER_ID", list.get(i2).getMATCHED_USER_ID());
                 DBHelper dBHelper = listUserActivity.db;
                 long res = dBHelper.insertData(dBHelper.tbl_transaction, cols);
                 if (res > 0) {
                     listUserActivity.db.updateVOTEDByUSER_ID_Maintable(user_id, Integer.parseInt(voted));
                     PrintStream printStream = System.out;
-                    printStream.println("Transaction data inserted true i=" + i3 + " res=" + res);
+                    printStream.println("Transaction data inserted true i=" + i2 + " res=" + res);
                 } else {
                     PrintStream printStream2 = System.out;
-                    printStream2.println("Transaction data inserted false i=" + i3 + " res=" + res);
+                    printStream2.println("Transaction data inserted false i=" + i2 + " res=" + res);
                 }
             }
-            i3++;
+            i2++;
             i = 0;
-            i2 = 1;
             listUserActivity = this;
             list = transTableDataModelList;
         }
@@ -1483,6 +1530,7 @@ public class ListUserActivity extends AppCompatActivity implements VoterListAdap
         try {
             this.captRslt1 = this.tmf20lib.captureFingerprint(10000);
             if (this.captRslt1 == null || TMF20ErrorCodes.SUCCESS != this.captRslt1.getStatusCode()) {
+                Toast.makeText(getApplicationContext(), this.resources.getString(R.string.fingerpint_capture_try_again), 1).show();
                 if (this.captRslt1.getStatusCode() == 15) {
                     deleteCache(this);
                 }
@@ -1491,7 +1539,6 @@ public class ListUserActivity extends AppCompatActivity implements VoterListAdap
             }
             this.imgFinger.setImageDrawable(getResources().getDrawable(R.drawable.right_icon_trp));
         } catch (Exception e) {
-            this.imgFinger.setImageDrawable(getResources().getDrawable(R.drawable.wrong_icon_trp));
         }
     }
 
@@ -1568,12 +1615,13 @@ public class ListUserActivity extends AppCompatActivity implements VoterListAdap
         String aadhaarNo;
         String fpString;
         String voting_date;
-        String str7 = "user_id";
-        String str8 = "AADHAAR_NO";
-        String str9 = "AADHAAR_MATCH";
-        String str10 = "GENDER";
-        String str11 = "AGE";
-        String slnoinward = "VOTED";
+        String str7 = "MATCHED_ID_DOCUMENT_IMAGE";
+        String str8 = "user_id";
+        String str9 = "AADHAAR_NO";
+        String str10 = "AADHAAR_MATCH";
+        String str11 = "GENDER";
+        String str12 = "AGE";
+        String str13 = "VOTED";
         int count = 0;
         try {
             Cursor cursor = this.db.getAllRowsofTransTableCursor();
@@ -1581,30 +1629,31 @@ public class ListUserActivity extends AppCompatActivity implements VoterListAdap
                 while (true) {
                     long transid = cursor.getLong(cursor.getColumnIndex(DBHelper.Key_ID));
                     int synced = cursor.getInt(cursor.getColumnIndex("SYNCED"));
-                    int voted = cursor.getInt(cursor.getColumnIndex(slnoinward));
-                    if (synced == 1) {
-                        str = str7;
-                        str3 = str8;
-                        str2 = str9;
-                        str4 = str10;
-                        str6 = str11;
-                        str5 = slnoinward;
-                    } else if (voted == 0) {
-                        str = str7;
-                        str3 = str8;
-                        str2 = str9;
-                        str4 = str10;
-                        str6 = str11;
-                        str5 = slnoinward;
-                    } else {
-                        try {
+                    try {
+                        int voted = cursor.getInt(cursor.getColumnIndex(str13));
+                        String fpString2 = str13;
+                        if (synced == 1) {
+                            str = str8;
+                            str3 = str9;
+                            str2 = str10;
+                            str4 = str11;
+                            str5 = str12;
+                            str6 = str7;
+                        } else if (voted == 0) {
+                            str = str8;
+                            str3 = str9;
+                            str2 = str10;
+                            str4 = str11;
+                            str5 = str12;
+                            str6 = str7;
+                        } else {
                             Map<String, String> map = new HashMap<>();
                             byte[] fp = cursor.getBlob(cursor.getColumnIndex("FingerTemplate"));
-                            int age = cursor.getInt(cursor.getColumnIndex(str11));
-                            String gender = cursor.getString(cursor.getColumnIndex(str10));
+                            int age = cursor.getInt(cursor.getColumnIndex(str12));
+                            String gender = cursor.getString(cursor.getColumnIndex(str11));
                             String voterimagename = cursor.getString(cursor.getColumnIndex("ID_DOCUMENT_IMAGE"));
-                            int aadhaarmatch = cursor.getInt(cursor.getColumnIndex(str9));
-                            String aadhaarNo2 = cursor.getString(cursor.getColumnIndex(str8));
+                            int aadhaarmatch = cursor.getInt(cursor.getColumnIndex(str10));
+                            String aadhaarNo2 = cursor.getString(cursor.getColumnIndex(str9));
                             if (aadhaarNo2 == null) {
                                 aadhaarNo2 = "";
                             }
@@ -1616,29 +1665,34 @@ public class ListUserActivity extends AppCompatActivity implements VoterListAdap
                                     String userId = this.userAuth.getPanchayatId() + "_" + this.userAuth.getWardNo() + "_" + this.userAuth.getBoothNo() + "_" + cursor.getString(cursor.getColumnIndex("SlNoInWard"));
                                     String boothid = this.userAuth.getPanchayatId() + "_" + this.userAuth.getWardNo() + "_" + this.userAuth.getBoothNo();
                                     voting_date = cursor.getString(cursor.getColumnIndex("VOTING_DATE"));
-                                    map.put(str7, userId);
-                                    map.put(str7, userId);
-                                    str = str7;
+                                    map.put(str8, userId);
+                                    map.put(str8, userId);
+                                    str = str8;
                                     map.put("FINGERPRINT_TEMPLATE", fpString);
-                                    map.put(slnoinward, "" + voted);
+                                    map.put(fpString2, "" + voted);
                                     map.put("ID_DOCUMENT_IMAGE", voterimagename);
-                                    str5 = slnoinward;
-                                    map.put(str9, "" + aadhaarmatch);
-                                    str2 = str9;
-                                    map.put(str8, aadhaarNo);
+                                    fpString2 = fpString2;
+                                    map.put(str10, "" + aadhaarmatch);
+                                    str2 = str10;
+                                    map.put(str9, aadhaarNo);
                                     if (voting_date != null || voting_date.isEmpty() || voting_date.length() <= 0) {
                                         map.put("VOTING_DATE", "");
                                     } else {
                                         map.put("VOTING_DATE", voting_date);
                                     }
-                                    str3 = str8;
+                                    str3 = str9;
                                     map.put("VOTING_TYPE", "NON_AADHAAR");
                                     map.put("booth_id", boothid);
-                                    str6 = str11;
-                                    map.put(str6, "" + age);
-                                    map.put(str10, gender);
-                                    str4 = str10;
+                                    map.put(str12, "" + age);
+                                    map.put(str11, gender);
+                                    str4 = str11;
                                     map.put("udevid", this.UDevId);
+                                    String matched_user_id = cursor.getString(cursor.getColumnIndex("MATCHED_USER_ID"));
+                                    str5 = str12;
+                                    str6 = str7;
+                                    String matched_id_document_iamge = cursor.getString(cursor.getColumnIndex(str6));
+                                    map.put("matched_user_id", matched_user_id);
+                                    map.put(str6, matched_id_document_iamge);
                                     uploadTransactionRow(map);
                                 }
                             } else {
@@ -1649,43 +1703,49 @@ public class ListUserActivity extends AppCompatActivity implements VoterListAdap
                             String userId2 = this.userAuth.getPanchayatId() + "_" + this.userAuth.getWardNo() + "_" + this.userAuth.getBoothNo() + "_" + cursor.getString(cursor.getColumnIndex("SlNoInWard"));
                             String boothid2 = this.userAuth.getPanchayatId() + "_" + this.userAuth.getWardNo() + "_" + this.userAuth.getBoothNo();
                             voting_date = cursor.getString(cursor.getColumnIndex("VOTING_DATE"));
-                            map.put(str7, userId2);
-                            map.put(str7, userId2);
-                            str = str7;
+                            map.put(str8, userId2);
+                            map.put(str8, userId2);
+                            str = str8;
                             map.put("FINGERPRINT_TEMPLATE", fpString);
-                            map.put(slnoinward, "" + voted);
+                            map.put(fpString2, "" + voted);
                             map.put("ID_DOCUMENT_IMAGE", voterimagename);
-                            str5 = slnoinward;
-                            map.put(str9, "" + aadhaarmatch);
-                            str2 = str9;
-                            map.put(str8, aadhaarNo);
+                            fpString2 = fpString2;
+                            map.put(str10, "" + aadhaarmatch);
+                            str2 = str10;
+                            map.put(str9, aadhaarNo);
                             if (voting_date != null) {
                             }
                             map.put("VOTING_DATE", "");
-                            str3 = str8;
+                            str3 = str9;
                             map.put("VOTING_TYPE", "NON_AADHAAR");
                             map.put("booth_id", boothid2);
-                            str6 = str11;
-                            map.put(str6, "" + age);
-                            map.put(str10, gender);
-                            str4 = str10;
+                            map.put(str12, "" + age);
+                            map.put(str11, gender);
+                            str4 = str11;
                             map.put("udevid", this.UDevId);
+                            String matched_user_id2 = cursor.getString(cursor.getColumnIndex("MATCHED_USER_ID"));
+                            str5 = str12;
+                            str6 = str7;
+                            String matched_id_document_iamge2 = cursor.getString(cursor.getColumnIndex(str6));
+                            map.put("matched_user_id", matched_user_id2);
+                            map.put(str6, matched_id_document_iamge2);
                             uploadTransactionRow(map);
-                        } catch (Exception e2) {
-                            e = e2;
-                            Toast.makeText(getApplicationContext(), "sync exception=" + e.getMessage(), 1).show();
+                        }
+                        if (cursor.moveToNext()) {
+                            str7 = str6;
+                            count = count;
+                            str13 = fpString2;
+                            str12 = str5;
+                            str11 = str4;
+                            str9 = str3;
+                            str10 = str2;
+                            str8 = str;
+                        } else {
                             return;
                         }
-                    }
-                    if (cursor.moveToNext()) {
-                        str11 = str6;
-                        count = count;
-                        slnoinward = str5;
-                        str10 = str4;
-                        str8 = str3;
-                        str9 = str2;
-                        str7 = str;
-                    } else {
+                    } catch (Exception e2) {
+                        e = e2;
+                        Toast.makeText(getApplicationContext(), "sync exception=" + e.getMessage(), 1).show();
                         return;
                     }
                 }
@@ -1860,7 +1920,7 @@ public class ListUserActivity extends AppCompatActivity implements VoterListAdap
         String str2 = "_";
         DBHelper db = new DBHelper(this);
         if (db.getImageUnSyncCount() <= 0) {
-            Toast.makeText(this, "Auto-sync all data already synced", 1).show();
+            Toast.makeText(this, "All images already synced", 1).show();
             return;
         }
         String androidId2 = Settings.Secure.getString(getContentResolver(), "android_id");
@@ -1907,9 +1967,7 @@ public class ListUserActivity extends AppCompatActivity implements VoterListAdap
     }
 
     private synchronized void postDataWithImage(HashMap<String, RequestBody> map, File file, String filename, final DBHelper db, final int transid) {
-        MultipartBody.Part body = MultipartBody.Part.createFormData(UriUtil.LOCAL_FILE_SCHEME, filename, RequestBody.create(MediaType.parse("multipart/form-data"), file));
-        Toast.makeText(this, "upload image name=" + filename, 0).show();
-        Call<ImageUploadResponse> call = ((GetDataService) RetrofitClientInstance.getRetrofitInstanceCimUrlForVoterIdUpload().create(GetDataService.class)).postVoterIdentification(body, map);
+        Call<ImageUploadResponse> call = ((GetDataService) RetrofitClientInstance.getRetrofitInstanceImageUploadNewUrl().create(GetDataService.class)).postVoterIdentification(MultipartBody.Part.createFormData(UriUtil.LOCAL_FILE_SCHEME, filename, RequestBody.create(MediaType.parse("multipart/form-data"), file)), map);
         Log.d("autosync", "postDataWithImage 1");
         call.enqueue(new Callback<ImageUploadResponse>() { // from class: com.example.aadhaarfpoffline.tatvik.activity.ListUserActivity.27
             @Override // retrofit2.Callback
@@ -1918,7 +1976,7 @@ public class ListUserActivity extends AppCompatActivity implements VoterListAdap
                 if (response != null && response.body() != null && response.body().isAdded().booleanValue()) {
                     Log.d("autosync", "postDataWithImage 3");
                     db.updateImageSync(transid, 1);
-                    Toast.makeText(ListUserActivity.this.getApplicationContext(), "Sync sync Id uploaded ", 0).show();
+                    Toast.makeText(ListUserActivity.this.getApplicationContext(), "Image Synchronizing ", 0).show();
                 }
             }
 
@@ -1963,6 +2021,14 @@ public class ListUserActivity extends AppCompatActivity implements VoterListAdap
             return file;
         } catch (Exception e) {
             return null;
+        }
+    }
+
+    @Override // androidx.fragment.app.FragmentActivity, android.app.Activity
+    public void onResume() {
+        super.onResume();
+        if (this.tmf20lib == null) {
+            this.tmf20lib = new TMF20API(this);
         }
     }
 }

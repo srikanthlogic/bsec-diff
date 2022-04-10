@@ -10,6 +10,7 @@ import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
+import android.widget.Toast;
 import androidx.cardview.widget.CardView;
 import androidx.exifinterface.media.ExifInterface;
 import androidx.recyclerview.widget.RecyclerView;
@@ -110,6 +111,16 @@ public class VotingHistoryAdapter extends RecyclerView.Adapter<ViewHolder> {
             v.setOnClickListener(new View.OnClickListener(VotingHistoryAdapter.this) { // from class: com.example.aadhaarfpoffline.tatvik.adapter.VotingHistoryAdapter.ViewHolder.1
                 @Override // android.view.View.OnClickListener
                 public void onClick(View view) {
+                    if (!VotingHistoryAdapter.this.userAuth.ifLocked().booleanValue()) {
+                        int pos = ViewHolder.this.getAdapterPosition();
+                        if (pos >= 0) {
+                            VotingHistoryAdapter.this.listener.onItemClick3(pos, ((VotingHistoryModel) VotingHistoryAdapter.this.votingHistoryModelList.get(pos)).getSlNoInWard());
+                        } else {
+                            Toast.makeText(VotingHistoryAdapter.this.mcontext, "Voter with Improper position is clicked", 1).show();
+                        }
+                    } else {
+                        Toast.makeText(VotingHistoryAdapter.this.mcontext, "App is locked.Booth officer fingerprint required", 1).show();
+                    }
                 }
             });
             this.SlNoInWard2 = (TextView) v.findViewById(R.id.slnoinward);

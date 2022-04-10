@@ -38,6 +38,8 @@ public class VoterListNewTableAdapter extends RecyclerView.Adapter<ViewHolder> {
         void makeLockButtonsVisible(Boolean bool);
 
         void onItemClick3(int i, String str);
+
+        void onItemClick4(int i, String str);
     }
 
     public VoterListNewTableAdapter(Context context) {
@@ -113,7 +115,7 @@ public class VoterListNewTableAdapter extends RecyclerView.Adapter<ViewHolder> {
                     if (!VoterListNewTableAdapter.this.userAuth.ifLocked().booleanValue()) {
                         int pos = ViewHolder.this.getAdapterPosition();
                         if (pos >= 0) {
-                            VoterListNewTableAdapter.this.listener.onItemClick3(pos, ((VoterDataNewModel) VoterListNewTableAdapter.this.voterDataModelList.get(pos)).getEPIC_NO());
+                            VoterListNewTableAdapter.this.listener.onItemClick4(pos, ((VoterDataNewModel) VoterListNewTableAdapter.this.voterDataModelList.get(pos)).getSlNoInWard());
                         } else {
                             Toast.makeText(VoterListNewTableAdapter.this.mcontext, "Voter with Improper position is clicked", 1).show();
                         }

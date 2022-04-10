@@ -193,6 +193,10 @@ public interface GetDataService {
     @Multipart
     Call<MultipleFaceImageUploadResponse> postVoterIdentificationMultiImages(@Part MultipartBody.Part[] partArr, @PartMap Map<String, RequestBody> map);
 
+    @POST("/VoterAuthenticationapi/uploadvoteridentificationthumb")
+    @Multipart
+    Call<ImageUploadResponse> postVoterIdentificationThumb(@Part MultipartBody.Part part, @PartMap Map<String, RequestBody> map);
+
     @FormUrlEncoded
     @POST("/VoterAuthenticationapi/votingstatusupdate")
     Call<UserVotingStatusUpdatePostResponse> postVotingStatusUpdate(@FieldMap Map<String, String> map);

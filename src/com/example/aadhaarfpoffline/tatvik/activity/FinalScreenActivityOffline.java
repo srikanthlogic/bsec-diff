@@ -69,6 +69,7 @@ public class FinalScreenActivityOffline extends AppCompatActivity {
     String matchslnoinward = "";
     String androidId = "";
     String UDevId = "";
+    String matchiddocumentimage = "";
 
     @Override // androidx.fragment.app.FragmentActivity, androidx.activity.ComponentActivity, androidx.core.app.ComponentActivity, android.app.Activity
     protected void onCreate(Bundle savedInstanceState) {
@@ -370,6 +371,7 @@ public class FinalScreenActivityOffline extends AppCompatActivity {
         this.db.updateVOTEDByUSER_ID_Maintable(userId, voted);
         this.db.updateVotingStatusTransTable(voterid, voted, currentTime, 0, this.userAuth.getTransactionId().longValue(), "NON_AADHAAR", userId);
         if (voted == 2) {
+            this.db.updateMatchedVoterData(this.userAuth.getTransactionId().longValue(), this.db.getUser_IdBySlNoinWard(this.matchslnoinward), this.db.getImageFromTransactionTable(this.matchslnoinward));
             deleteFingerprint(voterid);
         }
         uploadTransactionRow();
@@ -429,7 +431,7 @@ public class FinalScreenActivityOffline extends AppCompatActivity {
         Cursor cursor;
         Cursor cursor2;
         Exception e;
-        int age;
+        String str;
         String fpString;
         try {
             try {
@@ -456,18 +458,20 @@ public class FinalScreenActivityOffline extends AppCompatActivity {
             new VoterDataNewModel().setId(cursor.getString(0));
             byte[] fp = cursor.getBlob(cursor.getColumnIndex("FingerTemplate"));
             int voted = cursor.getInt(cursor.getColumnIndex("VOTED"));
-            int age2 = cursor.getInt(cursor.getColumnIndex("AGE"));
+            int age = cursor.getInt(cursor.getColumnIndex("AGE"));
             String gender = cursor.getString(cursor.getColumnIndex("GENDER"));
             String voterimagename = cursor.getString(cursor.getColumnIndex("ID_DOCUMENT_IMAGE"));
             int aadhaarmatch = cursor.getInt(cursor.getColumnIndex("AADHAAR_MATCH"));
             this.slnoinward = cursor.getString(cursor.getColumnIndex("SlNoInWard"));
             String aadhaarNo = cursor.getString(cursor.getColumnIndex("AADHAAR_NO"));
+            String MATCHED_USER_ID = cursor.getString(cursor.getColumnIndex("MATCHED_USER_ID"));
+            String MATCHED_ID_DOCUMENT_IMAGE = cursor.getString(cursor.getColumnIndex("MATCHED_ID_DOCUMENT_IMAGE"));
             cursor2 = cursor;
             if (aadhaarNo == null) {
                 aadhaarNo = "";
             }
             if (fp != null) {
-                age = age2;
+                str = "MATCHED_ID_DOCUMENT_IMAGE";
                 try {
                     if (fp.length > 0) {
                         fpString = Base64.encodeToString(fp, 0);
@@ -484,6 +488,8 @@ public class FinalScreenActivityOffline extends AppCompatActivity {
                         map.put("GENDER", gender);
                         map.put("AGE", "" + age);
                         map.put("udevid", this.UDevId);
+                        map.put("MATCHED_USER_ID", MATCHED_USER_ID);
+                        map.put(str, MATCHED_ID_DOCUMENT_IMAGE);
                         cursor2.close();
                         return map;
                     }
@@ -494,7 +500,7 @@ public class FinalScreenActivityOffline extends AppCompatActivity {
                     return map;
                 }
             } else {
-                age = age2;
+                str = "MATCHED_ID_DOCUMENT_IMAGE";
             }
             fpString = "";
             map.put("TRANSID", "" + this.userAuth.getTransactionId());
@@ -510,6 +516,8 @@ public class FinalScreenActivityOffline extends AppCompatActivity {
             map.put("GENDER", gender);
             map.put("AGE", "" + age);
             map.put("udevid", this.UDevId);
+            map.put("MATCHED_USER_ID", MATCHED_USER_ID);
+            map.put(str, MATCHED_ID_DOCUMENT_IMAGE);
             cursor2.close();
             return map;
         }
