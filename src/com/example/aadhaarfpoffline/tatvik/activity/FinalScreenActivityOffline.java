@@ -232,7 +232,7 @@ public class FinalScreenActivityOffline extends AppCompatActivity {
             }
         }
         String gender = this.resources.getString(R.string.gender) + ":" + Voter.getGENDER();
-        String blockNo = this.resources.getString(R.string.block_no) + ":" + Voter.getBlockID();
+        String blockNo = this.resources.getString(R.string.panchayat_id) + "/" + this.resources.getString(R.string.ward_no) + "/" + this.resources.getString(R.string.booth_no_text) + ":" + Voter.getPanchayatID() + "/" + Voter.getWardNo() + "/" + Voter.getBoothNo();
         System.out.println("showUserInfoIncaseofMatch 2 name=" + name);
         if (Voter.getAge() != null) {
             Voter.getAge();

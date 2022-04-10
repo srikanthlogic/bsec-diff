@@ -675,6 +675,8 @@ public class DBHelper extends SQLiteOpenHelper {
                     obj.setAge(cursor.getString(cursor.getColumnIndex("AGE")));
                     obj.setVOTED(cursor.getString(cursor.getColumnIndex("VOTED")));
                     obj.setID_DOCUMENT_IMAGE(cursor.getString(cursor.getColumnIndex("ID_DOCUMENT_IMAGE")));
+                    obj.setPanchayatID(cursor.getString(cursor.getColumnIndex("PanchayatID")));
+                    obj.setBoothNo("" + cursor.getInt(cursor.getColumnIndex("BoothNo")));
                     list.add(obj);
                 } while (cursor.moveToNext());
                 try {
@@ -806,6 +808,7 @@ public class DBHelper extends SQLiteOpenHelper {
                     obj.setVoted(cursor.getString(cursor.getColumnIndex("VOTED")));
                     obj.setVotingDate(cursor.getString(cursor.getColumnIndex("VOTING_DATE")));
                     obj.setSynced(cursor.getInt(cursor.getColumnIndex("SYNCED")));
+                    obj.setGender(cursor.getString(cursor.getColumnIndex("GENDER")));
                     list.add(obj);
                 } while (cursor.moveToNext());
                 cursor.close();
@@ -1239,11 +1242,11 @@ public class DBHelper extends SQLiteOpenHelper {
     }
 
     public long getNumberFemalesVoted() {
-        return (long) getReadableDatabase().rawQuery("SELECT  _id FROM " + this.tbl_transaction + " where (VOTED='1' or VOTED='3' or VOTED='2') AND GENDER='F'", null).getCount();
+        return (long) getReadableDatabase().rawQuery("SELECT  * FROM " + this.tbl_transaction + " where VOTED!='0' AND GENDER like '%F%'", null).getCount();
     }
 
     public long getNumberMalesVoted() {
-        return (long) getReadableDatabase().rawQuery("SELECT  distinct(SlNoInWard) FROM " + this.tbl_transaction + " where (VOTED='1' or VOTED='3' or VOTED='2') AND GENDER='M'", null).getCount();
+        return (long) getReadableDatabase().rawQuery("SELECT  * FROM " + this.tbl_transaction + " where VOTED!='0' AND GENDER like '%M%'", null).getCount();
     }
 
     public long getAadhaarVotedCount() {
