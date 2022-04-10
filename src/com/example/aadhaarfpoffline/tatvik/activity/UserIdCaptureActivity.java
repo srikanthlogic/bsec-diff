@@ -36,6 +36,7 @@ import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 import androidx.exifinterface.media.ExifInterface;
 import androidx.loader.content.CursorLoader;
+import androidx.recyclerview.widget.ItemTouchHelper;
 import com.example.aadhaarfpoffline.tatvik.GetDataService;
 import com.example.aadhaarfpoffline.tatvik.LocaleHelper;
 import com.example.aadhaarfpoffline.tatvik.ProgressRequestBody;
@@ -51,6 +52,7 @@ import com.example.aadhaarfpoffline.tatvik.network.ImageUploadResponse;
 import com.example.aadhaarfpoffline.tatvik.network.InitializeResponse;
 import com.example.aadhaarfpoffline.tatvik.network.PostUploadResponse;
 import com.example.aadhaarfpoffline.tatvik.servece.LocationTrack;
+import com.example.aadhaarfpoffline.tatvik.util.Const;
 import com.facebook.common.util.UriUtil;
 import com.google.android.gms.location.LocationListener;
 import com.google.gson.JsonObject;
@@ -200,15 +202,21 @@ public class UserIdCaptureActivity extends AppCompatActivity implements Progress
                 if (SystemClock.elapsedRealtime() - UserIdCaptureActivity.mLastClkTime >= UserIdCaptureActivity.Threshold) {
                     long unused = UserIdCaptureActivity.mLastClkTime = SystemClock.elapsedRealtime();
                     if (UserIdCaptureActivity.this.imageUri != null) {
-                        UserIdCaptureActivity.this.updatevoterDocumentSqlite();
-                        String filename = UserIdCaptureActivity.this.updatevoterDocumentSqliteTransTable();
-                        if (Build.VERSION.SDK_INT < 23) {
-                            return;
-                        }
-                        if (!UserIdCaptureActivity.this.checkPermission2()) {
-                            UserIdCaptureActivity.this.requestPermissions(new String[]{"android.permission.WRITE_EXTERNAL_STORAGE", "android.permission.READ_EXTERNAL_STORAGE"}, 1000);
-                        } else if (UserIdCaptureActivity.this.imageUri != null) {
-                            UserIdCaptureActivity.this.uploadImage(filename);
+                        try {
+                            UserIdCaptureActivity.this.updatevoterDocumentSqlite();
+                            String filename = UserIdCaptureActivity.this.updatevoterDocumentSqliteTransTable();
+                            if (Build.VERSION.SDK_INT < 23) {
+                                return;
+                            }
+                            if (!UserIdCaptureActivity.this.checkPermission2()) {
+                                UserIdCaptureActivity.this.requestPermissions(new String[]{"android.permission.WRITE_EXTERNAL_STORAGE", "android.permission.READ_EXTERNAL_STORAGE"}, 1000);
+                            } else if (UserIdCaptureActivity.this.imageUri != null) {
+                                UserIdCaptureActivity.this.uploadImage(filename);
+                            }
+                        } catch (Exception e) {
+                            Context applicationContext = UserIdCaptureActivity.this.getApplicationContext();
+                            Toast.makeText(applicationContext, "Document local update exception " + e.getMessage(), 0).show();
+                            Toast.makeText(UserIdCaptureActivity.this.getApplicationContext(), "Try captureing image again ", 0).show();
                         }
                     } else {
                         Toast.makeText(UserIdCaptureActivity.this.getApplicationContext(), "Please select an ID document", 0).show();
@@ -235,13 +243,17 @@ public class UserIdCaptureActivity extends AppCompatActivity implements Progress
 
     /* JADX INFO: Access modifiers changed from: private */
     public void openCamera() {
-        ContentValues values = new ContentValues();
-        values.put("title", "New Picture");
-        values.put("description", "From the Camera");
-        this.imageUri = getContentResolver().insert(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, values);
-        Intent cameraIntent = new Intent("android.media.action.IMAGE_CAPTURE");
-        cameraIntent.putExtra("output", this.imageUri);
-        startActivityForResult(cameraIntent, this.IMAGE_CAPTURE_CODE);
+        try {
+            ContentValues values = new ContentValues();
+            values.put("title", "New Picture");
+            values.put("description", "From the Camera");
+            this.imageUri = getContentResolver().insert(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, values);
+            Intent cameraIntent = new Intent("android.media.action.IMAGE_CAPTURE");
+            cameraIntent.putExtra("output", this.imageUri);
+            startActivityForResult(cameraIntent, this.IMAGE_CAPTURE_CODE);
+        } catch (Exception e) {
+            Toast.makeText(getApplicationContext(), "Error capturing image.Try again", 0).show();
+        }
     }
 
     @Override // androidx.fragment.app.FragmentActivity, androidx.activity.ComponentActivity, android.app.Activity
@@ -261,7 +273,11 @@ public class UserIdCaptureActivity extends AppCompatActivity implements Progress
     @Override // androidx.fragment.app.FragmentActivity, androidx.activity.ComponentActivity, android.app.Activity
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         if (resultCode == -1) {
-            this.mImageView.setImageURI(this.imageUri);
+            try {
+                this.mImageView.setImageURI(this.imageUri);
+            } catch (Exception e) {
+                Toast.makeText(this, "Image set exception " + e.getMessage(), 0).show();
+            }
         }
         super.onActivityResult(requestCode, resultCode, data);
     }
@@ -286,7 +302,7 @@ public class UserIdCaptureActivity extends AppCompatActivity implements Progress
     public void uploadImage(String filename) {
         ((BitmapDrawable) this.mImageView.getDrawable()).getBitmap();
         this.voteridtype = this.voteridtypesvalues.get(this.spinner.getSelectedItemPosition());
-        File file = new File("/sdcard/Images/", filename);
+        File file = new File("/sdcard/" + Const.PublicImageName + "/", filename);
         HashMap<String, RequestBody> map = new HashMap<>();
         map.put("udevid", createPartFromString(this.UDevId));
         map.put("votername", createPartFromString(this.votername));
@@ -318,6 +334,7 @@ public class UserIdCaptureActivity extends AppCompatActivity implements Progress
                         UserIdCaptureActivity.this.startnonAadhaarfingerprintactivity();
                     }
                 } else {
+                    UserIdCaptureActivity.this.db.updateImageSyncThumbnail(UserIdCaptureActivity.this.userAuth.getTransactionId().intValue(), 1);
                     UserIdCaptureActivity.this.startofflinefingerprintactivity();
                     UserIdCaptureActivity.this.voterIdentificationImage = response.body().getFilename();
                 }
@@ -529,7 +546,7 @@ public class UserIdCaptureActivity extends AppCompatActivity implements Progress
         ArrayAdapter aa = new ArrayAdapter(getApplicationContext(), 17367048, this.voteridtypes);
         aa.setDropDownViewResource(R.layout.dropdown);
         this.spinner.setAdapter((SpinnerAdapter) aa);
-        this.spinner.setSelection(0);
+        this.spinner.setSelection(2);
     }
 
     private void translate(String lan) {
@@ -798,10 +815,10 @@ public class UserIdCaptureActivity extends AppCompatActivity implements Progress
     }
 
     private void createDirectoryAndSaveFile(Bitmap imageToSave, String fileName) {
-        if (!new File(Environment.getExternalStorageDirectory() + "/Images").exists()) {
-            new File("/sdcard/Images/").mkdirs();
+        if (!new File(Environment.getExternalStorageDirectory() + "/" + Const.PublicImageName).exists()) {
+            new File("/sdcard/" + Const.PublicImageName + "/").mkdirs();
         }
-        File file = new File("/sdcard/Images/", fileName);
+        File file = new File("/sdcard/" + Const.PublicImageName + "/", fileName);
         if (file.exists()) {
             file.delete();
         }
@@ -842,6 +859,7 @@ public class UserIdCaptureActivity extends AppCompatActivity implements Progress
         cols.put("AGE", this.age);
         cols.put("GENDER", this.gender);
         cols.put("USER_ID", userId);
+        cols.put("THUMBNAIL_ID_DOCUMENT_IMAGE", filenameThumbNail);
         DBHelper dBHelper = this.db;
         this.userAuth.setTransactionId(Long.valueOf(dBHelper.insertData(dBHelper.tbl_transaction, cols)));
         return filenameThumbNail;
@@ -854,7 +872,7 @@ public class UserIdCaptureActivity extends AppCompatActivity implements Progress
 
     private Bitmap getThumbnail(Bitmap imagebitmap) {
         try {
-            return ThumbnailUtils.extractThumbnail(imagebitmap, 64, 64);
+            return ThumbnailUtils.extractThumbnail(imagebitmap, ItemTouchHelper.Callback.DEFAULT_DRAG_ANIMATION_DURATION, ItemTouchHelper.Callback.DEFAULT_DRAG_ANIMATION_DURATION);
         } catch (Exception e) {
             return null;
         }

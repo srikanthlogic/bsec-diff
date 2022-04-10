@@ -251,7 +251,7 @@ public class ListUserActivity extends AppCompatActivity implements VoterListAdap
         NavigationView navigationView = (NavigationView) findViewById(R.id.nav_view);
         navigationView.setNavigationItemSelectedListener(this);
         MenuItem nav_app_version = navigationView.getMenu().findItem(R.id.nav_app_version);
-        nav_app_version.setTitle("Version 26/" + BuildConfig.VERSION_NAME);
+        nav_app_version.setTitle("Version 29/" + BuildConfig.VERSION_NAME);
         this.recyclerView = (RecyclerView) findViewById(R.id.recyclerview_vendor_list);
         this.userAuth.getBoothId();
         this.search = (EditText) findViewById(R.id.search_text);
@@ -271,7 +271,7 @@ public class ListUserActivity extends AppCompatActivity implements VoterListAdap
         this.searchButton.setText(this.resources.getString(R.string.search));
         this.loginButton = (Button) findViewById(R.id.logout_button);
         this.loginButton.setVisibility(8);
-        this.captureFingerprint.setText(this.resources.getString(R.string.capture_text));
+        this.captureFingerprint.setText(this.resources.getString(R.string.aadhaar_fingerpint_capture));
         this.lockButton.setText(this.resources.getString(R.string.lock_text));
         this.insertFpButton.setText(this.resources.getString(R.string.insert_record_text));
         this.alternateButton.setText(this.resources.getString(R.string.alternate_text));
@@ -939,13 +939,14 @@ public class ListUserActivity extends AppCompatActivity implements VoterListAdap
         map.put("booth_no", booth);
         map.put("udevid", this.UDevId);
         ((GetDataService) RetrofitClientInstance.getRetrofitInstance().create(GetDataService.class)).getTransTable(map).enqueue(new Callback<TransTableGetResponse>() { // from class: com.example.aadhaarfpoffline.tatvik.activity.ListUserActivity.18
-            /* JADX WARN: Type inference failed for: r0v0 */
-            /* JADX WARN: Type inference failed for: r0v1 */
-            /* JADX WARN: Type inference failed for: r0v2, types: [android.widget.Toast] */
+            /* JADX WARN: Type inference failed for: r0v2 */
+            /* JADX WARN: Type inference failed for: r0v3 */
+            /* JADX WARN: Type inference failed for: r0v4, types: [android.widget.Toast] */
             /* JADX WARN: Unknown variable types count: 1 */
             @Override // retrofit2.Callback
             /* Code decompiled incorrectly, please refer to instructions dump */
             public void onResponse(Call<TransTableGetResponse> call, Response<TransTableGetResponse> response) {
+                Log.d("getdatatrans", response.raw().toString());
                 ?? r0 = 1;
                 if (response != null) {
                     try {
@@ -1131,11 +1132,14 @@ public class ListUserActivity extends AppCompatActivity implements VoterListAdap
             if (this.db.getUnSyncCount() > 0) {
                 syncTransTable();
             } else {
-                Toast.makeText(getApplicationContext(), "All data already synced", 1).show();
+                Toast.makeText(getApplicationContext(), "All data already synced.Checking if voter images need to be synced", 1).show();
             }
             if (!checkPermission()) {
                 requestPermissions(new String[]{"android.permission.WRITE_EXTERNAL_STORAGE"}, 1000);
             } else {
+                imageuploadRejectedVoters();
+                imageuploadRejectedVotersMatch();
+                imageuploadThumb();
                 imageupload();
             }
         } else if (id == R.id.nav_export) {
@@ -1239,19 +1243,18 @@ public class ListUserActivity extends AppCompatActivity implements VoterListAdap
 
     public void insertTransTable(List<TransTableDataModel> transTableDataModelList) {
         ListUserActivity listUserActivity = this;
-        List<TransTableDataModel> list = transTableDataModelList;
         int i = 0;
-        if (list == null || transTableDataModelList.isEmpty() || transTableDataModelList.size() <= 0) {
+        if (transTableDataModelList == null || transTableDataModelList.isEmpty() || transTableDataModelList.size() <= 0) {
             Toast.makeText(getApplicationContext(), "Empty transation table", 0).show();
             return;
         }
         int i2 = 0;
         while (i2 < transTableDataModelList.size()) {
-            String voted = list.get(i2).getVOTED();
+            String voted = transTableDataModelList.get(i2).getVOTED();
             if (!voted.equalsIgnoreCase("0")) {
                 ContentValues cols = new ContentValues();
-                String fptemplate = list.get(i2).getFINGERPRINT_TEMPLATE();
-                String user_id = list.get(i2).getUser_id();
+                String fptemplate = transTableDataModelList.get(i2).getFINGERPRINT_TEMPLATE();
+                String user_id = transTableDataModelList.get(i2).getUser_id();
                 if (user_id != null && !user_id.isEmpty() && user_id.length() > 0) {
                     String[] parts = user_id.split("_");
                     if (parts.length == 4) {
@@ -1263,22 +1266,27 @@ public class ListUserActivity extends AppCompatActivity implements VoterListAdap
                         cols.put("SlNoInWard", slnoinward);
                     }
                 }
-                byte[] fingerprintBlob = Base64.decode(fptemplate, i);
-                cols.put(DBHelper.Key_ID, list.get(i2).getTRANSID());
-                cols.put("FingerTemplate", fingerprintBlob);
-                cols.put("VOTED", Integer.valueOf(Integer.parseInt(list.get(i2).getVOTED())));
-                cols.put("VOTING_DATE", list.get(i2).getVOTING_DATE());
-                cols.put("ID_DOCUMENT_IMAGE", list.get(i2).getID_DOCUMENT_IMAGE());
-                cols.put("AADHAAR_MATCH", Integer.valueOf(Integer.parseInt(list.get(i2).getAADHAAR_MATCH())));
-                cols.put("AADHAAR_NO", list.get(i2).getAADHAAR_NO());
-                cols.put("VOTING_TYPE", list.get(i2).getVOTING_TYPE());
-                cols.put("GENDER", list.get(i2).getGENDER());
-                cols.put("AGE", Integer.valueOf(Integer.parseInt(list.get(i2).getAGE())));
+                if (fptemplate != null && !fptemplate.isEmpty() && fptemplate.length() >= 8) {
+                    cols.put("FingerTemplate", Base64.decode(fptemplate, i));
+                }
+                cols.put(DBHelper.Key_ID, transTableDataModelList.get(i2).getTRANSID());
+                cols.put("VOTED", Integer.valueOf(Integer.parseInt(transTableDataModelList.get(i2).getVOTED())));
+                cols.put("VOTING_DATE", transTableDataModelList.get(i2).getVOTING_DATE());
+                cols.put("ID_DOCUMENT_IMAGE", transTableDataModelList.get(i2).getID_DOCUMENT_IMAGE());
+                cols.put("AADHAAR_MATCH", Integer.valueOf(Integer.parseInt(transTableDataModelList.get(i2).getAADHAAR_MATCH())));
+                cols.put("AADHAAR_NO", transTableDataModelList.get(i2).getAADHAAR_NO());
+                cols.put("VOTING_TYPE", transTableDataModelList.get(i2).getVOTING_TYPE());
+                cols.put("GENDER", transTableDataModelList.get(i2).getGENDER());
+                cols.put("AGE", Integer.valueOf(Integer.parseInt(transTableDataModelList.get(i2).getAGE())));
                 cols.put("USER_ID", user_id);
                 cols.put("SYNCED", (Integer) 1);
                 cols.put("IMAGE_SYNCED", (Integer) 1);
-                cols.put("MATCHED_ID_DOCUMENT_IMAGE", list.get(i2).getMATCHED_ID_DOCUMENT_IMAGE());
-                cols.put("MATCHED_USER_ID", list.get(i2).getMATCHED_USER_ID());
+                cols.put("MATCHED_ID_DOCUMENT_IMAGE", transTableDataModelList.get(i2).getMATCHED_ID_DOCUMENT_IMAGE());
+                cols.put("MATCHED_USER_ID", transTableDataModelList.get(i2).getMATCHED_USER_ID());
+                cols.put("matched_user_id", transTableDataModelList.get(i2).getMATCHED_USER_ID());
+                cols.put("MATCHED_IMAGE_SYNCED", (Integer) 1);
+                cols.put("THUMBNAIL_ID_DOCUMENT_IMAGE", "");
+                cols.put("THUMBNAIL_IMAGE_SYNCED", (Integer) 1);
                 DBHelper dBHelper = listUserActivity.db;
                 long res = dBHelper.insertData(dBHelper.tbl_transaction, cols);
                 if (res > 0) {
@@ -1293,7 +1301,6 @@ public class ListUserActivity extends AppCompatActivity implements VoterListAdap
             i2++;
             i = 0;
             listUserActivity = this;
-            list = transTableDataModelList;
         }
     }
 
@@ -1342,7 +1349,7 @@ public class ListUserActivity extends AppCompatActivity implements VoterListAdap
         this.searchButton.setText(this.resources.getString(R.string.search));
         this.search.setHint(this.resources.getString(R.string.all_voters_text));
         setTitle(this.resources.getString(R.string.menu_text));
-        this.captureFingerprint.setText(this.resources.getString(R.string.capture_text));
+        this.captureFingerprint.setText(this.resources.getString(R.string.aadhaar_fingerpint_capture));
         if (lan.equalsIgnoreCase("en")) {
             TextView textView = this.stateDistrict;
             textView.setText(this.resources.getString(R.string.panchayat_name) + ":" + this.userAuth.getPanchayat_NAME_EN() + ", " + this.resources.getString(R.string.district_name_text) + ":" + this.userAuth.getDIST_NAME_EN() + " ," + this.resources.getString(R.string.block_name) + ":" + this.userAuth.getBlock_NAME_EN());
@@ -1355,7 +1362,12 @@ public class ListUserActivity extends AppCompatActivity implements VoterListAdap
             TextView textView3 = this.blockBooth;
             textView3.setText(this.userAuth.getPanchayatId() + " " + this.resources.getString(R.string.booth_no_text) + ":" + getBoothInFormat(this.userAuth.getBoothNo()) + "," + this.resources.getString(R.string.ward_no_text) + ":" + this.userAuth.getWardNo());
             this.numVoters.setText(this.resources.getString(R.string.total_no_voters_text, Integer.valueOf(this.voterDataNewModelList.size())));
-            this.adapter2.changeLanguage(lan);
+            VoterListNewTableAdapter voterListNewTableAdapter = this.adapter2;
+            if (voterListNewTableAdapter != null) {
+                voterListNewTableAdapter.changeLanguage(lan);
+            } else {
+                Toast.makeText(getBaseContext(), "Wait. Adapter null", 1).show();
+            }
         }
         this.lockButton.setText(this.resources.getString(R.string.lock_text));
         this.insertFpButton.setText(this.resources.getString(R.string.insert_record_text));
@@ -1612,16 +1624,21 @@ public class ListUserActivity extends AppCompatActivity implements VoterListAdap
         String str4;
         String str5;
         String str6;
+        String str7;
+        String slnoinward;
+        String voting_type;
         String aadhaarNo;
         String fpString;
         String voting_date;
-        String str7 = "MATCHED_ID_DOCUMENT_IMAGE";
-        String str8 = "user_id";
-        String str9 = "AADHAAR_NO";
-        String str10 = "AADHAAR_MATCH";
-        String str11 = "GENDER";
-        String str12 = "AGE";
-        String str13 = "VOTED";
+        String voting_type2 = "MATCHED_ID_DOCUMENT_IMAGE";
+        String str8 = "MATCHED_USER_ID";
+        String str9 = "user_id";
+        String str10 = "AADHAAR_NO";
+        String str11 = "AADHAAR_MATCH";
+        String str12 = "ID_DOCUMENT_IMAGE";
+        String str13 = "GENDER";
+        String str14 = "AGE";
+        String str15 = "VOTING_TYPE";
         int count = 0;
         try {
             Cursor cursor = this.db.getAllRowsofTransTableCursor();
@@ -1630,30 +1647,36 @@ public class ListUserActivity extends AppCompatActivity implements VoterListAdap
                     long transid = cursor.getLong(cursor.getColumnIndex(DBHelper.Key_ID));
                     int synced = cursor.getInt(cursor.getColumnIndex("SYNCED"));
                     try {
-                        int voted = cursor.getInt(cursor.getColumnIndex(str13));
-                        String fpString2 = str13;
+                        int voted = cursor.getInt(cursor.getColumnIndex("VOTED"));
+                        String voting_type3 = cursor.getString(cursor.getColumnIndex(str15));
                         if (synced == 1) {
-                            str = str8;
-                            str3 = str9;
-                            str2 = str10;
-                            str4 = str11;
-                            str5 = str12;
-                            str6 = str7;
+                            str2 = str9;
+                            str4 = str10;
+                            str3 = str11;
+                            str = str12;
+                            str6 = str13;
+                            str7 = str14;
+                            str5 = str15;
+                            slnoinward = voting_type2;
+                            voting_type = str8;
                         } else if (voted == 0) {
-                            str = str8;
-                            str3 = str9;
-                            str2 = str10;
-                            str4 = str11;
-                            str5 = str12;
-                            str6 = str7;
+                            str2 = str9;
+                            str4 = str10;
+                            str3 = str11;
+                            str = str12;
+                            str6 = str13;
+                            str7 = str14;
+                            str5 = str15;
+                            slnoinward = voting_type2;
+                            voting_type = str8;
                         } else {
                             Map<String, String> map = new HashMap<>();
                             byte[] fp = cursor.getBlob(cursor.getColumnIndex("FingerTemplate"));
-                            int age = cursor.getInt(cursor.getColumnIndex(str12));
-                            String gender = cursor.getString(cursor.getColumnIndex(str11));
-                            String voterimagename = cursor.getString(cursor.getColumnIndex("ID_DOCUMENT_IMAGE"));
-                            int aadhaarmatch = cursor.getInt(cursor.getColumnIndex(str10));
-                            String aadhaarNo2 = cursor.getString(cursor.getColumnIndex(str9));
+                            int age = cursor.getInt(cursor.getColumnIndex(str14));
+                            String gender = cursor.getString(cursor.getColumnIndex(str13));
+                            String voterimagename = cursor.getString(cursor.getColumnIndex(str12));
+                            int aadhaarmatch = cursor.getInt(cursor.getColumnIndex(str11));
+                            String aadhaarNo2 = cursor.getString(cursor.getColumnIndex(str10));
                             if (aadhaarNo2 == null) {
                                 aadhaarNo2 = "";
                             }
@@ -1665,34 +1688,37 @@ public class ListUserActivity extends AppCompatActivity implements VoterListAdap
                                     String userId = this.userAuth.getPanchayatId() + "_" + this.userAuth.getWardNo() + "_" + this.userAuth.getBoothNo() + "_" + cursor.getString(cursor.getColumnIndex("SlNoInWard"));
                                     String boothid = this.userAuth.getPanchayatId() + "_" + this.userAuth.getWardNo() + "_" + this.userAuth.getBoothNo();
                                     voting_date = cursor.getString(cursor.getColumnIndex("VOTING_DATE"));
-                                    map.put(str8, userId);
-                                    map.put(str8, userId);
-                                    str = str8;
+                                    map.put(str9, userId);
+                                    map.put(str9, userId);
+                                    str2 = str9;
                                     map.put("FINGERPRINT_TEMPLATE", fpString);
-                                    map.put(fpString2, "" + voted);
-                                    map.put("ID_DOCUMENT_IMAGE", voterimagename);
-                                    fpString2 = fpString2;
-                                    map.put(str10, "" + aadhaarmatch);
-                                    str2 = str10;
-                                    map.put(str9, aadhaarNo);
+                                    map.put("VOTED", "" + voted);
+                                    map.put(str12, voterimagename);
+                                    str = str12;
+                                    map.put(str11, "" + aadhaarmatch);
+                                    str3 = str11;
+                                    map.put(str10, aadhaarNo);
                                     if (voting_date != null || voting_date.isEmpty() || voting_date.length() <= 0) {
                                         map.put("VOTING_DATE", "");
                                     } else {
                                         map.put("VOTING_DATE", voting_date);
                                     }
-                                    str3 = str9;
-                                    map.put("VOTING_TYPE", "NON_AADHAAR");
+                                    str4 = str10;
+                                    map.put(str15, voting_type3);
                                     map.put("booth_id", boothid);
-                                    map.put(str12, "" + age);
-                                    map.put(str11, gender);
-                                    str4 = str11;
+                                    str5 = str15;
+                                    map.put(str14, "" + age);
+                                    str7 = str14;
+                                    map.put(str13, gender);
+                                    str6 = str13;
                                     map.put("udevid", this.UDevId);
-                                    String matched_user_id = cursor.getString(cursor.getColumnIndex("MATCHED_USER_ID"));
-                                    str5 = str12;
-                                    str6 = str7;
-                                    String matched_id_document_iamge = cursor.getString(cursor.getColumnIndex(str6));
+                                    voting_type = str8;
+                                    String matched_user_id = cursor.getString(cursor.getColumnIndex(voting_type));
+                                    slnoinward = voting_type2;
+                                    String matched_id_document_iamge = cursor.getString(cursor.getColumnIndex(slnoinward));
                                     map.put("matched_user_id", matched_user_id);
-                                    map.put(str6, matched_id_document_iamge);
+                                    map.put(voting_type, matched_user_id);
+                                    map.put(slnoinward, matched_id_document_iamge);
                                     uploadTransactionRow(map);
                                 }
                             } else {
@@ -1703,43 +1729,48 @@ public class ListUserActivity extends AppCompatActivity implements VoterListAdap
                             String userId2 = this.userAuth.getPanchayatId() + "_" + this.userAuth.getWardNo() + "_" + this.userAuth.getBoothNo() + "_" + cursor.getString(cursor.getColumnIndex("SlNoInWard"));
                             String boothid2 = this.userAuth.getPanchayatId() + "_" + this.userAuth.getWardNo() + "_" + this.userAuth.getBoothNo();
                             voting_date = cursor.getString(cursor.getColumnIndex("VOTING_DATE"));
-                            map.put(str8, userId2);
-                            map.put(str8, userId2);
-                            str = str8;
+                            map.put(str9, userId2);
+                            map.put(str9, userId2);
+                            str2 = str9;
                             map.put("FINGERPRINT_TEMPLATE", fpString);
-                            map.put(fpString2, "" + voted);
-                            map.put("ID_DOCUMENT_IMAGE", voterimagename);
-                            fpString2 = fpString2;
-                            map.put(str10, "" + aadhaarmatch);
-                            str2 = str10;
-                            map.put(str9, aadhaarNo);
+                            map.put("VOTED", "" + voted);
+                            map.put(str12, voterimagename);
+                            str = str12;
+                            map.put(str11, "" + aadhaarmatch);
+                            str3 = str11;
+                            map.put(str10, aadhaarNo);
                             if (voting_date != null) {
                             }
                             map.put("VOTING_DATE", "");
-                            str3 = str9;
-                            map.put("VOTING_TYPE", "NON_AADHAAR");
+                            str4 = str10;
+                            map.put(str15, voting_type3);
                             map.put("booth_id", boothid2);
-                            map.put(str12, "" + age);
-                            map.put(str11, gender);
-                            str4 = str11;
+                            str5 = str15;
+                            map.put(str14, "" + age);
+                            str7 = str14;
+                            map.put(str13, gender);
+                            str6 = str13;
                             map.put("udevid", this.UDevId);
-                            String matched_user_id2 = cursor.getString(cursor.getColumnIndex("MATCHED_USER_ID"));
-                            str5 = str12;
-                            str6 = str7;
-                            String matched_id_document_iamge2 = cursor.getString(cursor.getColumnIndex(str6));
+                            voting_type = str8;
+                            String matched_user_id2 = cursor.getString(cursor.getColumnIndex(voting_type));
+                            slnoinward = voting_type2;
+                            String matched_id_document_iamge2 = cursor.getString(cursor.getColumnIndex(slnoinward));
                             map.put("matched_user_id", matched_user_id2);
-                            map.put(str6, matched_id_document_iamge2);
+                            map.put(voting_type, matched_user_id2);
+                            map.put(slnoinward, matched_id_document_iamge2);
                             uploadTransactionRow(map);
                         }
                         if (cursor.moveToNext()) {
-                            str7 = str6;
+                            str8 = voting_type;
+                            voting_type2 = slnoinward;
                             count = count;
-                            str13 = fpString2;
-                            str12 = str5;
-                            str11 = str4;
-                            str9 = str3;
-                            str10 = str2;
-                            str8 = str;
+                            str14 = str7;
+                            str13 = str6;
+                            str15 = str5;
+                            str10 = str4;
+                            str11 = str3;
+                            str9 = str2;
+                            str12 = str;
                         } else {
                             return;
                         }
@@ -1913,60 +1944,295 @@ public class ListUserActivity extends AppCompatActivity implements VoterListAdap
         }
     }
 
+    /* JADX WARN: Removed duplicated region for block: B:25:0x015b A[LOOP:0: B:28:0x0051->B:25:0x015b, LOOP_END] */
+    /* JADX WARN: Removed duplicated region for block: B:34:0x0166 A[SYNTHETIC] */
+    /* Code decompiled incorrectly, please refer to instructions dump */
     private void imageupload() {
+        Cursor cursor;
+        long imagecounttobesynced;
+        boolean z;
         Exception e;
-        String str;
-        String androidId;
-        String str2 = "_";
         DBHelper db = new DBHelper(this);
-        if (db.getImageUnSyncCount() <= 0) {
+        long imagecounttobesynced2 = db.getImageUnSyncCount();
+        boolean z2 = true;
+        if (imagecounttobesynced2 <= 0) {
             Toast.makeText(this, "All images already synced", 1).show();
             return;
         }
-        String androidId2 = Settings.Secure.getString(getContentResolver(), "android_id");
+        Toast.makeText(this, imagecounttobesynced2 + " images to be synced", 1).show();
+        String androidId = Settings.Secure.getString(getContentResolver(), "android_id");
         UserAuth userAuth = new UserAuth(this);
-        try {
-            Cursor cursor = db.getAllRowsofTransTableCursor();
-            if (cursor.moveToFirst()) {
-                while (true) {
-                    Long transid = Long.valueOf(cursor.getLong(cursor.getColumnIndex(DBHelper.Key_ID)));
-                    cursor.getInt(cursor.getColumnIndex("SYNCED"));
-                    cursor.getInt(cursor.getColumnIndex("VOTED"));
-                    int imagesynced = cursor.getInt(cursor.getColumnIndex("IMAGE_SYNCED"));
-                    String slnoinward = cursor.getString(cursor.getColumnIndex("SlNoInWard"));
+        Cursor cursor2 = db.getAllRowsofTransTableCursor();
+        if (cursor2.moveToFirst()) {
+            while (true) {
+                try {
+                    Long transid = Long.valueOf(cursor2.getLong(cursor2.getColumnIndex(DBHelper.Key_ID)));
+                    cursor2.getInt(cursor2.getColumnIndex("SYNCED"));
+                    cursor2.getInt(cursor2.getColumnIndex("VOTED"));
+                    int imagesynced = cursor2.getInt(cursor2.getColumnIndex("IMAGE_SYNCED"));
+                    String slnoinward = cursor2.getString(cursor2.getColumnIndex("SlNoInWard"));
                     if (imagesynced != 0) {
-                        str = str2;
-                        androidId = androidId2;
+                        cursor = cursor2;
+                        imagecounttobesynced = imagecounttobesynced2;
+                        z = z2;
                     } else {
-                        String voterimagename = cursor.getString(cursor.getColumnIndex("ID_DOCUMENT_IMAGE"));
-                        File file2 = saveBitmapToFile(new File("/sdcard/Images/", voterimagename));
+                        String voterimagename = cursor2.getString(cursor2.getColumnIndex("ID_DOCUMENT_IMAGE"));
+                        File file2 = saveBitmapToFile(new File("/sdcard/" + Const.PublicImageName + "/", voterimagename));
                         HashMap<String, RequestBody> map = new HashMap<>();
-                        androidId = androidId2;
+                        imagecounttobesynced = imagecounttobesynced2;
                         try {
-                            map.put("udevid", createPartFromString(androidId2));
-                            str = str2;
-                            map.put("user_id", createPartFromString(userAuth.getPanchayatId() + str2 + userAuth.getWardNo() + str2 + userAuth.getBoothNo() + str2 + slnoinward));
-                            postDataWithImage(map, file2, voterimagename, db, transid.intValue());
+                            map.put("udevid", createPartFromString(androidId));
+                            map.put("user_id", createPartFromString(userAuth.getPanchayatId() + "_" + userAuth.getWardNo() + "_" + userAuth.getBoothNo() + "_" + slnoinward));
+                            cursor = cursor2;
                         } catch (Exception e2) {
                             e = e2;
-                            Toast.makeText(this, "sync exception=" + e.getMessage(), 1).show();
-                            return;
+                            cursor = cursor2;
+                        }
+                        try {
+                            postDataWithImage(map, file2, voterimagename, db, transid.intValue(), "image");
+                            z = true;
+                        } catch (Exception e3) {
+                            e = e3;
+                            Context applicationContext = getApplicationContext();
+                            z = true;
+                            Toast.makeText(applicationContext, "Background sync exception=" + e.getMessage(), 1).show();
+                            if (!cursor.moveToNext()) {
+                            }
                         }
                     }
-                    if (cursor.moveToNext()) {
-                        androidId2 = androidId;
-                        str2 = str;
-                    } else {
-                        return;
-                    }
+                } catch (Exception e4) {
+                    e = e4;
+                    cursor = cursor2;
+                    imagecounttobesynced = imagecounttobesynced2;
+                }
+                if (!cursor.moveToNext()) {
+                    z2 = z;
+                    imagecounttobesynced2 = imagecounttobesynced;
+                    cursor2 = cursor;
+                } else {
+                    return;
                 }
             }
-        } catch (Exception e3) {
-            e = e3;
         }
     }
 
-    private synchronized void postDataWithImage(HashMap<String, RequestBody> map, File file, String filename, final DBHelper db, final int transid) {
+    /* JADX WARN: Removed duplicated region for block: B:25:0x015b A[LOOP:0: B:28:0x0051->B:25:0x015b, LOOP_END] */
+    /* JADX WARN: Removed duplicated region for block: B:34:0x0166 A[SYNTHETIC] */
+    /* Code decompiled incorrectly, please refer to instructions dump */
+    private void imageuploadRejectedVoters() {
+        Cursor cursor;
+        long imagecounttobesynced;
+        boolean z;
+        Exception e;
+        DBHelper db = new DBHelper(this);
+        long imagecounttobesynced2 = db.getImageUnSyncCountRejectedVoters();
+        boolean z2 = true;
+        if (imagecounttobesynced2 <= 0) {
+            Toast.makeText(this, "All rejected images already synced", 1).show();
+            return;
+        }
+        Toast.makeText(this, imagecounttobesynced2 + " images to be synced", 1).show();
+        String androidId = Settings.Secure.getString(getContentResolver(), "android_id");
+        UserAuth userAuth = new UserAuth(this);
+        Cursor cursor2 = db.getAllRowsofTransTableCursorRejectedVoters();
+        if (cursor2.moveToFirst()) {
+            while (true) {
+                try {
+                    Long transid = Long.valueOf(cursor2.getLong(cursor2.getColumnIndex(DBHelper.Key_ID)));
+                    cursor2.getInt(cursor2.getColumnIndex("SYNCED"));
+                    cursor2.getInt(cursor2.getColumnIndex("VOTED"));
+                    int imagesynced = cursor2.getInt(cursor2.getColumnIndex("IMAGE_SYNCED"));
+                    String slnoinward = cursor2.getString(cursor2.getColumnIndex("SlNoInWard"));
+                    if (imagesynced != 0) {
+                        cursor = cursor2;
+                        imagecounttobesynced = imagecounttobesynced2;
+                        z = z2;
+                    } else {
+                        String voterimagename = cursor2.getString(cursor2.getColumnIndex("ID_DOCUMENT_IMAGE"));
+                        File file2 = saveBitmapToFile(new File("/sdcard/" + Const.PublicImageName + "/", voterimagename));
+                        HashMap<String, RequestBody> map = new HashMap<>();
+                        imagecounttobesynced = imagecounttobesynced2;
+                        try {
+                            map.put("udevid", createPartFromString(androidId));
+                            map.put("user_id", createPartFromString(userAuth.getPanchayatId() + "_" + userAuth.getWardNo() + "_" + userAuth.getBoothNo() + "_" + slnoinward));
+                            cursor = cursor2;
+                        } catch (Exception e2) {
+                            e = e2;
+                            cursor = cursor2;
+                        }
+                        try {
+                            postDataWithImage(map, file2, voterimagename, db, transid.intValue(), "image");
+                            z = true;
+                        } catch (Exception e3) {
+                            e = e3;
+                            Context applicationContext = getApplicationContext();
+                            z = true;
+                            Toast.makeText(applicationContext, "Background sync exception=" + e.getMessage(), 1).show();
+                            if (!cursor.moveToNext()) {
+                            }
+                        }
+                    }
+                } catch (Exception e4) {
+                    e = e4;
+                    cursor = cursor2;
+                    imagecounttobesynced = imagecounttobesynced2;
+                }
+                if (!cursor.moveToNext()) {
+                    z2 = z;
+                    imagecounttobesynced2 = imagecounttobesynced;
+                    cursor2 = cursor;
+                } else {
+                    return;
+                }
+            }
+        }
+    }
+
+    /* JADX WARN: Removed duplicated region for block: B:25:0x015b A[LOOP:0: B:28:0x0051->B:25:0x015b, LOOP_END] */
+    /* JADX WARN: Removed duplicated region for block: B:34:0x0166 A[SYNTHETIC] */
+    /* Code decompiled incorrectly, please refer to instructions dump */
+    private void imageuploadRejectedVotersMatch() {
+        Cursor cursor;
+        long imagecounttobesynced;
+        boolean z;
+        Exception e;
+        DBHelper db = new DBHelper(this);
+        long imagecounttobesynced2 = db.getImageUnSyncCountRejectedVotersMatch();
+        boolean z2 = true;
+        if (imagecounttobesynced2 <= 0) {
+            Toast.makeText(this, "All rejected matched images already synced", 1).show();
+            return;
+        }
+        Toast.makeText(this, imagecounttobesynced2 + " images to be synced", 1).show();
+        String androidId = Settings.Secure.getString(getContentResolver(), "android_id");
+        UserAuth userAuth = new UserAuth(this);
+        Cursor cursor2 = db.getAllRowsofTransTableCursorRejectedVotersMatch();
+        if (cursor2.moveToFirst()) {
+            while (true) {
+                try {
+                    Long transid = Long.valueOf(cursor2.getLong(cursor2.getColumnIndex(DBHelper.Key_ID)));
+                    cursor2.getInt(cursor2.getColumnIndex("SYNCED"));
+                    cursor2.getInt(cursor2.getColumnIndex("VOTED"));
+                    int imagesynced = cursor2.getInt(cursor2.getColumnIndex("IMAGE_SYNCED"));
+                    String slnoinward = cursor2.getString(cursor2.getColumnIndex("SlNoInWard"));
+                    if (imagesynced != 0) {
+                        cursor = cursor2;
+                        imagecounttobesynced = imagecounttobesynced2;
+                        z = z2;
+                    } else {
+                        String voterimagename = cursor2.getString(cursor2.getColumnIndex("MATCHED_ID_DOCUMENT_IMAGE"));
+                        File file2 = saveBitmapToFile(new File("/sdcard/" + Const.PublicImageName + "/", voterimagename));
+                        HashMap<String, RequestBody> map = new HashMap<>();
+                        imagecounttobesynced = imagecounttobesynced2;
+                        try {
+                            map.put("udevid", createPartFromString(androidId));
+                            map.put("user_id", createPartFromString(userAuth.getPanchayatId() + "_" + userAuth.getWardNo() + "_" + userAuth.getBoothNo() + "_" + slnoinward));
+                            cursor = cursor2;
+                        } catch (Exception e2) {
+                            e = e2;
+                            cursor = cursor2;
+                        }
+                        try {
+                            postDataWithImage(map, file2, voterimagename, db, transid.intValue(), "matched_image");
+                            z = true;
+                        } catch (Exception e3) {
+                            e = e3;
+                            Context applicationContext = getApplicationContext();
+                            z = true;
+                            Toast.makeText(applicationContext, "Background sync exception=" + e.getMessage(), 1).show();
+                            if (!cursor.moveToNext()) {
+                            }
+                        }
+                    }
+                } catch (Exception e4) {
+                    e = e4;
+                    cursor = cursor2;
+                    imagecounttobesynced = imagecounttobesynced2;
+                }
+                if (!cursor.moveToNext()) {
+                    z2 = z;
+                    imagecounttobesynced2 = imagecounttobesynced;
+                    cursor2 = cursor;
+                } else {
+                    return;
+                }
+            }
+        }
+    }
+
+    /* JADX WARN: Removed duplicated region for block: B:25:0x015b A[LOOP:0: B:28:0x0051->B:25:0x015b, LOOP_END] */
+    /* JADX WARN: Removed duplicated region for block: B:34:0x0166 A[SYNTHETIC] */
+    /* Code decompiled incorrectly, please refer to instructions dump */
+    private void imageuploadThumb() {
+        Cursor cursor;
+        long imagecounttobesynced;
+        boolean z;
+        Exception e;
+        DBHelper db = new DBHelper(this);
+        long imagecounttobesynced2 = db.getImageUnSyncCountThumb();
+        boolean z2 = true;
+        if (imagecounttobesynced2 <= 0) {
+            Toast.makeText(this, "All THUMB images already synced", 1).show();
+            return;
+        }
+        Toast.makeText(this, imagecounttobesynced2 + " Thumb images to be synced", 1).show();
+        String androidId = Settings.Secure.getString(getContentResolver(), "android_id");
+        UserAuth userAuth = new UserAuth(this);
+        Cursor cursor2 = db.getAllRowsofTransTableCursorThumbNail();
+        if (cursor2.moveToFirst()) {
+            while (true) {
+                try {
+                    Long transid = Long.valueOf(cursor2.getLong(cursor2.getColumnIndex(DBHelper.Key_ID)));
+                    cursor2.getInt(cursor2.getColumnIndex("SYNCED"));
+                    cursor2.getInt(cursor2.getColumnIndex("VOTED"));
+                    int imagesynced = cursor2.getInt(cursor2.getColumnIndex("IMAGE_SYNCED"));
+                    String slnoinward = cursor2.getString(cursor2.getColumnIndex("SlNoInWard"));
+                    if (imagesynced != 0) {
+                        cursor = cursor2;
+                        imagecounttobesynced = imagecounttobesynced2;
+                        z = z2;
+                    } else {
+                        String voterimagename = cursor2.getString(cursor2.getColumnIndex("THUMBNAIL_ID_DOCUMENT_IMAGE"));
+                        File file2 = saveBitmapToFile(new File("/sdcard/" + Const.PublicImageName + "/", voterimagename));
+                        HashMap<String, RequestBody> map = new HashMap<>();
+                        imagecounttobesynced = imagecounttobesynced2;
+                        try {
+                            map.put("udevid", createPartFromString(androidId));
+                            map.put("user_id", createPartFromString(userAuth.getPanchayatId() + "_" + userAuth.getWardNo() + "_" + userAuth.getBoothNo() + "_" + slnoinward));
+                            cursor = cursor2;
+                        } catch (Exception e2) {
+                            e = e2;
+                            cursor = cursor2;
+                        }
+                        try {
+                            postDataWithImage(map, file2, voterimagename, db, transid.intValue(), "thumb_image");
+                            z = true;
+                        } catch (Exception e3) {
+                            e = e3;
+                            Context applicationContext = getApplicationContext();
+                            z = true;
+                            Toast.makeText(applicationContext, "Background sync exception=" + e.getMessage(), 1).show();
+                            if (!cursor.moveToNext()) {
+                            }
+                        }
+                    }
+                } catch (Exception e4) {
+                    e = e4;
+                    cursor = cursor2;
+                    imagecounttobesynced = imagecounttobesynced2;
+                }
+                if (!cursor.moveToNext()) {
+                    z2 = z;
+                    imagecounttobesynced2 = imagecounttobesynced;
+                    cursor2 = cursor;
+                } else {
+                    return;
+                }
+            }
+        }
+    }
+
+    private synchronized void postDataWithImage(HashMap<String, RequestBody> map, File file, String filename, final DBHelper db, final int transid, final String which_image) {
         Call<ImageUploadResponse> call = ((GetDataService) RetrofitClientInstance.getRetrofitInstanceImageUploadNewUrl().create(GetDataService.class)).postVoterIdentification(MultipartBody.Part.createFormData(UriUtil.LOCAL_FILE_SCHEME, filename, RequestBody.create(MediaType.parse("multipart/form-data"), file)), map);
         Log.d("autosync", "postDataWithImage 1");
         call.enqueue(new Callback<ImageUploadResponse>() { // from class: com.example.aadhaarfpoffline.tatvik.activity.ListUserActivity.27
@@ -1975,7 +2241,13 @@ public class ListUserActivity extends AppCompatActivity implements VoterListAdap
                 Log.d("autosync", "postDataWithImage 2");
                 if (response != null && response.body() != null && response.body().isAdded().booleanValue()) {
                     Log.d("autosync", "postDataWithImage 3");
-                    db.updateImageSync(transid, 1);
+                    if (which_image.equalsIgnoreCase("image")) {
+                        db.updateImageSync(transid, 1);
+                    } else if (which_image.equalsIgnoreCase("matched_image")) {
+                        db.updateImageSyncMatched(transid, 1);
+                    } else if (which_image.equalsIgnoreCase("thumb_image")) {
+                        db.updateImageSyncThumbnail(transid, 1);
+                    }
                     Toast.makeText(ListUserActivity.this.getApplicationContext(), "Image Synchronizing ", 0).show();
                 }
             }
