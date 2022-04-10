@@ -58,8 +58,9 @@ public class LoginActivityNew extends AppCompatActivity {
         this.latitude = valueOf;
     }
 
+    /* JADX INFO: Access modifiers changed from: protected */
     @Override // androidx.fragment.app.FragmentActivity, androidx.activity.ComponentActivity, androidx.core.app.ComponentActivity, android.app.Activity
-    protected void onCreate(Bundle savedInstanceState) {
+    public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_login);
         getSupportActionBar().hide();
@@ -172,13 +173,84 @@ public class LoginActivityNew extends AppCompatActivity {
         });
     }
 
-    private void loginMethodWithDevice(String panchayat, String boothid, String password, String device, final String loc) {
+    private void loginMethodWithDevice(final String panchayat, final String boothid, final String password, final String device, final String loc) {
         Map<String, String> map = new HashMap<>();
         map.put("PanchayatID", panchayat);
         map.put("BoothNo", boothid);
         map.put("password", password);
         map.put("device", device);
         ((GetDataService) RetrofitClientInstance.getRetrofitInstanceLoginOnly().create(GetDataService.class)).getLoginWithUrl(map).enqueue(new Callback<LoginForUrlResponse>("9971791175") { // from class: com.example.aadhaarfpoffline.tatvik.activity.LoginActivityNew.4
+            @Override // retrofit2.Callback
+            public void onResponse(Call<LoginForUrlResponse> call, Response<LoginForUrlResponse> response) {
+                if (response != null && response.body() != null) {
+                    LoginActivityNew.this.responseString = response.body().toString();
+                    if (response.body().isLoginAllowed() == null) {
+                        Toast.makeText(LoginActivityNew.this.getApplicationContext(), "loginallowed field set to null", 1).show();
+                    } else if (!response.body().isLoginAllowed().booleanValue()) {
+                        Context applicationContext = LoginActivityNew.this.getApplicationContext();
+                        Toast.makeText(applicationContext, "Login Failed : " + response.body().getMessage(), 1).show();
+                    } else if (response.body().getDblocation().equalsIgnoreCase("0.0:0.0")) {
+                        UserAuth userAuth = new UserAuth(LoginActivityNew.this.getApplicationContext());
+                        userAuth.setBoothLocation(loc);
+                        LoginActivityNew.this.locationTrack.setBoothLocation(LoginActivityNew.this.getLocationFromString(loc));
+                        LoginActivityNew.this.locationTrack.setPhone("9971791175");
+                        userAuth.setBoothId(response.body().getBoothid());
+                        userAuth.setPhone("9971791175");
+                        userAuth.setLogin(true);
+                        userAuth.setPanchayatId(response.body().getPanchayatid());
+                        userAuth.setDistrictNo(response.body().getDistNo());
+                        userAuth.setBlockID(response.body().getBlockId());
+                        userAuth.setBoothNo(LoginActivityNew.this.boothNoTextFormat(response.body().getBoothNo()));
+                        userAuth.setWardNo(response.body().getWardno());
+                        userAuth.setBaseUrl(response.body().getUrl());
+                        LoginActivityNew.this.startMainActivity(response.body().getBoothid());
+                    } else {
+                        UserAuth userAuth2 = new UserAuth(LoginActivityNew.this.getApplicationContext());
+                        userAuth2.setBoothLocation(response.body().getDblocation());
+                        LoginActivityNew.this.locationTrack.setBoothLocation(LoginActivityNew.this.getLocationFromString(response.body().getDblocation()));
+                        LoginActivityNew.this.locationTrack.setPhone("9971791175");
+                        LoginActivityNew.this.locationTrack.getBoothDistance();
+                        userAuth2.setBoothId(response.body().getBoothid());
+                        userAuth2.setPhone("9971791175");
+                        userAuth2.setLogin(true);
+                        userAuth2.setPanchayatId(response.body().getPanchayatid());
+                        userAuth2.setWardNo(response.body().getWardno());
+                        LoginActivityNew.this.postLoginTimeUdate("9971791175", response.body().getBoothid());
+                        userAuth2.setPanchayatId(response.body().getPanchayatid());
+                        userAuth2.setDistrictNo(response.body().getDistNo());
+                        userAuth2.setBlockID(response.body().getBlockId());
+                        userAuth2.setBoothNo(LoginActivityNew.this.boothNoTextFormat(response.body().getBoothNo()));
+                        userAuth2.setWardNo(response.body().getWardno());
+                        userAuth2.setBaseUrl(response.body().getUrl());
+                    }
+                } else if (LoginActivityNew.this.db.getAllElements() == null || LoginActivityNew.this.db.getAllElements().size() <= 0) {
+                    Toast.makeText(LoginActivityNew.this.getApplicationContext(), "Resposne not in format and No data in database", 1).show();
+                    LoginActivityNew.this.loginMethodWithDeviceUrlfailCheck(panchayat, boothid, password, device, loc);
+                } else {
+                    Context applicationContext2 = LoginActivityNew.this.getApplicationContext();
+                    Toast.makeText(applicationContext2, "Resposne not in format but data exists in database" + response.toString(), 1).show();
+                    LoginActivityNew.this.startMainActivity("12");
+                }
+            }
+
+            @Override // retrofit2.Callback
+            public void onFailure(Call<LoginForUrlResponse> call, Throwable t) {
+                Context applicationContext = LoginActivityNew.this.getApplicationContext();
+                Toast.makeText(applicationContext, "Login Failure " + t.getMessage(), 1).show();
+                LoginActivityNew.this.loginMethodWithDeviceUrlfailCheck(panchayat, boothid, password, device, loc);
+            }
+        });
+    }
+
+    /* JADX INFO: Access modifiers changed from: private */
+    public void loginMethodWithDeviceUrlfailCheck(String panchayat, String boothid, String password, String device, final String loc) {
+        Toast.makeText(getApplicationContext(), "Login Failure Hitting other url to login", 1).show();
+        Map<String, String> map = new HashMap<>();
+        map.put("PanchayatID", panchayat);
+        map.put("BoothNo", boothid);
+        map.put("password", password);
+        map.put("device", device);
+        ((GetDataService) RetrofitClientInstance.getRetrofitInstanceLoginFailCheck().create(GetDataService.class)).getLoginWithUrl(map).enqueue(new Callback<LoginForUrlResponse>("9971791175") { // from class: com.example.aadhaarfpoffline.tatvik.activity.LoginActivityNew.5
             @Override // retrofit2.Callback
             public void onResponse(Call<LoginForUrlResponse> call, Response<LoginForUrlResponse> response) {
                 if (response != null && response.body() != null) {
@@ -240,7 +312,7 @@ public class LoginActivityNew extends AppCompatActivity {
     }
 
     private void loginGetMethod(final String phone, String otp, final String loc, String device) {
-        ((GetDataService) RetrofitClientInstance.getRetrofitInstance().create(GetDataService.class)).getLoginNewMethod(phone, otp, loc).enqueue(new Callback<ElectionBoothLoginGetResponse>() { // from class: com.example.aadhaarfpoffline.tatvik.activity.LoginActivityNew.5
+        ((GetDataService) RetrofitClientInstance.getRetrofitInstance().create(GetDataService.class)).getLoginNewMethod(phone, otp, loc).enqueue(new Callback<ElectionBoothLoginGetResponse>() { // from class: com.example.aadhaarfpoffline.tatvik.activity.LoginActivityNew.6
             @Override // retrofit2.Callback
             public void onResponse(Call<ElectionBoothLoginGetResponse> call, Response<ElectionBoothLoginGetResponse> response) {
                 if (response != null && response.body() != null) {
@@ -281,7 +353,7 @@ public class LoginActivityNew extends AppCompatActivity {
 
     /* JADX INFO: Access modifiers changed from: private */
     public void postLoginTimeUdate(String phone, final String boothid) {
-        ((GetDataService) RetrofitClientInstance.getRetrofitInstance().create(GetDataService.class)).getLoginTimeUpdateMethod(phone).enqueue(new Callback<LoginTimeUpdateGetResponse>() { // from class: com.example.aadhaarfpoffline.tatvik.activity.LoginActivityNew.6
+        ((GetDataService) RetrofitClientInstance.getRetrofitInstance().create(GetDataService.class)).getLoginTimeUpdateMethod(phone).enqueue(new Callback<LoginTimeUpdateGetResponse>() { // from class: com.example.aadhaarfpoffline.tatvik.activity.LoginActivityNew.7
             @Override // retrofit2.Callback
             public void onResponse(Call<LoginTimeUpdateGetResponse> call, Response<LoginTimeUpdateGetResponse> response) {
                 LoginActivityNew.this.startMainActivity(boothid);
@@ -343,7 +415,7 @@ public class LoginActivityNew extends AppCompatActivity {
             return true;
         }
         if (ActivityCompat.shouldShowRequestPermissionRationale(this, "android.permission.ACCESS_FINE_LOCATION")) {
-            new AlertDialog.Builder(this).setTitle("Permission Denied").setMessage("Please approve permission again.").setPositiveButton("Okay", new DialogInterface.OnClickListener() { // from class: com.example.aadhaarfpoffline.tatvik.activity.LoginActivityNew.7
+            new AlertDialog.Builder(this).setTitle("Permission Denied").setMessage("Please approve permission again.").setPositiveButton("Okay", new DialogInterface.OnClickListener() { // from class: com.example.aadhaarfpoffline.tatvik.activity.LoginActivityNew.8
                 @Override // android.content.DialogInterface.OnClickListener
                 public void onClick(DialogInterface dialogInterface, int i) {
                     ActivityCompat.requestPermissions(LoginActivityNew.this, new String[]{"android.permission.ACCESS_FINE_LOCATION"}, 99);

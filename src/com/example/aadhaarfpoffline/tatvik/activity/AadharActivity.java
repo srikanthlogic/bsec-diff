@@ -690,7 +690,6 @@ public class AadharActivity extends AppCompatActivity implements MFS100Event, Ob
 
     /* JADX INFO: Access modifiers changed from: private */
     public void popupFailedOffline(String failedmessage, VoterDataNewModel voter) {
-        Toast.makeText(getApplicationContext(), "popupFailedoffline", 1).show();
         AlertDialog.Builder alertDialogBuilder = new AlertDialog.Builder(this);
         System.out.println("popup2");
         alertDialogBuilder.setTitle(this.resources.getString(R.string.aadhaar_authentication));
@@ -959,42 +958,56 @@ public class AadharActivity extends AppCompatActivity implements MFS100Event, Ob
                 Log.v("Pawan ", "starting aadhaar capture");
                 startActivityForResult(intent2, this.CAPTURE_FINGERPRINT_ACTIVITY);
             } else if (this.userAuth.getFingerPrintDevice().equals(Const.eNBioScan)) {
-                final ProgressDialog pdLoading = new ProgressDialog(this);
-                pdLoading.setMessage("\tLoading...");
-                pdLoading.show();
-                RDService.discoverAndCapture(this, false, new RDService.OnRDServiceDiscoveryAndCapture() { // from class: com.example.aadhaarfpoffline.tatvik.activity.AadharActivity.10
-                    @Override // com.example.aadhaarfpoffline.tatvik.uid.RDService.OnRDServiceDiscoveryAndCapture
-                    public void onSuccess(final String result) {
-                        new Handler().postDelayed(new Runnable() { // from class: com.example.aadhaarfpoffline.tatvik.activity.AadharActivity.10.1
-                            @Override // java.lang.Runnable
-                            public void run() {
-                                if (pdLoading != null && pdLoading.isShowing()) {
-                                    pdLoading.dismiss();
+                try {
+                    final ProgressDialog pdLoading = new ProgressDialog(this);
+                    pdLoading.setMessage("\tLoading...");
+                    pdLoading.show();
+                    RDService.discoverAndCapture(this, false, new RDService.OnRDServiceDiscoveryAndCapture() { // from class: com.example.aadhaarfpoffline.tatvik.activity.AadharActivity.10
+                        @Override // com.example.aadhaarfpoffline.tatvik.uid.RDService.OnRDServiceDiscoveryAndCapture
+                        public void onSuccess(final String result) {
+                            AadharActivity.this.runOnUiThread(new Runnable() { // from class: com.example.aadhaarfpoffline.tatvik.activity.AadharActivity.10.1
+                                @Override // java.lang.Runnable
+                                public void run() {
+                                    new Handler().postDelayed(new Runnable() { // from class: com.example.aadhaarfpoffline.tatvik.activity.AadharActivity.10.1.1
+                                        @Override // java.lang.Runnable
+                                        public void run() {
+                                            if (pdLoading != null && pdLoading.isShowing()) {
+                                                pdLoading.dismiss();
+                                            }
+                                            Log.v("Pawan", String.format("pid xml is %s", result));
+                                            AadharActivity.this.fpcaptureString = result;
+                                            AadharActivity.this.captureResult.setText(result);
+                                            AadharActivity.this.partresult2 = result;
+                                            AadharActivity.this.capDoc = AadharActivity.convertStringToXMLDocument(result);
+                                        }
+                                    }, 3000);
                                 }
-                                Log.v("Pawan", String.format("pid xml is %s", result));
-                                AadharActivity.this.fpcaptureString = result;
-                                AadharActivity.this.captureResult.setText(result);
-                                AadharActivity.this.partresult2 = result;
-                                AadharActivity.this.capDoc = AadharActivity.convertStringToXMLDocument(result);
-                                Log.e("successtime", String.valueOf(Calendar.getInstance().getTime()));
-                            }
-                        }, 3000);
-                    }
+                            });
+                        }
 
-                    @Override // com.example.aadhaarfpoffline.tatvik.uid.RDService.OnRDServiceDiscoveryAndCapture
-                    public void onError(final VolleyError error) {
-                        new Handler().postDelayed(new Runnable() { // from class: com.example.aadhaarfpoffline.tatvik.activity.AadharActivity.10.2
-                            @Override // java.lang.Runnable
-                            public void run() {
-                                if (pdLoading != null && pdLoading.isShowing()) {
-                                    pdLoading.dismiss();
+                        @Override // com.example.aadhaarfpoffline.tatvik.uid.RDService.OnRDServiceDiscoveryAndCapture
+                        public void onError(final VolleyError error) {
+                            AadharActivity.this.runOnUiThread(new Runnable() { // from class: com.example.aadhaarfpoffline.tatvik.activity.AadharActivity.10.2
+                                @Override // java.lang.Runnable
+                                public void run() {
+                                    new Handler().postDelayed(new Runnable() { // from class: com.example.aadhaarfpoffline.tatvik.activity.AadharActivity.10.2.1
+                                        @Override // java.lang.Runnable
+                                        public void run() {
+                                            if (pdLoading != null && pdLoading.isShowing()) {
+                                                pdLoading.dismiss();
+                                            }
+                                            String errorMsg = new String(error.networkResponse.data);
+                                            Log.v("Pawan", "error is " + errorMsg);
+                                        }
+                                    }, 3000);
                                 }
-                                String errorMsg = new String(error.networkResponse.data);
-                                Log.v("Pawan", "error is " + errorMsg);
-                            }
-                        }, 3000);
-                    }
-                });
+                            });
+                        }
+                    });
+                } catch (Exception e) {
+                    Log.e("exceptiontry", e.getMessage());
+                    e.printStackTrace();
+                }
             }
         }
     }
@@ -1106,6 +1119,7 @@ public class AadharActivity extends AppCompatActivity implements MFS100Event, Ob
                     } else {
                         AadharActivity.this.voted = ExifInterface.GPS_MEASUREMENT_2D;
                     }
+                    AadharActivity.this.db.updateVOTEDByUSER_ID_Maintable(AadharActivity.this.userAuth.getPanchayatId() + "_" + AadharActivity.this.userAuth.getWardNo() + "_" + AadharActivity.this.userAuth.getBoothNo() + "_" + AadharActivity.this.slnoinward, Integer.parseInt(AadharActivity.this.voted));
                     AadharActivity.this.db.updateAadhaarResultTransTable(AadharActivity.this.voterid, AadharActivity.this.UID, AadharActivity.this.aadhaarmatch, AadharActivity.this.voted, AadharActivity.this.getCurrentTimeInFormat(), AadharActivity.this.userAuth.getTransactionId().longValue());
                     AadharActivity.this.uploadTransactionRow();
                     if (!AadharActivity.this.userAuth.getFingerPrintDevice().equals(Const.Mantra) && !AadharActivity.this.userAuth.getFingerPrintDevice().equals(Const.Tatvik)) {
@@ -1249,6 +1263,7 @@ public class AadharActivity extends AppCompatActivity implements MFS100Event, Ob
                     printStream2.println("fingerprinttemplate2=" + response.body().getMatchedvoterid());
                     Context applicationContext = AadharActivity.this.getApplicationContext();
                     Toast.makeText(applicationContext, "matchedvoterid=" + response.body().getMatchedvoterid(), 1).show();
+                    AadharActivity.this.db.updateVOTEDByUSER_ID_Maintable(AadharActivity.this.userAuth.getPanchayatId() + "_" + AadharActivity.this.userAuth.getWardNo() + "_" + AadharActivity.this.userAuth.getBoothNo() + "_" + AadharActivity.this.slnoinward, Integer.parseInt(voted));
                     AadharActivity.this.db.updateAadhaarResultTransTable(voterid, AadharActivity.this.UID, AadharActivity.this.aadhaarmatch, voted, AadharActivity.this.getCurrentTimeInFormat(), AadharActivity.this.userAuth.getTransactionId().longValue());
                     AadharActivity aadharActivity = AadharActivity.this;
                     aadharActivity.updateAadhaarResult(voterid, aadharActivity.UID, AadharActivity.this.aadhaarmatch, voted);
@@ -1260,6 +1275,7 @@ public class AadharActivity extends AppCompatActivity implements MFS100Event, Ob
                 Context applicationContext = AadharActivity.this.getApplicationContext();
                 Toast.makeText(applicationContext, "matchedvoterid= Error=" + t.getMessage(), 1).show();
                 if (!(t instanceof SocketTimeoutException) && (t instanceof IOException)) {
+                    AadharActivity.this.db.updateVOTEDByUSER_ID_Maintable(AadharActivity.this.userAuth.getPanchayatId() + "_" + AadharActivity.this.userAuth.getWardNo() + "_" + AadharActivity.this.userAuth.getBoothNo() + "_" + AadharActivity.this.slnoinward, Integer.parseInt(voted));
                     AadharActivity.this.db.updateAadhaarResultTransTable(voterid, AadharActivity.this.UID, AadharActivity.this.aadhaarmatch, voted, AadharActivity.this.getCurrentTimeInFormat(), AadharActivity.this.userAuth.getTransactionId().longValue());
                 }
             }
@@ -1355,6 +1371,7 @@ public class AadharActivity extends AppCompatActivity implements MFS100Event, Ob
         ((GetDataService) RetrofitClientInstance.getRetrofitInstance().create(GetDataService.class)).updateFpServer2(map).enqueue(new Callback<FinperprintCompareServerResponse>() { // from class: com.example.aadhaarfpoffline.tatvik.activity.AadharActivity.17
             @Override // retrofit2.Callback
             public void onResponse(Call<FinperprintCompareServerResponse> call, Response<FinperprintCompareServerResponse> response) {
+                AadharActivity.this.db.updateVOTEDByUSER_ID_Maintable(AadharActivity.this.userAuth.getPanchayatId() + "_" + AadharActivity.this.userAuth.getWardNo() + "_" + AadharActivity.this.userAuth.getBoothNo() + "_" + AadharActivity.this.slnoinward, Integer.parseInt(voted));
                 AadharActivity.this.db.updateAadhaarResultTransTable(voter_id, AadharActivity.this.UID, AadharActivity.this.aadhaarmatch, voted, AadharActivity.this.getCurrentTimeInFormat(), AadharActivity.this.userAuth.getTransactionId().longValue());
                 AadharActivity aadharActivity = AadharActivity.this;
                 aadharActivity.updateAadhaarResult(voter_id, aadharActivity.UID, AadharActivity.this.aadhaarmatch, voted);
@@ -1363,6 +1380,7 @@ public class AadharActivity extends AppCompatActivity implements MFS100Event, Ob
             @Override // retrofit2.Callback
             public void onFailure(Call<FinperprintCompareServerResponse> call, Throwable t) {
                 if (!(t instanceof SocketTimeoutException) && (t instanceof IOException)) {
+                    AadharActivity.this.db.updateVOTEDByUSER_ID_Maintable(AadharActivity.this.userAuth.getPanchayatId() + "_" + AadharActivity.this.userAuth.getWardNo() + "_" + AadharActivity.this.userAuth.getBoothNo() + "_" + AadharActivity.this.slnoinward, Integer.parseInt(voted));
                     AadharActivity.this.db.updateAadhaarResultTransTable(voter_id, AadharActivity.this.UID, AadharActivity.this.aadhaarmatch, voted, AadharActivity.this.getCurrentTimeInFormat(), AadharActivity.this.userAuth.getTransactionId().longValue());
                 }
             }
@@ -1373,18 +1391,16 @@ public class AadharActivity extends AppCompatActivity implements MFS100Event, Ob
         NBioBSPJNI.CURRENT_PRODUCT_ID = 0;
         if (this.bsp == null) {
             this.bsp = new NBioBSPJNI("010701-613E5C7F4CC7C4B0-72E340B47E034015", this, this.mCallback);
-            String msg = null;
             if (this.bsp.IsErrorOccured()) {
-                msg = "NBioBSP Error: " + this.bsp.GetErrorCode();
-            } else {
-                NBioBSPJNI nBioBSPJNI = this.bsp;
-                Objects.requireNonNull(nBioBSPJNI);
-                this.exportEngine = new NBioBSPJNI.Export();
-                NBioBSPJNI nBioBSPJNI2 = this.bsp;
-                Objects.requireNonNull(nBioBSPJNI2);
-                this.indexSearch = new NBioBSPJNI.IndexSearch();
+                Toast.makeText(getApplicationContext(), "NBioBSP Error: " + this.bsp.GetErrorCode(), 1).show();
+                return;
             }
-            Toast.makeText(getApplicationContext(), msg, 1).show();
+            NBioBSPJNI nBioBSPJNI = this.bsp;
+            Objects.requireNonNull(nBioBSPJNI);
+            this.exportEngine = new NBioBSPJNI.Export();
+            NBioBSPJNI nBioBSPJNI2 = this.bsp;
+            Objects.requireNonNull(nBioBSPJNI2);
+            this.indexSearch = new NBioBSPJNI.IndexSearch();
         }
     }
 
@@ -1581,18 +1597,14 @@ public class AadharActivity extends AppCompatActivity implements MFS100Event, Ob
 
     /* JADX INFO: Access modifiers changed from: private */
     public String compareAndLockNetgin(String voterid, byte[] finger_template1) {
-        Toast.makeText(getApplicationContext(), "CompareFingerprint", 1).show();
         Cursor cursor = this.db.fpcompareTransTable(voterid);
         int numrows = 0;
         if (!cursor.moveToFirst()) {
             return "";
         }
-        Toast.makeText(getApplicationContext(), "CompareFingerprint2", 1).show();
         do {
             byte[] fingerprint1 = cursor.getBlob(cursor.getColumnIndex("FingerTemplate"));
             numrows++;
-            Context applicationContext = getApplicationContext();
-            Toast.makeText(applicationContext, "CompareFingerprint3 numrows=" + numrows, 1).show();
             if (this.byTemplate1 != null) {
                 NBioBSPJNI nBioBSPJNI = this.bsp;
                 Objects.requireNonNull(nBioBSPJNI);
@@ -1628,8 +1640,6 @@ public class AadharActivity extends AppCompatActivity implements MFS100Event, Ob
                     this.msg = "Template VerifyMatch Successed";
                     String matchvoterid = cursor.getString(cursor.getColumnIndex("EPIC_NO"));
                     this.matchslnoinward = cursor.getString(cursor.getColumnIndex("SlNoInWard"));
-                    Context applicationContext2 = getApplicationContext();
-                    Toast.makeText(applicationContext2, "Match voterid" + matchvoterid, 1).show();
                     return matchvoterid;
                 } else {
                     this.msg = "Template VerifyMatch Failed";

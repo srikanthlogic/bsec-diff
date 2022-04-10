@@ -27,7 +27,7 @@ public class SplashActivity extends AppCompatActivity {
                     i.setFlags(i.getFlags() | 1073741824);
                     SplashActivity.this.startActivity(i);
                 } else {
-                    SplashActivity.this.startActivity(new Intent(SplashActivity.this.getApplicationContext(), LoginActivityNew.class));
+                    SplashActivity.this.startActivity(new Intent(SplashActivity.this.getApplicationContext(), LoginActivityWithoutLocation.class));
                 }
                 SplashActivity.this.finish();
             }
