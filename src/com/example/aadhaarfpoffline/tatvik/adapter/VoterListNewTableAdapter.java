@@ -11,8 +11,6 @@ import android.widget.RelativeLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 import androidx.cardview.widget.CardView;
-import androidx.core.content.ContextCompat;
-import androidx.exifinterface.media.ExifInterface;
 import androidx.recyclerview.widget.RecyclerView;
 import com.example.aadhaarfpoffline.tatvik.LocaleHelper;
 import com.example.aadhaarfpoffline.tatvik.R;
@@ -20,7 +18,6 @@ import com.example.aadhaarfpoffline.tatvik.UserAuth;
 import com.example.aadhaarfpoffline.tatvik.model.VoterDataNewModel;
 import java.text.SimpleDateFormat;
 import java.util.List;
-import okhttp3.internal.cache.DiskLruCache;
 /* loaded from: classes2.dex */
 public class VoterListNewTableAdapter extends RecyclerView.Adapter<ViewHolder> {
     private Boolean Clickable;
@@ -110,14 +107,16 @@ public class VoterListNewTableAdapter extends RecyclerView.Adapter<ViewHolder> {
             v.setOnClickListener(new View.OnClickListener(VoterListNewTableAdapter.this) { // from class: com.example.aadhaarfpoffline.tatvik.adapter.VoterListNewTableAdapter.ViewHolder.1
                 @Override // android.view.View.OnClickListener
                 public void onClick(View view) {
-                    Context context = VoterListNewTableAdapter.this.mcontext;
-                    Toast.makeText(context, "App is locked? " + VoterListNewTableAdapter.this.userAuth.ifLocked(), 1).show();
                     if (!VoterListNewTableAdapter.this.userAuth.ifLocked().booleanValue()) {
                         int pos = ViewHolder.this.getAdapterPosition();
-                        VoterListNewTableAdapter.this.listener.onItemClick3(pos, ((VoterDataNewModel) VoterListNewTableAdapter.this.voterDataModelList.get(pos)).getEPIC_NO());
-                        return;
+                        if (pos >= 0) {
+                            VoterListNewTableAdapter.this.listener.onItemClick3(pos, ((VoterDataNewModel) VoterListNewTableAdapter.this.voterDataModelList.get(pos)).getEPIC_NO());
+                        } else {
+                            Toast.makeText(VoterListNewTableAdapter.this.mcontext, "Voter with Improper position is clicked", 1).show();
+                        }
+                    } else {
+                        Toast.makeText(VoterListNewTableAdapter.this.mcontext, "App is locked.Booth officer fingerprint required", 1).show();
                     }
-                    Toast.makeText(VoterListNewTableAdapter.this.mcontext, "App is locked.Booth officer fingerprint required", 1).show();
                 }
             });
             this.VoterName = (TextView) v.findViewById(R.id.voter_name);
@@ -154,16 +153,7 @@ public class VoterListNewTableAdapter extends RecyclerView.Adapter<ViewHolder> {
             } else {
                 this.imageView.setImageResource(R.drawable.woman);
             }
-            if (((VoterDataNewModel) VoterListNewTableAdapter.this.voterDataModelList.get(position)).getVOTED().equalsIgnoreCase("0")) {
-                this.votedOrNot.setText(VoterListNewTableAdapter.this.resources.getString(R.string.not_voted_text));
-                this.votedOrNot.setBackgroundTintList(ContextCompat.getColorStateList(VoterListNewTableAdapter.this.mcontext, R.color.blue));
-            } else if (((VoterDataNewModel) VoterListNewTableAdapter.this.voterDataModelList.get(position)).getVOTED().equalsIgnoreCase(DiskLruCache.VERSION_1) || ((VoterDataNewModel) VoterListNewTableAdapter.this.voterDataModelList.get(position)).getVOTED().equalsIgnoreCase(ExifInterface.GPS_MEASUREMENT_3D)) {
-                this.votedOrNot.setText(VoterListNewTableAdapter.this.resources.getString(R.string.voted_text));
-                this.votedOrNot.setBackgroundTintList(ContextCompat.getColorStateList(VoterListNewTableAdapter.this.mcontext, R.color.green));
-            } else if (((VoterDataNewModel) VoterListNewTableAdapter.this.voterDataModelList.get(position)).getVOTED().equalsIgnoreCase(ExifInterface.GPS_MEASUREMENT_2D)) {
-                this.votedOrNot.setText(VoterListNewTableAdapter.this.resources.getString(R.string.not_voted_text));
-                this.votedOrNot.setBackgroundTintList(ContextCompat.getColorStateList(VoterListNewTableAdapter.this.mcontext, R.color.blue));
-            }
+            this.votedOrNot.setVisibility(8);
         }
     }
 

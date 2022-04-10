@@ -357,4 +357,7 @@ public class SyncActivity extends AppCompatActivity implements SyncTableAdapter.
 
     private void exportCSV() {
     }
+
+    private void uploadTransactionTable() {
+    }
 }

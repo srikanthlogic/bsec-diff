@@ -11,6 +11,7 @@ import android.hardware.usb.UsbManager;
 import android.util.Base64;
 import android.util.Log;
 import androidx.core.app.NotificationManagerCompat;
+import com.alcorlink.camera.AlErrorCode;
 import com.facebook.common.statfs.StatFsHelper;
 import com.facebook.imagepipeline.common.RotationOptions;
 import java.io.ByteArrayOutputStream;
@@ -746,8 +747,8 @@ public class MFS100 {
                 lstHeader.write(0);
                 lstHeader.write(IntToBytes(StatFsHelper.DEFAULT_DISK_YELLOW_LEVEL_IN_MB, 2));
                 lstHeader.write(IntToBytes(500, 2));
-                lstHeader.write(IntToBytes(197, 2));
-                lstHeader.write(IntToBytes(197, 2));
+                lstHeader.write(IntToBytes(AlErrorCode.ERR_NOT_INIT, 2));
+                lstHeader.write(IntToBytes(AlErrorCode.ERR_NOT_INIT, 2));
                 lstHeader.write(1);
                 lstHeader.write(0);
                 lstHeader.write(0);
