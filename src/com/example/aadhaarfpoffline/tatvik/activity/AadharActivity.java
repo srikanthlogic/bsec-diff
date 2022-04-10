@@ -1183,22 +1183,17 @@ public class AadharActivity extends AppCompatActivity implements MFS100Event, Ob
 
     /* JADX INFO: Access modifiers changed from: private */
     public String CompareFingerprintTatvikTransTable(String voterid, byte[] fingerprint2) {
-        Toast.makeText(getApplicationContext(), "CompareFingerprint", 1).show();
         Cursor cursor = this.db.fpcompareTransTable(voterid);
         int numrows = 0;
         if (!cursor.moveToFirst()) {
             return "";
         }
-        Toast.makeText(getApplicationContext(), "CompareFingerprint2", 1).show();
         do {
-            byte[] fingerprint1 = cursor.getBlob(cursor.getColumnIndex("FingerTemplate"));
             numrows++;
-            Context applicationContext = getApplicationContext();
-            Toast.makeText(applicationContext, "CompareFingerprint3 numrows=" + numrows, 1).show();
-            if (this.tmf20lib.matchIsoTemplates(fingerprint1, fingerprint2)) {
+            if (this.tmf20lib.matchIsoTemplates(cursor.getBlob(cursor.getColumnIndex("FingerTemplate")), fingerprint2)) {
                 String matchvoterid = cursor.getString(cursor.getColumnIndex("EPIC_NO"));
-                Context applicationContext2 = getApplicationContext();
-                Toast.makeText(applicationContext2, "Match voterid" + matchvoterid, 1).show();
+                Context applicationContext = getApplicationContext();
+                Toast.makeText(applicationContext, "Match voterid" + matchvoterid, 1).show();
                 return matchvoterid;
             }
         } while (cursor.moveToNext());

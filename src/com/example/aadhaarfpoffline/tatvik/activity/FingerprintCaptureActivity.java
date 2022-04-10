@@ -1105,6 +1105,7 @@ public class FingerprintCaptureActivity extends AppCompatActivity implements MFS
         i.putExtra("facematchvoterid", this.nameIfFoundFace);
         i.putExtra("fpmatchvotertid", this.nameIfFoundFp);
         i.putExtra("voted", this.voted);
+        i.putExtra("slnoinward", this.slnoinward);
         startActivity(i);
     }
 
