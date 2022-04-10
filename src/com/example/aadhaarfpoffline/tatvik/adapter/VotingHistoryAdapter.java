@@ -111,15 +111,11 @@ public class VotingHistoryAdapter extends RecyclerView.Adapter<ViewHolder> {
             v.setOnClickListener(new View.OnClickListener(VotingHistoryAdapter.this) { // from class: com.example.aadhaarfpoffline.tatvik.adapter.VotingHistoryAdapter.ViewHolder.1
                 @Override // android.view.View.OnClickListener
                 public void onClick(View view) {
-                    if (!VotingHistoryAdapter.this.userAuth.ifLocked().booleanValue()) {
-                        int pos = ViewHolder.this.getAdapterPosition();
-                        if (pos >= 0) {
-                            VotingHistoryAdapter.this.listener.onItemClick3(pos, ((VotingHistoryModel) VotingHistoryAdapter.this.votingHistoryModelList.get(pos)).getSlNoInWard());
-                        } else {
-                            Toast.makeText(VotingHistoryAdapter.this.mcontext, "Voter with Improper position is clicked", 1).show();
-                        }
+                    int pos = ViewHolder.this.getAdapterPosition();
+                    if (pos >= 0) {
+                        VotingHistoryAdapter.this.listener.onItemClick3(pos, ((VotingHistoryModel) VotingHistoryAdapter.this.votingHistoryModelList.get(pos)).getSlNoInWard());
                     } else {
-                        Toast.makeText(VotingHistoryAdapter.this.mcontext, "App is locked.Booth officer fingerprint required", 1).show();
+                        Toast.makeText(VotingHistoryAdapter.this.mcontext, "Voter with Improper position is clicked", 1).show();
                     }
                 }
             });
@@ -142,6 +138,8 @@ public class VotingHistoryAdapter extends RecyclerView.Adapter<ViewHolder> {
                 this.votedOrNot.setText("VOTED");
             } else if (((VotingHistoryModel) VotingHistoryAdapter.this.votingHistoryModelList.get(position)).getVoted().equalsIgnoreCase(ExifInterface.GPS_MEASUREMENT_2D)) {
                 this.votedOrNot.setText("REJECTED");
+            } else if (((VotingHistoryModel) VotingHistoryAdapter.this.votingHistoryModelList.get(position)).getVoted().equalsIgnoreCase("0")) {
+                this.votedOrNot.setText("NOT VOTED");
             }
             if (((VotingHistoryModel) VotingHistoryAdapter.this.votingHistoryModelList.get(position)).getVotingDate() == null || ((VotingHistoryModel) VotingHistoryAdapter.this.votingHistoryModelList.get(position)).getVotingDate().isEmpty() || ((VotingHistoryModel) VotingHistoryAdapter.this.votingHistoryModelList.get(position)).getVotingDate().length() < 1) {
                 this.VotingDate.setText("Voting Not complete");

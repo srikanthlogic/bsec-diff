@@ -30,6 +30,7 @@ import com.example.aadhaarfpoffline.tatvik.model.VoterDataNewModel;
 import com.example.aadhaarfpoffline.tatvik.network.DBUpdateResponse;
 import com.example.aadhaarfpoffline.tatvik.network.ImageUploadResponse;
 import com.example.aadhaarfpoffline.tatvik.network.VoterListNewTableGetResponse;
+import com.example.aadhaarfpoffline.tatvik.util.Const;
 import com.facebook.common.util.UriUtil;
 import com.google.common.net.HttpHeaders;
 import java.io.File;
@@ -232,7 +233,7 @@ public class SyncActivity extends AppCompatActivity implements SyncTableAdapter.
     }
 
     private void uploadImage22september(HashMap<String, RequestBody> map, String imagename) {
-        File file = new File("/sdcard/Images/", imagename);
+        File file = new File("/sdcard/" + Const.PublicImageName + "/", imagename);
         try {
             BitmapFactory.decodeFile(file.getPath()).compress(Bitmap.CompressFormat.JPEG, 2, new FileOutputStream(file));
         } catch (Throwable t) {

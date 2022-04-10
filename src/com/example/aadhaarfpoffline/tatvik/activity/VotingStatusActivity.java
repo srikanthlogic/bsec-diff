@@ -28,6 +28,7 @@ import com.example.aadhaarfpoffline.tatvik.adapter.VotingHistoryAdapter;
 import com.example.aadhaarfpoffline.tatvik.database.DBHelper;
 import com.example.aadhaarfpoffline.tatvik.model.VoterDataNewModel;
 import com.example.aadhaarfpoffline.tatvik.model.VotingHistoryModel;
+import com.example.aadhaarfpoffline.tatvik.util.Const;
 import com.facebook.drawee.view.SimpleDraweeView;
 import java.io.File;
 import java.util.List;
@@ -119,6 +120,9 @@ public class VotingStatusActivity extends AppCompatActivity implements VotingHis
         Toast.makeText(applicationContext, "position=" + position + " slnoinward=" + slnoinward, 1).show();
         Context applicationContext2 = getApplicationContext();
         Toast.makeText(applicationContext2, "image=" + this.list.get(position).getMATCHED_ID_DOCUMENT_IMAGE() + " userid=" + this.list.get(position).getMATCHED_USER_ID(), 1).show();
+        if (this.list.get(position).getVoted() == null || this.list.get(position).getVoted().isEmpty() || this.list.get(position).getVoted().length() < 1) {
+            Toast.makeText(getApplicationContext(), "Voted filed empty", 1).show();
+        }
         if (this.list.get(position).getVoted().equalsIgnoreCase(ExifInterface.GPS_MEASUREMENT_2D)) {
             String[] words = this.list.get(position).getMATCHED_USER_ID().split("_");
             if (words != null && words.length == 4) {
@@ -182,7 +186,7 @@ public class VotingStatusActivity extends AppCompatActivity implements VotingHis
         TextView messageText = (TextView) dialogView.findViewById(R.id.match_message);
         TextView messageVoterOnNot = (TextView) dialogView.findViewById(R.id.message);
         String voterimage = this.list.get(position).getMATCHED_ID_DOCUMENT_IMAGE();
-        File imgFile = new File("/sdcard/Images/" + voterimage);
+        File imgFile = new File("/sdcard/" + Const.PublicImageName + "/" + voterimage);
         if (imgFile.exists()) {
             Bitmap myBitmap = BitmapFactory.decodeFile(imgFile.getAbsolutePath());
             matchUserImage.setVisibility(0);
