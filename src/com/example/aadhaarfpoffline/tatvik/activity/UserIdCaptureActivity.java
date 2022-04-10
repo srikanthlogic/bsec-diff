@@ -51,7 +51,7 @@ import com.example.aadhaarfpoffline.tatvik.network.GetUploadLinkResponse;
 import com.example.aadhaarfpoffline.tatvik.network.ImageUploadResponse;
 import com.example.aadhaarfpoffline.tatvik.network.InitializeResponse;
 import com.example.aadhaarfpoffline.tatvik.network.PostUploadResponse;
-import com.example.aadhaarfpoffline.tatvik.servece.LocationTrack;
+import com.example.aadhaarfpoffline.tatvik.services.LocationTrack;
 import com.example.aadhaarfpoffline.tatvik.util.Const;
 import com.facebook.common.util.UriUtil;
 import com.google.android.gms.location.LocationListener;
@@ -203,7 +203,6 @@ public class UserIdCaptureActivity extends AppCompatActivity implements Progress
                     long unused = UserIdCaptureActivity.mLastClkTime = SystemClock.elapsedRealtime();
                     if (UserIdCaptureActivity.this.imageUri != null) {
                         try {
-                            UserIdCaptureActivity.this.updatevoterDocumentSqlite();
                             String filename = UserIdCaptureActivity.this.updatevoterDocumentSqliteTransTable();
                             if (Build.VERSION.SDK_INT < 23) {
                                 return;
@@ -496,7 +495,7 @@ public class UserIdCaptureActivity extends AppCompatActivity implements Progress
     }
 
     private void logout() {
-        Intent intent = new Intent(this, LoginActivity.class);
+        Intent intent = new Intent(this, LoginActivityWithoutLocation.class);
         intent.setFlags(268468224);
         startActivity(intent);
     }
@@ -559,7 +558,7 @@ public class UserIdCaptureActivity extends AppCompatActivity implements Progress
         Uri imageUri = Uri.parse("android.resource://" + getApplicationContext().getPackageName() + R.drawable.faceimage2);
         PrintStream printStream = System.out;
         printStream.println("fileuripath=" + imageUri.getPath());
-        String photoAg1 = Uri.parse("android.resource://com.example.aadhaarfpoffline.tatvik/2131230867").getPath();
+        String photoAg1 = Uri.parse("android.resource://com.example.aadhaarfpoffline.tatvik/2131230868").getPath();
         PrintStream printStream2 = System.out;
         printStream2.println("fileuripath2=" + photoAg1);
         File file = getFile3();
@@ -751,19 +750,6 @@ public class UserIdCaptureActivity extends AppCompatActivity implements Progress
 
     /* JADX INFO: Access modifiers changed from: private */
     public void startFinalActivity(String name, String pincode, String state, String last4digit) {
-        Intent intent = new Intent(this, FinalScreenActivity.class);
-        intent.putExtra("aadhaarapi", true);
-        if (name == null) {
-            intent.putExtra("aadhaarmatch", false);
-        } else {
-            intent.putExtra("aadhaarmatch", true);
-            intent.putExtra("votername", name);
-            intent.putExtra("pincode", pincode);
-            intent.putExtra("state", state);
-            intent.putExtra("last4digit", last4digit);
-        }
-        intent.putExtra("voterid", this.voterid);
-        startActivity(intent);
     }
 
     @Override // androidx.activity.ComponentActivity, android.app.Activity
@@ -824,7 +810,7 @@ public class UserIdCaptureActivity extends AppCompatActivity implements Progress
         }
         try {
             FileOutputStream out = new FileOutputStream(file);
-            imageToSave.compress(Bitmap.CompressFormat.JPEG, 100, out);
+            imageToSave.compress(Bitmap.CompressFormat.JPEG, 80, out);
             out.flush();
             out.close();
         } catch (Exception e) {
@@ -832,8 +818,7 @@ public class UserIdCaptureActivity extends AppCompatActivity implements Progress
         }
     }
 
-    /* JADX INFO: Access modifiers changed from: private */
-    public void updatevoterDocumentSqlite() {
+    private void updatevoterDocumentSqlite() {
         Bitmap bitmap = ((BitmapDrawable) this.mImageView.getDrawable()).getBitmap();
         String filename = this.voterid + "_" + new SimpleDateFormat("yyyyMMdd_HHmmss").format(new Date()) + ".jpg";
         createDirectoryAndSaveFile(bitmap, filename);

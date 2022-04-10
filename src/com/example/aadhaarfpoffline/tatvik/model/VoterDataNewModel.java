@@ -69,6 +69,8 @@ public class VoterDataNewModel {
     private String STATUS_TYPE;
     @SerializedName("SlNoInWard")
     private String SlNoInWard;
+    @SerializedName("USER_ID")
+    private String USER_ID = "";
     @SerializedName("UserId")
     private String UserId;
     @SerializedName("VOTED")
@@ -408,5 +410,9 @@ public class VoterDataNewModel {
 
     public String getBoothNo() {
         return this.BoothNo;
+    }
+
+    public String getUSER_ID() {
+        return this.USER_ID;
     }
 }

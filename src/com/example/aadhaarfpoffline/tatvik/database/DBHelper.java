@@ -558,6 +558,82 @@ public class DBHelper extends SQLiteOpenHelper {
         }
     }
 
+    public String getUSER_IDForAadhaar(String aadhaanum) {
+        String selectQuery = "SELECT  * FROM " + this.tbl_transaction + " where AADHAAR_NO='" + aadhaanum + "' ";
+        SQLiteDatabase db = getReadableDatabase();
+        try {
+            Cursor cursor = db.rawQuery(selectQuery, null);
+            if (!cursor.moveToFirst()) {
+                try {
+                    cursor.close();
+                } catch (Exception e) {
+                }
+                try {
+                    db.close();
+                    return "";
+                } catch (Exception e2) {
+                    return "";
+                }
+            } else if (cursor.moveToFirst()) {
+                String user_id = cursor.getString(cursor.getColumnIndex("USER_ID"));
+                try {
+                    cursor.close();
+                } catch (Exception e3) {
+                }
+                return user_id;
+            } else {
+                do {
+                } while (cursor.moveToNext());
+                cursor.close();
+                db.close();
+                return "";
+            }
+        } finally {
+            try {
+                db.close();
+            } catch (Exception e4) {
+            }
+        }
+    }
+
+    public String getID_DOCUMENT_IMAGEForAadhaar(String aadhaanum) {
+        String selectQuery = "SELECT  * FROM " + this.tbl_transaction + " where AADHAAR_NO='" + aadhaanum + "' ";
+        SQLiteDatabase db = getReadableDatabase();
+        try {
+            Cursor cursor = db.rawQuery(selectQuery, null);
+            if (!cursor.moveToFirst()) {
+                try {
+                    cursor.close();
+                } catch (Exception e) {
+                }
+                try {
+                    db.close();
+                    return "";
+                } catch (Exception e2) {
+                    return "";
+                }
+            } else if (cursor.moveToFirst()) {
+                String user_id = cursor.getString(cursor.getColumnIndex("ID_DOCUMENT_IMAGE"));
+                try {
+                    cursor.close();
+                } catch (Exception e3) {
+                }
+                return user_id;
+            } else {
+                do {
+                } while (cursor.moveToNext());
+                cursor.close();
+                db.close();
+                return "";
+            }
+        } finally {
+            try {
+                db.close();
+            } catch (Exception e4) {
+            }
+        }
+    }
+
     public String getuseridimageTransTable(String voterid) {
         Cursor c = getReadableDatabase().rawQuery("SELECT  ID_DOCUMENT_IMAGE FROM " + this.tbl_transaction + " where EPIC_NO='" + voterid + "'", null);
         String name = c.getString(c.getColumnIndex("SlNoInWard"));
@@ -1378,7 +1454,7 @@ public class DBHelper extends SQLiteOpenHelper {
     }
 
     public long getImageUnSyncCountRejectedVotersMatch() {
-        return (long) getReadableDatabase().rawQuery("SELECT  MATCHED_IMAGE_SYNCED FROM " + this.tbl_transaction + " where MATCHED_IMAGE_SYNCED='0' AND (VOTED='2' OR VOTED='1' OR VOTED='3') ", null).getCount();
+        return (long) getReadableDatabase().rawQuery("SELECT  MATCHED_IMAGE_SYNCED FROM " + this.tbl_transaction + " where MATCHED_ID_DOCUMENT_IMAGE IS NOT NULL AND MATCHED_ID_DOCUMENT_IMAGE != '' AND  MATCHED_IMAGE_SYNCED='0' AND (VOTED='2' OR VOTED='1' OR VOTED='3') ", null).getCount();
     }
 
     public long getImageUnSyncCountThumb() {
