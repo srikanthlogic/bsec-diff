@@ -23,6 +23,7 @@ import com.example.aadhaarfpoffline.tatvik.network.TransactionRowPostResponse;
 import com.example.aadhaarfpoffline.tatvik.network.UserFaceMatchStatusUpdatePostResponse;
 import com.example.aadhaarfpoffline.tatvik.network.UserLocationUpdatePostResponse;
 import com.example.aadhaarfpoffline.tatvik.network.UserVotingStatusUpdatePostResponse;
+import com.example.aadhaarfpoffline.tatvik.network.VoterByUserIdGetResponse;
 import com.example.aadhaarfpoffline.tatvik.network.VoterDataGetResponse;
 import com.example.aadhaarfpoffline.tatvik.network.VoterListGetResponse;
 import com.example.aadhaarfpoffline.tatvik.network.VoterListNewTableGetResponse;
@@ -77,6 +78,9 @@ public interface GetDataService {
 
     @GET("/VoterAuthenticationapi/getVoterData")
     Call<VoterDataGetResponse> getVoterByUserId(@QueryMap Map<String, String> map);
+
+    @GET("/VoterAuthenticationapi/matchuserexists")
+    Call<VoterByUserIdGetResponse> getVoterByUserIdTransTable(@QueryMap Map<String, String> map);
 
     @GET("/VoterAuthenticationapi/getVoterData")
     Call<VoterDataGetResponse> getVoterByUserId_old(@Query("user_id") String str);

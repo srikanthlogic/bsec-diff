@@ -14,6 +14,7 @@ import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.Handler;
 import android.os.SystemClock;
 import android.provider.MediaStore;
 import android.provider.Settings;
@@ -45,12 +46,10 @@ import com.example.aadhaarfpoffline.tatvik.GetDataService;
 import com.example.aadhaarfpoffline.tatvik.LocaleHelper;
 import com.example.aadhaarfpoffline.tatvik.R;
 import com.example.aadhaarfpoffline.tatvik.UserAuth;
-import com.example.aadhaarfpoffline.tatvik.adapter.VoterListAdapter;
 import com.example.aadhaarfpoffline.tatvik.adapter.VoterListNewTableAdapter;
 import com.example.aadhaarfpoffline.tatvik.config.RetrofitClientInstance;
 import com.example.aadhaarfpoffline.tatvik.database.DBHelper;
 import com.example.aadhaarfpoffline.tatvik.model.TransTableDataModel;
-import com.example.aadhaarfpoffline.tatvik.model.VoterDataModel;
 import com.example.aadhaarfpoffline.tatvik.model.VoterDataNewModel;
 import com.example.aadhaarfpoffline.tatvik.network.DBUpdateResponse;
 import com.example.aadhaarfpoffline.tatvik.network.FinperprintCompareServerResponse;
@@ -58,9 +57,9 @@ import com.example.aadhaarfpoffline.tatvik.network.ImageUploadResponse;
 import com.example.aadhaarfpoffline.tatvik.network.LockUpdateResponse;
 import com.example.aadhaarfpoffline.tatvik.network.TransTableGetResponse;
 import com.example.aadhaarfpoffline.tatvik.network.TransactionRowPostResponse;
-import com.example.aadhaarfpoffline.tatvik.network.VoterListGetResponse;
 import com.example.aadhaarfpoffline.tatvik.network.VoterListNewTableGetResponse;
-import com.example.aadhaarfpoffline.tatvik.servece.LocationTrack;
+import com.example.aadhaarfpoffline.tatvik.services.LocationTrack;
+import com.example.aadhaarfpoffline.tatvik.services.ManualSyncService;
 import com.example.aadhaarfpoffline.tatvik.util.Const;
 import com.facebook.common.util.UriUtil;
 import com.google.android.material.navigation.NavigationView;
@@ -94,11 +93,10 @@ import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
 /* loaded from: classes2.dex */
-public class ListUserActivity extends AppCompatActivity implements VoterListAdapter.OnItemClickListener, MFS100Event, NavigationView.OnNavigationItemSelectedListener, VoterListNewTableAdapter.OnItemClickListener, Observer {
+public class ListUserActivity extends AppCompatActivity implements MFS100Event, NavigationView.OnNavigationItemSelectedListener, VoterListNewTableAdapter.OnItemClickListener, Observer {
     public static final String MULTIPART_FORM_DATA;
     private static final int PERMISSION_CODE;
     public static final int QUALITY_LIMIT;
-    private VoterListAdapter adapter;
     private VoterListNewTableAdapter adapter2;
     private Button alternateButton;
     private TextView blockBooth;
@@ -134,7 +132,6 @@ public class ListUserActivity extends AppCompatActivity implements VoterListAdap
     private TextView stateDistrict;
     TMF20API tmf20lib;
     UserAuth userAuth;
-    private List<VoterDataModel> voterDataModelList;
     private List<VoterDataNewModel> voterDataNewModelList;
     private List<VoterDataNewModel> voterDataNewModelList2;
     private List<VoterDataNewModel> voterListFromServer;
@@ -251,7 +248,7 @@ public class ListUserActivity extends AppCompatActivity implements VoterListAdap
         NavigationView navigationView = (NavigationView) findViewById(R.id.nav_view);
         navigationView.setNavigationItemSelectedListener(this);
         MenuItem nav_app_version = navigationView.getMenu().findItem(R.id.nav_app_version);
-        nav_app_version.setTitle("Version 29/" + BuildConfig.VERSION_NAME);
+        nav_app_version.setTitle("Version 34/" + BuildConfig.VERSION_NAME);
         this.recyclerView = (RecyclerView) findViewById(R.id.recyclerview_vendor_list);
         this.userAuth.getBoothId();
         this.search = (EditText) findViewById(R.id.search_text);
@@ -288,7 +285,6 @@ public class ListUserActivity extends AppCompatActivity implements VoterListAdap
                 ListUserActivity.this.search(ListUserActivity.this.search.getText().toString());
             }
         });
-        this.voterDataModelList = new ArrayList();
         this.voterDataNewModelList = new ArrayList();
         this.progressBar.setVisibility(0);
         if (this.db.getAllElements() == null || this.db.getAllElements().size() <= 0) {
@@ -639,27 +635,7 @@ public class ListUserActivity extends AppCompatActivity implements VoterListAdap
         }
     }
 
-    private void getdata() {
-        for (int i = 0; i < 10; i++) {
-            VoterDataModel voterDataModel = new VoterDataModel();
-            voterDataModel.setCreatedAt("121 A/3 Katwaria sarai 110016" + i);
-            voterDataModel.setVoterId("Napo san" + i);
-            voterDataModel.setBlockNo("napo@yeputuye.com" + i);
-            voterDataModel.setGSTIN("gst2345_" + i);
-            voterDataModel.setId("id435_" + i);
-            voterDataModel.setPAM("pam123_" + i);
-            voterDataModel.setDistrict("punjab_" + i);
-            voterDataModel.setBooth_id("punjabstateid_" + i);
-            voterDataModel.setVoter_name("vendor_" + i);
-            this.voterDataModelList.add(voterDataModel);
-        }
-        setRecyclerView();
-    }
-
-    public void setRecyclerView() {
-        this.adapter = new VoterListAdapter(this, this, this.voterDataModelList);
-        this.recyclerView.setAdapter(this.adapter);
-        this.recyclerView.setLayoutManager(new LinearLayoutManager(this, 1, false));
+    private void setRecyclerView() {
     }
 
     public void setRecyclerViewNewTable() {
@@ -669,38 +645,6 @@ public class ListUserActivity extends AppCompatActivity implements VoterListAdap
         this.progressBar.setVisibility(8);
         this.recyclerView.setLayoutManager(linearVertical);
         this.adapter2.notifyDataSetChanged();
-    }
-
-    private void fetchUsersData() {
-        getVoterList();
-    }
-
-    @Override // com.example.aadhaarfpoffline.tatvik.adapter.VoterListAdapter.OnItemClickListener
-    public void onItemClick(int position) {
-        Intent intent = new Intent(this, UserIdCaptureActivity.class);
-        intent.putExtra("voter_name", this.voterDataModelList.get(position).getVoter_name());
-        intent.putExtra("voter_id", this.voterDataModelList.get(position).getVoterId());
-        intent.putExtra("district", this.voterDataModelList.get(position).getDistrict());
-        intent.putExtra("blockno", this.voterDataModelList.get(position).getBlockNo());
-        intent.putExtra("blockid", this.voterDataModelList.get(position).getBooth_id());
-        intent.putExtra("slnoinward", this.voterDataNewModelList.get(position).getSlNoInWard());
-        intent.putExtra("age", this.voterDataNewModelList.get(position).getAge());
-        intent.putExtra("gender", this.voterDataNewModelList.get(position).getGENDER());
-        startActivity(intent);
-    }
-
-    @Override // com.example.aadhaarfpoffline.tatvik.adapter.VoterListAdapter.OnItemClickListener
-    public void onItemClick2(int position) {
-        Intent intent = new Intent(this, UserIdCaptureActivity.class);
-        intent.putExtra("voter_name", this.voterDataModelList.get(position).getVoter_name());
-        intent.putExtra("voter_id", this.voterDataModelList.get(position).getVoterId());
-        intent.putExtra("district", this.voterDataModelList.get(position).getDistrict());
-        intent.putExtra("blockno", this.voterDataModelList.get(position).getBlockNo());
-        intent.putExtra("blockid", this.voterDataModelList.get(position).getBooth_id());
-        intent.putExtra("slnoinward", this.voterDataNewModelList.get(position).getSlNoInWard());
-        intent.putExtra("age", this.voterDataNewModelList.get(position).getAge());
-        intent.putExtra("gender", this.voterDataNewModelList.get(position).getGENDER());
-        startActivity(intent);
     }
 
     @Override // com.example.aadhaarfpoffline.tatvik.adapter.VoterListNewTableAdapter.OnItemClickListener
@@ -791,57 +735,6 @@ public class ListUserActivity extends AppCompatActivity implements VoterListAdap
     public void makeLockButtonsVisible(Boolean visible) {
     }
 
-    private void getVoterList() {
-        ((GetDataService) RetrofitClientInstance.getRetrofitInstance().create(GetDataService.class)).getVoterList().enqueue(new Callback<VoterListGetResponse>() { // from class: com.example.aadhaarfpoffline.tatvik.activity.ListUserActivity.15
-            @Override // retrofit2.Callback
-            public void onResponse(Call<VoterListGetResponse> call, Response<VoterListGetResponse> response) {
-                if (response != null && response.isSuccessful() && response.body() != null && response.body().getVoters() != null) {
-                    ListUserActivity.this.voterDataModelList = response.body().getVoters();
-                    ListUserActivity.this.setRecyclerView();
-                }
-            }
-
-            @Override // retrofit2.Callback
-            public void onFailure(Call<VoterListGetResponse> call, Throwable t) {
-            }
-        });
-    }
-
-    private void getVoterListByBooth(String boothid) {
-        ((GetDataService) RetrofitClientInstance.getRetrofitInstance().create(GetDataService.class)).getVoterListByBoothId(boothid).enqueue(new Callback<VoterListGetResponse>() { // from class: com.example.aadhaarfpoffline.tatvik.activity.ListUserActivity.16
-            @Override // retrofit2.Callback
-            public void onResponse(Call<VoterListGetResponse> call, Response<VoterListGetResponse> response) {
-                ListUserActivity.this.voterDataModelList = response.body().getVoters();
-                if (ListUserActivity.this.lan.equalsIgnoreCase("en")) {
-                    TextView textView = ListUserActivity.this.stateDistrict;
-                    textView.setText(ListUserActivity.this.resources.getString(R.string.panchayat_name) + ":" + ListUserActivity.this.userAuth.getPanchayat_NAME_EN() + " " + ListUserActivity.this.resources.getString(R.string.district_name_text) + ":" + ListUserActivity.this.userAuth.getDIST_NAME_EN() + " " + ListUserActivity.this.resources.getString(R.string.block_name) + ":" + ListUserActivity.this.userAuth.getBlock_NAME_EN());
-                } else {
-                    TextView textView2 = ListUserActivity.this.stateDistrict;
-                    textView2.setText(ListUserActivity.this.resources.getString(R.string.panchayat_name) + ":" + ListUserActivity.this.userAuth.getPanchayat_NAME_HN() + " " + ListUserActivity.this.resources.getString(R.string.district_name_text) + ":" + ListUserActivity.this.userAuth.getDIST_NAME_HN() + " " + ListUserActivity.this.resources.getString(R.string.block_name) + ":" + ListUserActivity.this.userAuth.getBlock_NAME_HN());
-                }
-                TextView textView3 = ListUserActivity.this.blockBooth;
-                StringBuilder sb = new StringBuilder();
-                sb.append(ListUserActivity.this.userAuth.getPanchayatId());
-                sb.append(" ");
-                sb.append(ListUserActivity.this.resources.getString(R.string.booth_no_text));
-                sb.append(":");
-                ListUserActivity listUserActivity = ListUserActivity.this;
-                sb.append(listUserActivity.getBoothInFormat(listUserActivity.userAuth.getBoothNo()));
-                sb.append(",");
-                sb.append(ListUserActivity.this.resources.getString(R.string.ward_no_text));
-                sb.append(":");
-                sb.append(ListUserActivity.this.userAuth.getWardNo());
-                textView3.setText(sb.toString());
-                ListUserActivity.this.numVoters.setText(ListUserActivity.this.resources.getString(R.string.total_no_voters_text, Integer.valueOf(ListUserActivity.this.voterDataNewModelList.size())));
-                ListUserActivity.this.setRecyclerView();
-            }
-
-            @Override // retrofit2.Callback
-            public void onFailure(Call<VoterListGetResponse> call, Throwable t) {
-            }
-        });
-    }
-
     private void getVoterListNewTableByBooth(String dist, String block, String panchayatId, String ward, String booth) {
         HashMap<String, String> map = new HashMap<>();
         map.put("dist_no", dist);
@@ -850,7 +743,7 @@ public class ListUserActivity extends AppCompatActivity implements VoterListAdap
         map.put("ward_no", ward);
         map.put("booth_no", booth);
         map.put("udevid", this.UDevId);
-        ((GetDataService) RetrofitClientInstance.getRetrofitInstance().create(GetDataService.class)).getVoterListNewTableByBoothNo(map).enqueue(new Callback<VoterListNewTableGetResponse>() { // from class: com.example.aadhaarfpoffline.tatvik.activity.ListUserActivity.17
+        ((GetDataService) RetrofitClientInstance.getRetrofitInstance().create(GetDataService.class)).getVoterListNewTableByBoothNo(map).enqueue(new Callback<VoterListNewTableGetResponse>() { // from class: com.example.aadhaarfpoffline.tatvik.activity.ListUserActivity.15
             @Override // retrofit2.Callback
             public void onResponse(Call<VoterListNewTableGetResponse> call, Response<VoterListNewTableGetResponse> response) {
                 Log.d("getdata", response.raw().toString());
@@ -860,8 +753,8 @@ public class ListUserActivity extends AppCompatActivity implements VoterListAdap
                             Log.d("getVoterListNewTableByBooth", response.toString());
                             ListUserActivity.this.voterDataNewModelList = response.body().getVoters();
                             Log.d("getVoterListNewTableByBooth2", ListUserActivity.this.voterDataNewModelList.toString());
-                            $$Lambda$ListUserActivity$17$L8YlHwHJKq7cWBBju86EauHR4c r2 = $$Lambda$ListUserActivity$17$L8YlHwHJKq7cWBBju86EauHR4c.INSTANCE;
-                            $$Lambda$ListUserActivity$17$IB4M3NQI4gZ2SQn48ZnTvdAeEm0 r3 = $$Lambda$ListUserActivity$17$IB4M3NQI4gZ2SQn48ZnTvdAeEm0.INSTANCE;
+                            $$Lambda$ListUserActivity$15$c0P9NQJvKTCgzbWfDwcOxEt6Ncs r2 = $$Lambda$ListUserActivity$15$c0P9NQJvKTCgzbWfDwcOxEt6Ncs.INSTANCE;
+                            $$Lambda$ListUserActivity$15$Xr44Ek0tKiSrJEG5vOQ5dsEiwvY r3 = $$Lambda$ListUserActivity$15$Xr44Ek0tKiSrJEG5vOQ5dsEiwvY.INSTANCE;
                             if (ListUserActivity.this.lan.equalsIgnoreCase("en")) {
                                 TextView textView = ListUserActivity.this.stateDistrict;
                                 textView.setText(ListUserActivity.this.resources.getString(R.string.panchayat_name) + ":" + ListUserActivity.this.userAuth.getPanchayat_NAME_EN() + " " + ListUserActivity.this.resources.getString(R.string.district_name_text) + ":" + ListUserActivity.this.userAuth.getDIST_NAME_EN() + " " + ListUserActivity.this.resources.getString(R.string.block_name) + ":" + ListUserActivity.this.userAuth.getBlock_NAME_EN());
@@ -938,7 +831,7 @@ public class ListUserActivity extends AppCompatActivity implements VoterListAdap
         map.put("ward_no", ward);
         map.put("booth_no", booth);
         map.put("udevid", this.UDevId);
-        ((GetDataService) RetrofitClientInstance.getRetrofitInstance().create(GetDataService.class)).getTransTable(map).enqueue(new Callback<TransTableGetResponse>() { // from class: com.example.aadhaarfpoffline.tatvik.activity.ListUserActivity.18
+        ((GetDataService) RetrofitClientInstance.getRetrofitInstance().create(GetDataService.class)).getTransTable(map).enqueue(new Callback<TransTableGetResponse>() { // from class: com.example.aadhaarfpoffline.tatvik.activity.ListUserActivity.16
             /* JADX WARN: Type inference failed for: r0v2 */
             /* JADX WARN: Type inference failed for: r0v3 */
             /* JADX WARN: Type inference failed for: r0v4, types: [android.widget.Toast] */
@@ -983,7 +876,7 @@ public class ListUserActivity extends AppCompatActivity implements VoterListAdap
     }
 
     private void getVoterListNewTableByBlock(String block) {
-        ((GetDataService) RetrofitClientInstance.getRetrofitInstance().create(GetDataService.class)).getVoterListNewTableByPanchayatId(block).enqueue(new Callback<VoterListNewTableGetResponse>() { // from class: com.example.aadhaarfpoffline.tatvik.activity.ListUserActivity.19
+        ((GetDataService) RetrofitClientInstance.getRetrofitInstance().create(GetDataService.class)).getVoterListNewTableByPanchayatId(block).enqueue(new Callback<VoterListNewTableGetResponse>() { // from class: com.example.aadhaarfpoffline.tatvik.activity.ListUserActivity.17
             @Override // retrofit2.Callback
             public void onResponse(Call<VoterListNewTableGetResponse> call, Response<VoterListNewTableGetResponse> response) {
                 Log.d("basictag success", response.toString());
@@ -1079,7 +972,7 @@ public class ListUserActivity extends AppCompatActivity implements VoterListAdap
     }
 
     public void StartSyncCapture() {
-        new Thread(new Runnable() { // from class: com.example.aadhaarfpoffline.tatvik.activity.ListUserActivity.20
+        new Thread(new Runnable() { // from class: com.example.aadhaarfpoffline.tatvik.activity.ListUserActivity.18
             @Override // java.lang.Runnable
             public void run() {
                 ListUserActivity.this.isCaptureRunning = true;
@@ -1090,7 +983,7 @@ public class ListUserActivity extends AppCompatActivity implements VoterListAdap
                     if (ret == 0) {
                         ListUserActivity.this.lastCapFingerData = fingerData;
                         final Bitmap bitmap = BitmapFactory.decodeByteArray(fingerData.FingerImage(), 0, fingerData.FingerImage().length);
-                        ListUserActivity.this.runOnUiThread(new Runnable() { // from class: com.example.aadhaarfpoffline.tatvik.activity.ListUserActivity.20.1
+                        ListUserActivity.this.runOnUiThread(new Runnable() { // from class: com.example.aadhaarfpoffline.tatvik.activity.ListUserActivity.18.1
                             @Override // java.lang.Runnable
                             public void run() {
                                 ListUserActivity.this.imgFinger.setImageBitmap(bitmap);
@@ -1129,18 +1022,10 @@ public class ListUserActivity extends AppCompatActivity implements VoterListAdap
         } else if (id == R.id.nav_count_offline) {
             getsqlitedata();
         } else if (id == R.id.nav_sync) {
-            if (this.db.getUnSyncCount() > 0) {
-                syncTransTable();
-            } else {
-                Toast.makeText(getApplicationContext(), "All data already synced.Checking if voter images need to be synced", 1).show();
-            }
             if (!checkPermission()) {
                 requestPermissions(new String[]{"android.permission.WRITE_EXTERNAL_STORAGE"}, 1000);
             } else {
-                imageuploadRejectedVoters();
-                imageuploadRejectedVotersMatch();
-                imageuploadThumb();
-                imageupload();
+                startService(new Intent(this, ManualSyncService.class));
             }
         } else if (id == R.id.nav_export) {
             if (Build.VERSION.SDK_INT >= 23) {
@@ -1176,10 +1061,6 @@ public class ListUserActivity extends AppCompatActivity implements VoterListAdap
         }
         ((DrawerLayout) findViewById(R.id.drawer_layout)).closeDrawer(GravityCompat.END);
         return true;
-    }
-
-    private void startSyncActivity() {
-        startActivity(new Intent(this, SyncActivity.class));
     }
 
     public void insertUsersOffline() {
@@ -1561,7 +1442,7 @@ public class ListUserActivity extends AppCompatActivity implements VoterListAdap
         map.put("voterid", voterid);
         map.put("fp", fp_string);
         map.put("udevid", this.UDevId);
-        ((GetDataService) RetrofitClientInstance.getRetrofitInstance().create(GetDataService.class)).updateFpServer2(map).enqueue(new Callback<FinperprintCompareServerResponse>() { // from class: com.example.aadhaarfpoffline.tatvik.activity.ListUserActivity.21
+        ((GetDataService) RetrofitClientInstance.getRetrofitInstance().create(GetDataService.class)).updateFpServer2(map).enqueue(new Callback<FinperprintCompareServerResponse>() { // from class: com.example.aadhaarfpoffline.tatvik.activity.ListUserActivity.19
             @Override // retrofit2.Callback
             public void onResponse(Call<FinperprintCompareServerResponse> call, Response<FinperprintCompareServerResponse> response) {
             }
@@ -1591,7 +1472,7 @@ public class ListUserActivity extends AppCompatActivity implements VoterListAdap
         map.put("VOTED", voteD);
         map.put("ID_DOCUMENT_IMAGE", id_documentimage);
         map.put("udevid", this.UDevId);
-        ((GetDataService) RetrofitClientInstance.getRetrofitInstance().create(GetDataService.class)).postDBUpdate(map).enqueue(new Callback<DBUpdateResponse>() { // from class: com.example.aadhaarfpoffline.tatvik.activity.ListUserActivity.22
+        ((GetDataService) RetrofitClientInstance.getRetrofitInstance().create(GetDataService.class)).postDBUpdate(map).enqueue(new Callback<DBUpdateResponse>() { // from class: com.example.aadhaarfpoffline.tatvik.activity.ListUserActivity.20
             @Override // retrofit2.Callback
             public void onResponse(Call<DBUpdateResponse> call, Response<DBUpdateResponse> response) {
             }
@@ -1625,20 +1506,20 @@ public class ListUserActivity extends AppCompatActivity implements VoterListAdap
         String str5;
         String str6;
         String str7;
-        String slnoinward;
-        String voting_type;
+        String str8;
+        String str9;
         String aadhaarNo;
         String fpString;
         String voting_date;
-        String voting_type2 = "MATCHED_ID_DOCUMENT_IMAGE";
-        String str8 = "MATCHED_USER_ID";
-        String str9 = "user_id";
-        String str10 = "AADHAAR_NO";
-        String str11 = "AADHAAR_MATCH";
-        String str12 = "ID_DOCUMENT_IMAGE";
-        String str13 = "GENDER";
-        String str14 = "AGE";
-        String str15 = "VOTING_TYPE";
+        String slnoinward = "MATCHED_ID_DOCUMENT_IMAGE";
+        String str10 = "MATCHED_USER_ID";
+        String str11 = "user_id";
+        String str12 = "AADHAAR_NO";
+        String str13 = "AADHAAR_MATCH";
+        String str14 = "ID_DOCUMENT_IMAGE";
+        String str15 = "GENDER";
+        String str16 = "AGE";
+        String str17 = "VOTING_TYPE";
         int count = 0;
         try {
             Cursor cursor = this.db.getAllRowsofTransTableCursor();
@@ -1648,35 +1529,35 @@ public class ListUserActivity extends AppCompatActivity implements VoterListAdap
                     int synced = cursor.getInt(cursor.getColumnIndex("SYNCED"));
                     try {
                         int voted = cursor.getInt(cursor.getColumnIndex("VOTED"));
-                        String voting_type3 = cursor.getString(cursor.getColumnIndex(str15));
+                        String voting_type = cursor.getString(cursor.getColumnIndex(str17));
                         if (synced == 1) {
-                            str2 = str9;
-                            str4 = str10;
-                            str3 = str11;
-                            str = str12;
-                            str6 = str13;
-                            str7 = str14;
-                            str5 = str15;
-                            slnoinward = voting_type2;
-                            voting_type = str8;
+                            str4 = str11;
+                            str6 = str12;
+                            str5 = str13;
+                            str3 = str14;
+                            str8 = str15;
+                            str9 = str16;
+                            str7 = str17;
+                            str = slnoinward;
+                            str2 = str10;
                         } else if (voted == 0) {
-                            str2 = str9;
-                            str4 = str10;
-                            str3 = str11;
-                            str = str12;
-                            str6 = str13;
-                            str7 = str14;
-                            str5 = str15;
-                            slnoinward = voting_type2;
-                            voting_type = str8;
+                            str4 = str11;
+                            str6 = str12;
+                            str5 = str13;
+                            str3 = str14;
+                            str8 = str15;
+                            str9 = str16;
+                            str7 = str17;
+                            str = slnoinward;
+                            str2 = str10;
                         } else {
                             Map<String, String> map = new HashMap<>();
                             byte[] fp = cursor.getBlob(cursor.getColumnIndex("FingerTemplate"));
-                            int age = cursor.getInt(cursor.getColumnIndex(str14));
-                            String gender = cursor.getString(cursor.getColumnIndex(str13));
-                            String voterimagename = cursor.getString(cursor.getColumnIndex(str12));
-                            int aadhaarmatch = cursor.getInt(cursor.getColumnIndex(str11));
-                            String aadhaarNo2 = cursor.getString(cursor.getColumnIndex(str10));
+                            int age = cursor.getInt(cursor.getColumnIndex(str16));
+                            String gender = cursor.getString(cursor.getColumnIndex(str15));
+                            String voterimagename = cursor.getString(cursor.getColumnIndex(str14));
+                            int aadhaarmatch = cursor.getInt(cursor.getColumnIndex(str13));
+                            String aadhaarNo2 = cursor.getString(cursor.getColumnIndex(str12));
                             if (aadhaarNo2 == null) {
                                 aadhaarNo2 = "";
                             }
@@ -1688,37 +1569,42 @@ public class ListUserActivity extends AppCompatActivity implements VoterListAdap
                                     String userId = this.userAuth.getPanchayatId() + "_" + this.userAuth.getWardNo() + "_" + this.userAuth.getBoothNo() + "_" + cursor.getString(cursor.getColumnIndex("SlNoInWard"));
                                     String boothid = this.userAuth.getPanchayatId() + "_" + this.userAuth.getWardNo() + "_" + this.userAuth.getBoothNo();
                                     voting_date = cursor.getString(cursor.getColumnIndex("VOTING_DATE"));
-                                    map.put(str9, userId);
-                                    map.put(str9, userId);
-                                    str2 = str9;
+                                    map.put(str11, userId);
+                                    map.put(str11, userId);
+                                    str4 = str11;
                                     map.put("FINGERPRINT_TEMPLATE", fpString);
                                     map.put("VOTED", "" + voted);
-                                    map.put(str12, voterimagename);
-                                    str = str12;
-                                    map.put(str11, "" + aadhaarmatch);
-                                    str3 = str11;
-                                    map.put(str10, aadhaarNo);
+                                    map.put(str14, voterimagename);
+                                    str3 = str14;
+                                    map.put(str13, "" + aadhaarmatch);
+                                    str5 = str13;
+                                    map.put(str12, aadhaarNo);
                                     if (voting_date != null || voting_date.isEmpty() || voting_date.length() <= 0) {
                                         map.put("VOTING_DATE", "");
                                     } else {
                                         map.put("VOTING_DATE", voting_date);
                                     }
-                                    str4 = str10;
-                                    map.put(str15, voting_type3);
+                                    str6 = str12;
+                                    map.put(str17, voting_type);
                                     map.put("booth_id", boothid);
-                                    str5 = str15;
-                                    map.put(str14, "" + age);
-                                    str7 = str14;
-                                    map.put(str13, gender);
-                                    str6 = str13;
+                                    str7 = str17;
+                                    map.put(str16, "" + age);
+                                    str9 = str16;
+                                    map.put(str15, gender);
+                                    str8 = str15;
                                     map.put("udevid", this.UDevId);
-                                    voting_type = str8;
-                                    String matched_user_id = cursor.getString(cursor.getColumnIndex(voting_type));
-                                    slnoinward = voting_type2;
+                                    String matched_user_id = cursor.getString(cursor.getColumnIndex(str10));
                                     String matched_id_document_iamge = cursor.getString(cursor.getColumnIndex(slnoinward));
                                     map.put("matched_user_id", matched_user_id);
-                                    map.put(voting_type, matched_user_id);
+                                    map.put(str10, matched_user_id);
                                     map.put(slnoinward, matched_id_document_iamge);
+                                    str2 = str10;
+                                    str = slnoinward;
+                                    new Handler().postDelayed(new Runnable() { // from class: com.example.aadhaarfpoffline.tatvik.activity.ListUserActivity.21
+                                        @Override // java.lang.Runnable
+                                        public void run() {
+                                        }
+                                    }, 100);
                                     uploadTransactionRow(map);
                                 }
                             } else {
@@ -1729,48 +1615,53 @@ public class ListUserActivity extends AppCompatActivity implements VoterListAdap
                             String userId2 = this.userAuth.getPanchayatId() + "_" + this.userAuth.getWardNo() + "_" + this.userAuth.getBoothNo() + "_" + cursor.getString(cursor.getColumnIndex("SlNoInWard"));
                             String boothid2 = this.userAuth.getPanchayatId() + "_" + this.userAuth.getWardNo() + "_" + this.userAuth.getBoothNo();
                             voting_date = cursor.getString(cursor.getColumnIndex("VOTING_DATE"));
-                            map.put(str9, userId2);
-                            map.put(str9, userId2);
-                            str2 = str9;
+                            map.put(str11, userId2);
+                            map.put(str11, userId2);
+                            str4 = str11;
                             map.put("FINGERPRINT_TEMPLATE", fpString);
                             map.put("VOTED", "" + voted);
-                            map.put(str12, voterimagename);
-                            str = str12;
-                            map.put(str11, "" + aadhaarmatch);
-                            str3 = str11;
-                            map.put(str10, aadhaarNo);
+                            map.put(str14, voterimagename);
+                            str3 = str14;
+                            map.put(str13, "" + aadhaarmatch);
+                            str5 = str13;
+                            map.put(str12, aadhaarNo);
                             if (voting_date != null) {
                             }
                             map.put("VOTING_DATE", "");
-                            str4 = str10;
-                            map.put(str15, voting_type3);
+                            str6 = str12;
+                            map.put(str17, voting_type);
                             map.put("booth_id", boothid2);
-                            str5 = str15;
-                            map.put(str14, "" + age);
-                            str7 = str14;
-                            map.put(str13, gender);
-                            str6 = str13;
+                            str7 = str17;
+                            map.put(str16, "" + age);
+                            str9 = str16;
+                            map.put(str15, gender);
+                            str8 = str15;
                             map.put("udevid", this.UDevId);
-                            voting_type = str8;
-                            String matched_user_id2 = cursor.getString(cursor.getColumnIndex(voting_type));
-                            slnoinward = voting_type2;
+                            String matched_user_id2 = cursor.getString(cursor.getColumnIndex(str10));
                             String matched_id_document_iamge2 = cursor.getString(cursor.getColumnIndex(slnoinward));
                             map.put("matched_user_id", matched_user_id2);
-                            map.put(voting_type, matched_user_id2);
+                            map.put(str10, matched_user_id2);
                             map.put(slnoinward, matched_id_document_iamge2);
+                            str2 = str10;
+                            str = slnoinward;
+                            new Handler().postDelayed(new Runnable() { // from class: com.example.aadhaarfpoffline.tatvik.activity.ListUserActivity.21
+                                @Override // java.lang.Runnable
+                                public void run() {
+                                }
+                            }, 100);
                             uploadTransactionRow(map);
                         }
                         if (cursor.moveToNext()) {
-                            str8 = voting_type;
-                            voting_type2 = slnoinward;
                             count = count;
-                            str14 = str7;
-                            str13 = str6;
-                            str15 = str5;
-                            str10 = str4;
-                            str11 = str3;
-                            str9 = str2;
-                            str12 = str;
+                            str16 = str9;
+                            str15 = str8;
+                            str17 = str7;
+                            str12 = str6;
+                            str13 = str5;
+                            str11 = str4;
+                            str14 = str3;
+                            str10 = str2;
+                            slnoinward = str;
                         } else {
                             return;
                         }
@@ -1794,7 +1685,7 @@ public class ListUserActivity extends AppCompatActivity implements VoterListAdap
         map.put("logoutdate", getCurrentTimeInFormat());
         map.put("user_id", this.userAuth.getPanchayatId() + "_" + this.userAuth.getBoothNo());
         map.put("udevid", this.UDevId);
-        ((GetDataService) RetrofitClientInstance.getRetrofitInstance().create(GetDataService.class)).lockRecordUpdate(map).enqueue(new Callback<LockUpdateResponse>() { // from class: com.example.aadhaarfpoffline.tatvik.activity.ListUserActivity.23
+        ((GetDataService) RetrofitClientInstance.getRetrofitInstance().create(GetDataService.class)).lockRecordUpdate(map).enqueue(new Callback<LockUpdateResponse>() { // from class: com.example.aadhaarfpoffline.tatvik.activity.ListUserActivity.22
             @Override // retrofit2.Callback
             public void onResponse(Call<LockUpdateResponse> call, Response<LockUpdateResponse> response) {
             }
@@ -1823,7 +1714,7 @@ public class ListUserActivity extends AppCompatActivity implements VoterListAdap
         map.put("machine", device);
         map.put("user_id", this.userAuth.getPanchayatId() + "_" + this.userAuth.getWardNo() + "_" + this.userAuth.getBoothNo());
         map.put("udevid", this.UDevId);
-        ((GetDataService) RetrofitClientInstance.getRetrofitInstance().create(GetDataService.class)).lockRecordUpdate(map).enqueue(new Callback<LockUpdateResponse>() { // from class: com.example.aadhaarfpoffline.tatvik.activity.ListUserActivity.24
+        ((GetDataService) RetrofitClientInstance.getRetrofitInstance().create(GetDataService.class)).lockRecordUpdate(map).enqueue(new Callback<LockUpdateResponse>() { // from class: com.example.aadhaarfpoffline.tatvik.activity.ListUserActivity.23
             @Override // retrofit2.Callback
             public void onResponse(Call<LockUpdateResponse> call, Response<LockUpdateResponse> response) {
             }
@@ -1846,7 +1737,7 @@ public class ListUserActivity extends AppCompatActivity implements VoterListAdap
         map.put("machine", device);
         map.put("user_id", this.userAuth.getPanchayatId() + "_" + this.userAuth.getWardNo() + "_" + this.userAuth.getBoothNo());
         map.put("udevid", this.UDevId);
-        ((GetDataService) RetrofitClientInstance.getRetrofitInstance().create(GetDataService.class)).lockRecordUpdate(map).enqueue(new Callback<LockUpdateResponse>() { // from class: com.example.aadhaarfpoffline.tatvik.activity.ListUserActivity.25
+        ((GetDataService) RetrofitClientInstance.getRetrofitInstance().create(GetDataService.class)).lockRecordUpdate(map).enqueue(new Callback<LockUpdateResponse>() { // from class: com.example.aadhaarfpoffline.tatvik.activity.ListUserActivity.24
             @Override // retrofit2.Callback
             public void onResponse(Call<LockUpdateResponse> call, Response<LockUpdateResponse> response) {
                 Toast.makeText(ListUserActivity.this.getApplicationContext(), "response positive", 1).show();
@@ -1878,9 +1769,10 @@ public class ListUserActivity extends AppCompatActivity implements VoterListAdap
 
     private void uploadTransactionRow(Map<String, String> map) {
         final String transId = map.get("TRANSID");
-        ((GetDataService) RetrofitClientInstance.getRetrofitInstanceForSync().create(GetDataService.class)).updateTransactionRow(map).enqueue(new Callback<TransactionRowPostResponse>() { // from class: com.example.aadhaarfpoffline.tatvik.activity.ListUserActivity.26
+        ((GetDataService) RetrofitClientInstance.getRetrofitInstanceForSync().create(GetDataService.class)).updateTransactionRow(map).enqueue(new Callback<TransactionRowPostResponse>() { // from class: com.example.aadhaarfpoffline.tatvik.activity.ListUserActivity.25
             @Override // retrofit2.Callback
             public void onResponse(Call<TransactionRowPostResponse> call, Response<TransactionRowPostResponse> response) {
+                Log.d("syncing", "responserawstring list" + response.raw().toString());
                 if (response == null || response.body() == null || !response.body().getUpdated()) {
                     Context applicationContext = ListUserActivity.this.getApplicationContext();
                     Toast.makeText(applicationContext, "voterlistTransaction row Not updated " + response.code(), 1).show();
@@ -1914,10 +1806,14 @@ public class ListUserActivity extends AppCompatActivity implements VoterListAdap
             return String.valueOf((boothnum.intValue() - 2000) + "ख");
         } else if (boothnum.intValue() > 3000 && boothnum.intValue() <= 4000) {
             return String.valueOf((boothnum.intValue() - PathInterpolatorCompat.MAX_NUM_POINTS) + "ग");
-        } else if (boothnum.intValue() <= 4000 || boothnum.intValue() > 5000) {
+        } else if (boothnum.intValue() > 4000 && boothnum.intValue() <= 5000) {
+            return String.valueOf((boothnum.intValue() - 4000) + "घ");
+        } else if (boothnum.intValue() > 5000 && boothnum.intValue() <= 6000) {
+            return String.valueOf((boothnum.intValue() - 5000) + "ङ");
+        } else if (boothnum.intValue() <= 6000 || boothnum.intValue() > 7000) {
             return "";
         } else {
-            return String.valueOf((boothnum.intValue() - 4000) + "घ");
+            return String.valueOf((boothnum.intValue() - 6000) + "च");
         }
     }
 
@@ -2103,7 +1999,7 @@ public class ListUserActivity extends AppCompatActivity implements VoterListAdap
             Toast.makeText(this, "All rejected matched images already synced", 1).show();
             return;
         }
-        Toast.makeText(this, imagecounttobesynced2 + " images to be synced", 1).show();
+        Toast.makeText(this, imagecounttobesynced2 + "rejected images to be synced", 1).show();
         String androidId = Settings.Secure.getString(getContentResolver(), "android_id");
         UserAuth userAuth = new UserAuth(this);
         Cursor cursor2 = db.getAllRowsofTransTableCursorRejectedVotersMatch();
@@ -2235,7 +2131,7 @@ public class ListUserActivity extends AppCompatActivity implements VoterListAdap
     private synchronized void postDataWithImage(HashMap<String, RequestBody> map, File file, String filename, final DBHelper db, final int transid, final String which_image) {
         Call<ImageUploadResponse> call = ((GetDataService) RetrofitClientInstance.getRetrofitInstanceImageUploadNewUrl().create(GetDataService.class)).postVoterIdentification(MultipartBody.Part.createFormData(UriUtil.LOCAL_FILE_SCHEME, filename, RequestBody.create(MediaType.parse("multipart/form-data"), file)), map);
         Log.d("autosync", "postDataWithImage 1");
-        call.enqueue(new Callback<ImageUploadResponse>() { // from class: com.example.aadhaarfpoffline.tatvik.activity.ListUserActivity.27
+        call.enqueue(new Callback<ImageUploadResponse>() { // from class: com.example.aadhaarfpoffline.tatvik.activity.ListUserActivity.26
             @Override // retrofit2.Callback
             public void onResponse(Call<ImageUploadResponse> call2, Response<ImageUploadResponse> response) {
                 Log.d("autosync", "postDataWithImage 2");

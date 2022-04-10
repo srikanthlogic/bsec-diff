@@ -739,24 +739,17 @@ public class BackgroundService extends IntentService {
         }
     }
 
-    private void uploadTransactionRow(Map<String, String> map, final DBHelper db) {
-        final String transId = map.get("TRANSID");
-        ((GetDataService) RetrofitClientInstance.getRetrofitInstanceForSync().create(GetDataService.class)).updateTransactionRow(map).enqueue(new Callback<TransactionRowPostResponse>() { // from class: com.example.aadhaarfpoffline.tatvik.services.BackgroundService.1
-            @Override // retrofit2.Callback
-            public void onResponse(Call<TransactionRowPostResponse> call, Response<TransactionRowPostResponse> response) {
-                if (response != null && response.body() != null && response.body().getUpdated()) {
-                    db.updateSync(Integer.parseInt(transId), 1);
-                    Context applicationContext = BackgroundService.this.getApplicationContext();
-                    Toast.makeText(applicationContext, "voterlistTransaction row updated successfully" + response.code() + " transid=" + transId, 1).show();
-                }
+    private void uploadTransactionRow(Map<String, String> map, DBHelper db) {
+        String transId = map.get("TRANSID");
+        try {
+            Response<TransactionRowPostResponse> response = ((GetDataService) RetrofitClientInstance.getRetrofitInstanceForSync().create(GetDataService.class)).updateTransactionRow(map).execute();
+            if (response != null && response.body() != null && response.body().getUpdated()) {
+                db.updateSync(Integer.parseInt(transId), 1);
+                Context applicationContext = getApplicationContext();
+                Toast.makeText(applicationContext, "voterlistTransaction row updated successfully" + response.code() + " transid=" + transId, 1).show();
             }
-
-            @Override // retrofit2.Callback
-            public void onFailure(Call<TransactionRowPostResponse> call, Throwable t) {
-                Context applicationContext = BackgroundService.this.getApplicationContext();
-                Toast.makeText(applicationContext, "voterlistTransaction update Error. " + t.getMessage(), 1).show();
-            }
-        });
+        } catch (Exception e) {
+        }
     }
 
     private boolean isNetworkAvailable() {
@@ -766,7 +759,7 @@ public class BackgroundService extends IntentService {
     private synchronized void postDataWithImage(HashMap<String, RequestBody> map, File file, String filename, final DBHelper db, final int transid, final String which_image) {
         Call<ImageUploadResponse> call = ((GetDataService) RetrofitClientInstance.getRetrofitInstanceImageUploadNewUrl().create(GetDataService.class)).postVoterIdentification(MultipartBody.Part.createFormData(UriUtil.LOCAL_FILE_SCHEME, filename, RequestBody.create(MediaType.parse("multipart/form-data"), file)), map);
         Log.d("autosync", "postDataWithImage 1");
-        call.enqueue(new Callback<ImageUploadResponse>() { // from class: com.example.aadhaarfpoffline.tatvik.services.BackgroundService.2
+        call.enqueue(new Callback<ImageUploadResponse>() { // from class: com.example.aadhaarfpoffline.tatvik.services.BackgroundService.1
             @Override // retrofit2.Callback
             public void onResponse(Call<ImageUploadResponse> call2, Response<ImageUploadResponse> response) {
                 Log.d("autosync", "postDataWithImage 2");
