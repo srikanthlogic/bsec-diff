@@ -133,6 +133,7 @@ public class FingerprintCaptureActivity extends AppCompatActivity implements MFS
     String voted = "";
     String voteridtype = "";
     Boolean FaceFound = false;
+    String matchedvoterimagename = "";
     int nFIQ = 0;
     String msg = "";
     private boolean bspConnected = false;
@@ -1131,6 +1132,7 @@ public class FingerprintCaptureActivity extends AppCompatActivity implements MFS
         i.putExtra("fpmatchvotertid", this.nameIfFoundFp);
         i.putExtra("voted", this.voted);
         i.putExtra("slnoinward", this.slnoinward);
+        i.putExtra("matchedvoterimagename", this.matchedvoterimagename);
         startActivity(i);
     }
 
@@ -1212,6 +1214,7 @@ public class FingerprintCaptureActivity extends AppCompatActivity implements MFS
         i.putExtra("voted", this.voted);
         i.putExtra("slnoinward", this.slnoinward);
         i.putExtra("matchslnoinward", fpmatchvoterid);
+        i.putExtra("matchedvoterimagename", this.matchedvoterimagename);
         startActivity(i);
         finish();
     }
@@ -1305,6 +1308,7 @@ public class FingerprintCaptureActivity extends AppCompatActivity implements MFS
 
     private String compareAndLockNetgin(String voterid, byte[] finger_template1) {
         Cursor cursor = this.db.fpcompareTransTable(voterid);
+        this.matchedvoterimagename = "";
         int numrows = 0;
         if (!cursor.moveToFirst()) {
             return "";
@@ -1346,7 +1350,9 @@ public class FingerprintCaptureActivity extends AppCompatActivity implements MFS
                 } else if (bResult.booleanValue()) {
                     this.msg = "Template VerifyMatch Successed";
                     cursor.getString(cursor.getColumnIndex("EPIC_NO"));
-                    return cursor.getString(cursor.getColumnIndex("SlNoInWard"));
+                    String slnoinward = cursor.getString(cursor.getColumnIndex("SlNoInWard"));
+                    this.matchedvoterimagename = cursor.getString(cursor.getColumnIndex("ID_DOCUMENT_IMAGE"));
+                    return slnoinward;
                 } else {
                     this.msg = "Template VerifyMatch Failed";
                 }
@@ -1376,6 +1382,7 @@ public class FingerprintCaptureActivity extends AppCompatActivity implements MFS
     }
 
     private String CompareFingerprintTatvikTransTable(String voterid, byte[] fingerprint2) {
+        this.matchedvoterimagename = "";
         try {
             Cursor cursor = this.db.fpcompareTransTable(voterid);
             int numrows = 0;
@@ -1387,6 +1394,7 @@ public class FingerprintCaptureActivity extends AppCompatActivity implements MFS
                         String slnoinward = cursor.getString(cursor.getColumnIndex("SlNoInWard"));
                         Context applicationContext = getApplicationContext();
                         Toast.makeText(applicationContext, "Match voterid fingerprint capture" + slnoinward, 1).show();
+                        this.matchedvoterimagename = cursor.getString(cursor.getColumnIndex("ID_DOCUMENT_IMAGE"));
                         return slnoinward;
                     }
                 } while (cursor.moveToNext());

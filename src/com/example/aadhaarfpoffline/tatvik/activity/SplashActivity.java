@@ -10,6 +10,7 @@ import android.os.Looper;
 import android.provider.Settings;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.NotificationCompat;
+import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 import androidx.vectordrawable.graphics.drawable.PathInterpolatorCompat;
 import com.example.aadhaarfpoffline.tatvik.R;
 import com.example.aadhaarfpoffline.tatvik.UserAuth;
@@ -31,7 +32,7 @@ public class SplashActivity extends AppCompatActivity {
         this.broadcastReceiver = new ResponseBroadcastReceiver();
         IntentFilter intentFilter = new IntentFilter();
         intentFilter.addAction(BackgroundService.ACTION);
-        registerReceiver(this.broadcastReceiver, intentFilter);
+        LocalBroadcastManager.getInstance(this).registerReceiver(this.broadcastReceiver, intentFilter);
         scheduleAlarm();
         new Handler(Looper.getMainLooper()).postDelayed(new Runnable() { // from class: com.example.aadhaarfpoffline.tatvik.activity.SplashActivity.1
             @Override // java.lang.Runnable
@@ -64,7 +65,7 @@ public class SplashActivity extends AppCompatActivity {
         super.onResume();
         IntentFilter intentFilter = new IntentFilter();
         intentFilter.addAction(BackgroundService.ACTION);
-        registerReceiver(this.broadcastReceiver, intentFilter);
+        LocalBroadcastManager.getInstance(this).registerReceiver(this.broadcastReceiver, intentFilter);
     }
 
     private void scheduleAlarm() {

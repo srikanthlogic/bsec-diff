@@ -14,6 +14,7 @@ import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
 import androidx.appcompat.app.AppCompatActivity;
@@ -50,6 +51,7 @@ public class LoginActivityWithoutLocation extends AppCompatActivity {
     private TextView loginMessage;
     Double longitude;
     private EditText password;
+    private ProgressBar progressBar;
     Runnable r;
     Resources resources;
     private static long mLastClkTime = 0;
@@ -59,7 +61,7 @@ public class LoginActivityWithoutLocation extends AppCompatActivity {
     private String responseString = "";
     String androidId = "";
     String UDevId = "";
-    private String PHASE = "5";
+    private String PHASE = "6";
 
     public LoginActivityWithoutLocation() {
         Double valueOf = Double.valueOf(0.0d);
@@ -97,8 +99,9 @@ public class LoginActivityWithoutLocation extends AppCompatActivity {
         this.password.setHintTextColor(Color.parseColor("#ffffff"));
         this.loginMessage = (TextView) findViewById(R.id.loginmessage);
         this.appVersion = (TextView) findViewById(R.id.versioncode);
+        this.progressBar = (ProgressBar) findViewById(R.id.simpleProgressBar);
         TextView textView = this.appVersion;
-        textView.setText("App version:26/" + BuildConfig.VERSION_NAME);
+        textView.setText("App version:29/" + BuildConfig.VERSION_NAME);
         MultiWaveHeader waveHeader = (MultiWaveHeader) findViewById(R.id.wavebottom);
         waveHeader.setColorAlpha(0.5f);
         waveHeader.start();
@@ -107,7 +110,7 @@ public class LoginActivityWithoutLocation extends AppCompatActivity {
             @Override // android.view.View.OnClickListener
             public void onClick(View view) {
                 if (SystemClock.elapsedRealtime() - LoginActivityWithoutLocation.mLastClkTime < LoginActivityWithoutLocation.Threshold) {
-                    Toast.makeText(LoginActivityWithoutLocation.this.getApplicationContext(), "Please wait for some time", 1).show();
+                    Toast.makeText(LoginActivityWithoutLocation.this.getApplicationContext(), "Waiting for response from Server.Please wait for some time", 1).show();
                     return;
                 }
                 long unused = LoginActivityWithoutLocation.mLastClkTime = SystemClock.elapsedRealtime();
@@ -159,9 +162,12 @@ public class LoginActivityWithoutLocation extends AppCompatActivity {
         map.put("device", device);
         map.put("udevid", this.UDevId);
         map.put("phaseno", this.PHASE);
-        ((GetDataService) RetrofitClientInstance.getRetrofitInstanceLoginOnly().create(GetDataService.class)).getLoginWithUrl(map).enqueue(new Callback<LoginForUrlResponse>("9971791175") { // from class: com.example.aadhaarfpoffline.tatvik.activity.LoginActivityWithoutLocation.3
+        Call<LoginForUrlResponse> call = ((GetDataService) RetrofitClientInstance.getRetrofitInstanceLoginOnly().create(GetDataService.class)).getLoginWithUrl(map);
+        this.progressBar.setVisibility(0);
+        call.enqueue(new Callback<LoginForUrlResponse>("9971791175") { // from class: com.example.aadhaarfpoffline.tatvik.activity.LoginActivityWithoutLocation.3
             @Override // retrofit2.Callback
-            public void onResponse(Call<LoginForUrlResponse> call, Response<LoginForUrlResponse> response) {
+            public void onResponse(Call<LoginForUrlResponse> call2, Response<LoginForUrlResponse> response) {
+                LoginActivityWithoutLocation.this.progressBar.setVisibility(8);
                 Log.d("getloginresposne", response.raw().toString());
                 if (response == null || response.body() == null) {
                     Toast.makeText(LoginActivityWithoutLocation.this.getApplicationContext(), "Resposne not in format.Trying alternate url to login" + response.toString(), 1).show();
@@ -203,7 +209,8 @@ public class LoginActivityWithoutLocation extends AppCompatActivity {
             }
 
             @Override // retrofit2.Callback
-            public void onFailure(Call<LoginForUrlResponse> call, Throwable t) {
+            public void onFailure(Call<LoginForUrlResponse> call2, Throwable t) {
+                LoginActivityWithoutLocation.this.progressBar.setVisibility(8);
                 Context applicationContext = LoginActivityWithoutLocation.this.getApplicationContext();
                 Toast.makeText(applicationContext, "Login Failure .Trying alternate url" + t.getMessage(), 1).show();
                 LoginActivityWithoutLocation.this.loginMethodWithDeviceUrlfailCheck(panchayat, boothid, password, device, loc);
@@ -220,9 +227,13 @@ public class LoginActivityWithoutLocation extends AppCompatActivity {
         map.put("device", device);
         map.put("udevid", this.UDevId);
         map.put("phaseno", this.PHASE);
-        ((GetDataService) RetrofitClientInstance.getRetrofitInstanceLoginFailCheck().create(GetDataService.class)).getLoginWithUrl(map).enqueue(new Callback<LoginForUrlResponse>("9971791175") { // from class: com.example.aadhaarfpoffline.tatvik.activity.LoginActivityWithoutLocation.4
+        Call<LoginForUrlResponse> call = ((GetDataService) RetrofitClientInstance.getRetrofitInstanceLoginFailCheck().create(GetDataService.class)).getLoginWithUrl(map);
+        this.progressBar.setVisibility(0);
+        call.enqueue(new Callback<LoginForUrlResponse>("9971791175") { // from class: com.example.aadhaarfpoffline.tatvik.activity.LoginActivityWithoutLocation.4
             @Override // retrofit2.Callback
-            public void onResponse(Call<LoginForUrlResponse> call, Response<LoginForUrlResponse> response) {
+            public void onResponse(Call<LoginForUrlResponse> call2, Response<LoginForUrlResponse> response) {
+                LoginActivityWithoutLocation.this.progressBar.setVisibility(8);
+                Log.d("oldcimresponse", response.raw().toString());
                 if (response == null || response.body() == null) {
                     Toast.makeText(LoginActivityWithoutLocation.this.getApplicationContext(), "2Resposne not in format", 1).show();
                     return;
@@ -261,7 +272,8 @@ public class LoginActivityWithoutLocation extends AppCompatActivity {
             }
 
             @Override // retrofit2.Callback
-            public void onFailure(Call<LoginForUrlResponse> call, Throwable t) {
+            public void onFailure(Call<LoginForUrlResponse> call2, Throwable t) {
+                LoginActivityWithoutLocation.this.progressBar.setVisibility(8);
                 Context applicationContext = LoginActivityWithoutLocation.this.getApplicationContext();
                 Toast.makeText(applicationContext, "Login Failure " + t.getMessage(), 1).show();
             }

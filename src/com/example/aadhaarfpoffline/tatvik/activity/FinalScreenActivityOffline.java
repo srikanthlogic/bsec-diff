@@ -9,6 +9,7 @@ import android.graphics.BitmapFactory;
 import android.media.ToneGenerator;
 import android.net.Uri;
 import android.os.Bundle;
+import android.os.SystemClock;
 import android.provider.Settings;
 import android.util.Base64;
 import android.view.View;
@@ -28,6 +29,7 @@ import com.example.aadhaarfpoffline.tatvik.network.FacefpmatchvoteridUpdatePostR
 import com.example.aadhaarfpoffline.tatvik.network.TransactionRowPostResponse;
 import com.example.aadhaarfpoffline.tatvik.network.UserVotingStatusUpdatePostResponse;
 import com.example.aadhaarfpoffline.tatvik.network.VoterDataGetResponse;
+import com.example.aadhaarfpoffline.tatvik.util.Const;
 import com.facebook.drawee.view.SimpleDraweeView;
 import com.google.common.net.HttpHeaders;
 import java.io.File;
@@ -59,6 +61,8 @@ public class FinalScreenActivityOffline extends AppCompatActivity {
     private TextView messageText;
     Resources resources;
     private UserAuth userAuth;
+    private static long mLastClkTime = 0;
+    private static long Threshold = 10000;
     private String voterid = "";
     String facematchvoterid = "";
     String fpmatchovertid = "";
@@ -70,6 +74,7 @@ public class FinalScreenActivityOffline extends AppCompatActivity {
     String androidId = "";
     String UDevId = "";
     String matchiddocumentimage = "";
+    String matchedvoterimagename = "";
 
     @Override // androidx.fragment.app.FragmentActivity, androidx.activity.ComponentActivity, androidx.core.app.ComponentActivity, android.app.Activity
     protected void onCreate(Bundle savedInstanceState) {
@@ -98,6 +103,9 @@ public class FinalScreenActivityOffline extends AppCompatActivity {
         this.slnoinward = intent.getStringExtra("slnoinward");
         this.matchslnoinward = intent.getStringExtra("matchslnoinward");
         String fpmatchvoterid = intent.getStringExtra("fpmatchvotertid");
+        this.matchedvoterimagename = intent.getStringExtra("matchedvoterimagename");
+        Context applicationContext = getApplicationContext();
+        Toast.makeText(applicationContext, "matchedvoterimage=" + this.matchedvoterimagename, 1).show();
         if (allowedtovote.booleanValue()) {
             String votingmessage = this.resources.getString(R.string.u_can_vote_text);
             this.image.setImageResource(R.drawable.right_icon_trp);
@@ -116,6 +124,11 @@ public class FinalScreenActivityOffline extends AppCompatActivity {
         this.ButtonList.setOnClickListener(new View.OnClickListener() { // from class: com.example.aadhaarfpoffline.tatvik.activity.FinalScreenActivityOffline.1
             @Override // android.view.View.OnClickListener
             public void onClick(View v) {
+                if (SystemClock.elapsedRealtime() - FinalScreenActivityOffline.mLastClkTime < FinalScreenActivityOffline.Threshold) {
+                    Toast.makeText(FinalScreenActivityOffline.this.getApplicationContext(), "Waiting for response from server", 1).show();
+                    return;
+                }
+                long unused = FinalScreenActivityOffline.mLastClkTime = SystemClock.elapsedRealtime();
                 if (FinalScreenActivityOffline.this.votedDone.equalsIgnoreCase(DiskLruCache.VERSION_1) && FinalScreenActivityOffline.this.voted == 1) {
                     FinalScreenActivityOffline.this.voted = 3;
                 }
@@ -128,6 +141,11 @@ public class FinalScreenActivityOffline extends AppCompatActivity {
         this.ButtonVisible.setOnClickListener(new View.OnClickListener() { // from class: com.example.aadhaarfpoffline.tatvik.activity.FinalScreenActivityOffline.2
             @Override // android.view.View.OnClickListener
             public void onClick(View v) {
+                if (SystemClock.elapsedRealtime() - FinalScreenActivityOffline.mLastClkTime < FinalScreenActivityOffline.Threshold) {
+                    Toast.makeText(FinalScreenActivityOffline.this.getApplicationContext(), "Waiting for response from server", 1).show();
+                    return;
+                }
+                long unused = FinalScreenActivityOffline.mLastClkTime = SystemClock.elapsedRealtime();
                 if (FinalScreenActivityOffline.this.votedDone.equalsIgnoreCase(DiskLruCache.VERSION_1)) {
                     FinalScreenActivityOffline finalScreenActivityOffline = FinalScreenActivityOffline.this;
                     finalScreenActivityOffline.voted = 3;
@@ -203,7 +221,7 @@ public class FinalScreenActivityOffline extends AppCompatActivity {
             this.matchUserImage.setVisibility(0);
             this.matchUserImage.setImageURI(uri1);
             if (!isUrlValid(imageurl)) {
-                File imgFile = new File("/sdcard/Images/" + Voter.getID_DOCUMENT_IMAGE());
+                File imgFile = new File("/sdcard/" + Const.PublicImageName + "/" + Voter.getID_DOCUMENT_IMAGE());
                 if (imgFile.exists()) {
                     Bitmap myBitmap = BitmapFactory.decodeFile(imgFile.getAbsolutePath());
                     this.matchUserImage.setVisibility(0);
@@ -215,6 +233,7 @@ public class FinalScreenActivityOffline extends AppCompatActivity {
 
     /* JADX INFO: Access modifiers changed from: private */
     public void showUserInfoFromLocaldb(VoterDataNewModel Voter) {
+        String voterimage;
         System.out.println("showUserInfoIncaseofMatch1");
         String name = this.resources.getString(R.string.name) + ":";
         if (this.lan.equalsIgnoreCase("en")) {
@@ -248,15 +267,20 @@ public class FinalScreenActivityOffline extends AppCompatActivity {
             this.matchMessageText.setVisibility(0);
             this.matchMessageText.setText(message);
             System.out.println("showUserInfoIncaseofMatch4 ");
-            String voterimage = this.db.getImageFromTransactionTable(this.matchslnoinward);
-            File imgFile = new File("/sdcard/Images/" + voterimage);
+            String str = this.matchedvoterimagename;
+            if (str == null || str.isEmpty() || this.matchedvoterimagename.length() <= 0) {
+                voterimage = this.db.getImageFromTransactionTable(this.matchslnoinward);
+            } else {
+                voterimage = this.matchedvoterimagename;
+            }
+            File imgFile = new File("/sdcard/" + Const.PublicImageName + "/" + voterimage);
             if (imgFile.exists()) {
                 Bitmap myBitmap = BitmapFactory.decodeFile(imgFile.getAbsolutePath());
                 this.matchUserImage.setVisibility(0);
                 this.matchUserImage.setImageBitmap(myBitmap);
                 return;
             }
-            Uri uri1 = Uri.parse("http://cim.phoneme.in/PanchayatElectionoff/getimages/?file=" + voterimage);
+            Uri uri1 = Uri.parse("http://election.phoneme.in:9090/VoterAuthenticationapi/getimagesthumb?file=" + voterimage);
             this.matchUserImage.setVisibility(0);
             this.matchUserImage.setImageURI(uri1);
         }
@@ -366,13 +390,20 @@ public class FinalScreenActivityOffline extends AppCompatActivity {
 
     /* JADX INFO: Access modifiers changed from: private */
     public void updateVotingStatusOffline(String voterid, int voted) {
+        String matchdocument;
         String currentTime = getcurrentTime();
         String userId = this.userAuth.getPanchayatId() + "_" + this.userAuth.getWardNo() + "_" + this.userAuth.getBoothNo() + "_" + this.slnoinward;
         this.db.updateVOTEDByUSER_ID_Maintable(userId, voted);
         this.db.updateVotingStatusTransTable(voterid, voted, currentTime, 0, this.userAuth.getTransactionId().longValue(), "NON_AADHAAR", userId);
         if (voted == 2) {
-            this.db.updateMatchedVoterData(this.userAuth.getTransactionId().longValue(), this.db.getUser_IdBySlNoinWard(this.matchslnoinward), this.db.getImageFromTransactionTable(this.matchslnoinward));
-            deleteFingerprint(voterid);
+            String matchedUserId = this.db.getUser_IdBySlNoinWard(this.matchslnoinward);
+            String str = this.matchedvoterimagename;
+            if (str == null || str.isEmpty() || this.matchedvoterimagename.length() <= 0) {
+                matchdocument = this.db.getImageFromTransactionTable(this.matchslnoinward);
+            } else {
+                matchdocument = this.matchedvoterimagename;
+            }
+            this.db.updateMatchedVoterData(this.userAuth.getTransactionId().longValue(), matchedUserId, matchdocument);
         }
         uploadTransactionRow();
     }
@@ -423,7 +454,7 @@ public class FinalScreenActivityOffline extends AppCompatActivity {
         });
     }
 
-    /* JADX WARN: Can't wrap try/catch for region: R(10:5|6|(1:8)|9|(4:11|43|12|(5:14|19|38|20|22))(1:17)|18|19|38|20|22) */
+    /* JADX WARN: Can't wrap try/catch for region: R(10:5|6|(1:8)|9|(4:11|42|12|(5:14|19|44|20|22))(1:17)|18|19|44|20|22) */
     /* Code decompiled incorrectly, please refer to instructions dump */
     private Map<String, String> getTransactionRowData() {
         Throwable th;
@@ -437,22 +468,22 @@ public class FinalScreenActivityOffline extends AppCompatActivity {
             try {
                 cursor = this.db.SingleTransactionRow(this.userAuth.getTransactionId().longValue());
                 map = new HashMap<>();
-            } catch (Throwable th2) {
-                th = th2;
-            }
-            try {
             } catch (Exception e2) {
-                e = e2;
-                cursor2 = cursor;
-            } catch (Throwable th3) {
-                th = th3;
-                try {
-                    cursor.close();
-                } catch (Exception e3) {
-                }
-                throw th;
             }
-        } catch (Exception e4) {
+        } catch (Throwable th2) {
+            th = th2;
+        }
+        try {
+        } catch (Exception e3) {
+            e = e3;
+            cursor2 = cursor;
+        } catch (Throwable th3) {
+            th = th3;
+            try {
+                cursor.close();
+            } catch (Exception e4) {
+            }
+            throw th;
         }
         if (cursor.moveToFirst()) {
             new VoterDataNewModel().setId(cursor.getString(0));
@@ -489,6 +520,7 @@ public class FinalScreenActivityOffline extends AppCompatActivity {
                         map.put("AGE", "" + age);
                         map.put("udevid", this.UDevId);
                         map.put("MATCHED_USER_ID", MATCHED_USER_ID);
+                        map.put("matched_user_id", MATCHED_USER_ID);
                         map.put(str, MATCHED_ID_DOCUMENT_IMAGE);
                         cursor2.close();
                         return map;
@@ -517,6 +549,7 @@ public class FinalScreenActivityOffline extends AppCompatActivity {
             map.put("AGE", "" + age);
             map.put("udevid", this.UDevId);
             map.put("MATCHED_USER_ID", MATCHED_USER_ID);
+            map.put("matched_user_id", MATCHED_USER_ID);
             map.put(str, MATCHED_ID_DOCUMENT_IMAGE);
             cursor2.close();
             return map;

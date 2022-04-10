@@ -8,6 +8,7 @@ import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.net.ConnectivityManager;
 import android.provider.Settings;
+import android.util.Base64;
 import android.util.Log;
 import android.widget.Toast;
 import androidx.core.content.ContextCompat;
@@ -17,6 +18,7 @@ import com.example.aadhaarfpoffline.tatvik.config.RetrofitClientInstance;
 import com.example.aadhaarfpoffline.tatvik.database.DBHelper;
 import com.example.aadhaarfpoffline.tatvik.network.ImageUploadResponse;
 import com.example.aadhaarfpoffline.tatvik.network.TransactionRowPostResponse;
+import com.example.aadhaarfpoffline.tatvik.util.Const;
 import com.facebook.common.util.UriUtil;
 import java.io.File;
 import java.io.FileInputStream;
@@ -41,17 +43,11 @@ public class ResponseBroadcastReceiver extends BroadcastReceiver {
 
     @Override // android.content.BroadcastReceiver
     public void onReceive(Context context, Intent intent) {
-        Log.d("onreceive", "time=" + getCurrentTimeInFormat());
+        Log.d("onreceive1", "time1=" + getCurrentTimeInFormat());
         this.mContext = context;
         if (intent.getIntExtra("resultCode", 0) == -1) {
             intent.getStringExtra("toastMessage");
         }
-        if (isNetworkAvailable()) {
-            Log.d("autosync", "Network available");
-            syncTransTable();
-            return;
-        }
-        Log.d("autosync", "Network not available");
     }
 
     private boolean checkPermission() {
@@ -95,7 +91,7 @@ public class ResponseBroadcastReceiver extends BroadcastReceiver {
                         androidId = androidId2;
                     } else {
                         String voterimagename = cursor.getString(cursor.getColumnIndex("ID_DOCUMENT_IMAGE"));
-                        File file2 = saveBitmapToFile(new File("/sdcard/Images/", voterimagename));
+                        File file2 = saveBitmapToFile(new File("/sdcard/" + Const.PublicImageName + "/", voterimagename));
                         HashMap<String, RequestBody> map = new HashMap<>();
                         androidId = androidId2;
                         try {
@@ -123,17 +119,233 @@ public class ResponseBroadcastReceiver extends BroadcastReceiver {
         }
     }
 
-    /*  JADX ERROR: JadxRuntimeException in pass: BlockProcessor
-        jadx.core.utils.exceptions.JadxRuntimeException: Unreachable block: B:67:0x029d
-        	at jadx.core.dex.visitors.blocks.BlockProcessor.checkForUnreachableBlocks(BlockProcessor.java:86)
-        	at jadx.core.dex.visitors.blocks.BlockProcessor.processBlocksTree(BlockProcessor.java:52)
-        	at jadx.core.dex.visitors.blocks.BlockProcessor.visit(BlockProcessor.java:44)
-        */
     private void syncTransTable() {
-        /*
-        // Method dump skipped, instructions count: 729
-        */
-        throw new UnsupportedOperationException("Method not decompiled: com.example.aadhaarfpoffline.tatvik.receivers.ResponseBroadcastReceiver.syncTransTable():void");
+        ResponseBroadcastReceiver responseBroadcastReceiver;
+        Exception e;
+        String str;
+        String str2;
+        String str3;
+        String str4;
+        String str5;
+        String str6;
+        String str7;
+        String str8;
+        String str9;
+        DBHelper db;
+        Map<String, String> map;
+        byte[] fp;
+        int age;
+        String gender;
+        String voterimagename;
+        int aadhaarmatch;
+        String aadhaarNo;
+        String aadhaarNo2;
+        String fpString;
+        String voting_date;
+        String voting_type = "MATCHED_USER_ID";
+        String str10 = "user_id";
+        String str11 = "AADHAAR_NO";
+        String fpString2 = "AADHAAR_MATCH";
+        String str12 = "ID_DOCUMENT_IMAGE";
+        String str13 = "GENDER";
+        String str14 = "AGE";
+        String str15 = "VOTING_TYPE";
+        DBHelper db2 = new DBHelper(this.mContext);
+        if (db2.getUnSyncCount() <= 0) {
+            Toast.makeText(this.mContext, "All data already synced", 1).show();
+            return;
+        }
+        String UDevId = Settings.Secure.getString(this.mContext.getContentResolver(), "android_id");
+        String str16 = "MATCHED_ID_DOCUMENT_IMAGE";
+        UserAuth userAuth = new UserAuth(this.mContext);
+        try {
+            Cursor cursor = db2.getAllRowsofTransTableCursor();
+            if (cursor.moveToFirst()) {
+                while (true) {
+                    try {
+                        long transid = cursor.getLong(cursor.getColumnIndex(DBHelper.Key_ID));
+                        int synced = cursor.getInt(cursor.getColumnIndex("SYNCED"));
+                        try {
+                            int voted = cursor.getInt(cursor.getColumnIndex("VOTED"));
+                            String voting_type2 = cursor.getString(cursor.getColumnIndex(str15));
+                            String UDevId2 = UDevId;
+                            if (synced == 1) {
+                                str3 = str11;
+                                str2 = fpString2;
+                                str = str12;
+                                str5 = str13;
+                                str6 = str14;
+                                str4 = str15;
+                                db = db2;
+                                str8 = voting_type;
+                                responseBroadcastReceiver = this;
+                                str7 = str10;
+                                str9 = str16;
+                            } else if (voted == 0) {
+                                str3 = str11;
+                                str2 = fpString2;
+                                str = str12;
+                                str5 = str13;
+                                str6 = str14;
+                                str4 = str15;
+                                db = db2;
+                                str8 = voting_type;
+                                responseBroadcastReceiver = this;
+                                str7 = str10;
+                                str9 = str16;
+                            } else {
+                                try {
+                                    map = new HashMap<>();
+                                    fp = cursor.getBlob(cursor.getColumnIndex("FingerTemplate"));
+                                    age = cursor.getInt(cursor.getColumnIndex(str14));
+                                    gender = cursor.getString(cursor.getColumnIndex(str13));
+                                    voterimagename = cursor.getString(cursor.getColumnIndex(str12));
+                                    aadhaarmatch = cursor.getInt(cursor.getColumnIndex(fpString2));
+                                    aadhaarNo = cursor.getString(cursor.getColumnIndex(str11));
+                                    if (aadhaarNo == null) {
+                                        aadhaarNo = "";
+                                    }
+                                } catch (Exception e2) {
+                                    e = e2;
+                                    responseBroadcastReceiver = this;
+                                }
+                                try {
+                                    try {
+                                        if (fp != null) {
+                                            aadhaarNo2 = aadhaarNo;
+                                            try {
+                                                if (fp.length >= 0) {
+                                                    fpString = Base64.encodeToString(fp, 0);
+                                                    map.put("TRANSID", "" + transid);
+                                                    String userId = userAuth.getPanchayatId() + "_" + userAuth.getWardNo() + "_" + userAuth.getBoothNo() + "_" + cursor.getString(cursor.getColumnIndex("SlNoInWard"));
+                                                    String boothid = userAuth.getPanchayatId() + "_" + userAuth.getWardNo() + "_" + userAuth.getBoothNo();
+                                                    voting_date = cursor.getString(cursor.getColumnIndex("VOTING_DATE"));
+                                                    map.put(str10, userId);
+                                                    map.put(str10, userId);
+                                                    map.put("FINGERPRINT_TEMPLATE", fpString);
+                                                    map.put("VOTED", "" + voted);
+                                                    map.put(str12, voterimagename);
+                                                    str = str12;
+                                                    map.put(fpString2, "" + aadhaarmatch);
+                                                    str2 = fpString2;
+                                                    map.put(str11, aadhaarNo2);
+                                                    if (voting_date != null || voting_date.isEmpty() || voting_date.length() <= 0) {
+                                                        map.put("VOTING_DATE", "");
+                                                    } else {
+                                                        map.put("VOTING_DATE", voting_date);
+                                                    }
+                                                    str3 = str11;
+                                                    map.put(str15, voting_type2);
+                                                    map.put("booth_id", boothid);
+                                                    str4 = str15;
+                                                    map.put(str14, "" + age);
+                                                    str6 = str14;
+                                                    map.put(str13, gender);
+                                                    str5 = str13;
+                                                    map.put("udevid", UDevId2);
+                                                    UDevId2 = UDevId2;
+                                                    String matched_user_id = cursor.getString(cursor.getColumnIndex(voting_type));
+                                                    str7 = str10;
+                                                    str9 = str16;
+                                                    String matched_id_document_iamge = cursor.getString(cursor.getColumnIndex(str9));
+                                                    map.put("matched_user_id", matched_user_id);
+                                                    map.put(voting_type, matched_user_id);
+                                                    map.put(str9, matched_id_document_iamge);
+                                                    responseBroadcastReceiver = this;
+                                                    str8 = voting_type;
+                                                    db = db2;
+                                                    responseBroadcastReceiver.uploadTransactionRow(map, db);
+                                                }
+                                            } catch (Exception e3) {
+                                                e = e3;
+                                                responseBroadcastReceiver = this;
+                                                Toast.makeText(responseBroadcastReceiver.mContext, "sync exception=" + e.getMessage(), 1).show();
+                                                return;
+                                            }
+                                        } else {
+                                            aadhaarNo2 = aadhaarNo;
+                                        }
+                                        responseBroadcastReceiver.uploadTransactionRow(map, db);
+                                    } catch (Exception e4) {
+                                        e = e4;
+                                        Toast.makeText(responseBroadcastReceiver.mContext, "sync exception=" + e.getMessage(), 1).show();
+                                        return;
+                                    }
+                                    map.put("udevid", UDevId2);
+                                    UDevId2 = UDevId2;
+                                    String matched_user_id2 = cursor.getString(cursor.getColumnIndex(voting_type));
+                                    str7 = str10;
+                                    str9 = str16;
+                                    String matched_id_document_iamge2 = cursor.getString(cursor.getColumnIndex(str9));
+                                    map.put("matched_user_id", matched_user_id2);
+                                    map.put(voting_type, matched_user_id2);
+                                    map.put(str9, matched_id_document_iamge2);
+                                    responseBroadcastReceiver = this;
+                                    str8 = voting_type;
+                                    db = db2;
+                                } catch (Exception e5) {
+                                    e = e5;
+                                    responseBroadcastReceiver = this;
+                                    Toast.makeText(responseBroadcastReceiver.mContext, "sync exception=" + e.getMessage(), 1).show();
+                                    return;
+                                }
+                                fpString = "";
+                                map.put("TRANSID", "" + transid);
+                                String userId2 = userAuth.getPanchayatId() + "_" + userAuth.getWardNo() + "_" + userAuth.getBoothNo() + "_" + cursor.getString(cursor.getColumnIndex("SlNoInWard"));
+                                String boothid2 = userAuth.getPanchayatId() + "_" + userAuth.getWardNo() + "_" + userAuth.getBoothNo();
+                                voting_date = cursor.getString(cursor.getColumnIndex("VOTING_DATE"));
+                                map.put(str10, userId2);
+                                map.put(str10, userId2);
+                                map.put("FINGERPRINT_TEMPLATE", fpString);
+                                map.put("VOTED", "" + voted);
+                                map.put(str12, voterimagename);
+                                str = str12;
+                                map.put(fpString2, "" + aadhaarmatch);
+                                str2 = fpString2;
+                                map.put(str11, aadhaarNo2);
+                                if (voting_date != null) {
+                                }
+                                map.put("VOTING_DATE", "");
+                                str3 = str11;
+                                map.put(str15, voting_type2);
+                                map.put("booth_id", boothid2);
+                                str4 = str15;
+                                map.put(str14, "" + age);
+                                str6 = str14;
+                                map.put(str13, gender);
+                                str5 = str13;
+                            }
+                            if (cursor.moveToNext()) {
+                                db2 = db;
+                                str16 = str9;
+                                voting_type = str8;
+                                str10 = str7;
+                                UDevId = UDevId2;
+                                str14 = str6;
+                                str13 = str5;
+                                str15 = str4;
+                                str11 = str3;
+                                fpString2 = str2;
+                                str12 = str;
+                            } else {
+                                return;
+                            }
+                        } catch (Exception e6) {
+                            e = e6;
+                            responseBroadcastReceiver = this;
+                        }
+                    } catch (Exception e7) {
+                        e = e7;
+                        responseBroadcastReceiver = this;
+                        Toast.makeText(responseBroadcastReceiver.mContext, "sync exception=" + e.getMessage(), 1).show();
+                        return;
+                    }
+                }
+            }
+        } catch (Exception e8) {
+            e = e8;
+            responseBroadcastReceiver = this;
+        }
     }
 
     private void uploadTransactionRow(Map<String, String> map, final DBHelper db) {
